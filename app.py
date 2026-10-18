@@ -14,7 +14,7 @@ from google import genai
 app = Flask(__name__)
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "20"))
+FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 MAX_MESSAGE_LENGTH = 4000
@@ -212,47 +212,48 @@ def history():
     except Exception:
         return jsonify({"error": "History is temporarily unavailable."}), 503
 
+@app.route("/api/usage", methods=["GET", "OPTIONS"])
+def usage():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Sign in to view your daily chat usage."}), 401
+    try:
+        init_db()
+        limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user["plan"] == "premium" else FREE_DAILY_LIMIT
+        client_key = "user:" + user["id"]
+        with db() as conn:
+            used = conn.execute(
+                "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
+                (client_key,)
+            ).fetchone()["n"]
+        return jsonify({"plan": user["plan"], "daily_limit": limit, "used": used, "remaining": max(0, limit - used)})
+    except Exception:
+        app.logger.exception("Usage lookup failed")
+        return jsonify({"error": "Usage information is temporarily unavailable."}), 503
+
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 def chat():
     if request.method == "OPTIONS":
         return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Please sign in or create a DexAI account before chatting.", "code": "AUTH_REQUIRED"}), 401
+
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
+
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return jsonify({"error": "AI configuration is incomplete."}), 503
-    user = current_user()
-    client_key = "user:" + user["id"] if user else "guest:" + (request.remote_addr or "unknown")
-    limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user and user["plan"] == "premium" else (FREE_DAILY_LIMIT if user else GUEST_DAILY_LIMIT)
-    # Keep guest AI chat available during initial setup; persistent accounts/history
-    # become available as soon as DATABASE_URL is connected in Render.
-    if not os.getenv("DATABASE_URL"):
-        day_key = datetime.now(timezone.utc).date().isoformat()
-        usage_key = client_key + ":" + day_key
-        used = MEMORY_USAGE.get(usage_key, 0)
-        if used >= limit:
-            return jsonify({"error": f"Daily limit reached ({limit} messages). Try again tomorrow."}), 429
-        cache_key = hashlib.sha256((client_key + "\\n" + message).encode()).hexdigest()
-        cached_item = MEMORY_CACHE.get(cache_key)
-        if cached_item and cached_item[0] > time.time():
-            answer = cached_item[1]
-            was_cached = True
-        else:
-            try:
-                client = genai.Client(api_key=api_key)
-                result = client.models.generate_content(model=MODEL, contents=message)
-                answer = (result.text or "").strip() or "Please try asking another question."
-                MEMORY_CACHE[cache_key] = (time.time() + CACHE_TTL_SECONDS, answer)
-                was_cached = False
-            except Exception:
-                app.logger.exception("AI request failed")
-                return jsonify({"error": "AI request failed. Please try again."}), 502
-        MEMORY_USAGE[usage_key] = used + 1
-        return jsonify({"reply": answer, "cached": was_cached, "remaining": max(0, limit - used - 1), "storage": "temporary"})
+
+    client_key = "user:" + user["id"]
+    limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user["plan"] == "premium" else FREE_DAILY_LIMIT
     try:
         init_db()
         with db() as conn:
@@ -261,8 +262,9 @@ def chat():
                 (client_key,)
             ).fetchone()["n"]
             if usage >= limit:
-                return jsonify({"error": f"Daily limit reached ({limit} messages). Log in or try again tomorrow."}), 429
-            cache_key = hashlib.sha256((client_key + "\n" + message).encode()).hexdigest()
+                return jsonify({"error": f"Daily limit reached ({limit} messages). Your limit resets at midnight UTC.", "remaining": 0, "plan": user["plan"]}), 429
+
+            cache_key = hashlib.sha256((client_key + "\\n" + message).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
@@ -277,13 +279,23 @@ def chat():
                     "INSERT INTO ai_cache(cache_key,response,expires_at) VALUES (%s,%s,NOW() + (%s * INTERVAL '1 second')) ON CONFLICT(cache_key) DO UPDATE SET response=EXCLUDED.response, expires_at=EXCLUDED.expires_at",
                     (cache_key, answer, CACHE_TTL_SECONDS)
                 )
-            conn.execute("INSERT INTO usage_events(user_id,client_key) VALUES (%s,%s)",
-                         (user["id"] if user else None, client_key))
-            if user:
-                conn.execute("INSERT INTO conversations(user_id,role,content) VALUES (%s,'user',%s),(%s,'assistant',%s)",
-                             (user["id"], message, user["id"], answer))
+
+            conn.execute(
+                "INSERT INTO usage_events(user_id,client_key) VALUES (%s,%s)",
+                (user["id"], client_key)
+            )
+            conn.execute(
+                "INSERT INTO conversations(user_id,role,content) VALUES (%s,'user',%s),(%s,'assistant',%s)",
+                (user["id"], message, user["id"], answer)
+            )
             conn.execute("DELETE FROM ai_cache WHERE expires_at <= NOW()")
-        return jsonify({"reply": answer, "cached": bool(cached), "remaining": max(0, limit - usage - 1)})
+        return jsonify({
+            "reply": answer,
+            "cached": bool(cached),
+            "remaining": max(0, limit - usage - 1),
+            "daily_limit": limit,
+            "plan": user["plan"]
+        })
     except Exception:
         app.logger.exception("AI request failed")
         return jsonify({"error": "AI request failed. Check database and Gemini configuration, then try again."}), 502
