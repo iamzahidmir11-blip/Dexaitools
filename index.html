@@ -710,6 +710,24 @@ footer .brand { color: var(--text); font-size: 20px; }
   .chat-form-wrap { padding: 12px; }
   footer { flex-direction: column; text-align: center; }
 }
+
+/* Secure account dialog */
+.auth-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.76);backdrop-filter:blur(12px)}
+.auth-overlay.open{display:flex}
+.auth-card{width:min(440px,100%);padding:28px;border:1px solid rgba(216,181,106,.32);border-radius:22px;background:linear-gradient(145deg,#171612,#0c0c0b);box-shadow:0 25px 90px rgba(0,0,0,.6)}
+.auth-card h2{font-family:"Playfair Display",serif;font-size:30px;font-weight:500;margin:0 0 8px}
+.auth-card p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 20px}
+.auth-card label{display:block;color:#d6cdbb;font-size:12px;margin:12px 0 6px}
+.auth-card input{width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:10px;background:#090909;color:var(--text);outline:none}
+.auth-card input:focus{border-color:var(--gold)}
+.auth-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+.auth-actions button{flex:1}
+.auth-error{min-height:18px;margin-top:12px;color:#ffb2a6;font-size:12px}
+.auth-close{float:right;border:0;background:transparent;color:var(--muted);font-size:24px}
+.auth-small{font-size:12px!important;margin-top:15px!important}
+.auth-small button{border:0;background:none;color:var(--gold2);padding:0;text-decoration:underline}
+@media(max-width:480px){.auth-card{padding:22px}}
+
 </style>
 </head>
 
@@ -906,6 +924,34 @@ footer .brand { color: var(--text); font-size: 20px; }
   <a href="#home">Back to top ↑</a>
 </footer>
 
+
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-card">
+    <button class="auth-close" id="authClose" type="button" aria-label="Close">×</button>
+    <div class="eyebrow" style="margin-bottom:16px"><span class="eyebrow-dot"></span> DEXAI ACCOUNT</div>
+    <h2 id="authTitle">Welcome back.</h2>
+    <p id="authDescription">Sign in to save your AI conversations and access your workspace.</p>
+    <form id="authForm">
+      <div id="authNameWrap" hidden>
+        <label for="authName">Display name</label>
+        <input id="authName" name="name" autocomplete="name" maxlength="80" placeholder="Your name">
+      </div>
+      <label for="authEmail">Email</label>
+      <input id="authEmail" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com">
+      <label for="authPassword">Password</label>
+      <input id="authPassword" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="At least 8 characters">
+      <div class="auth-error" id="authError" role="status"></div>
+      <div class="auth-actions">
+        <button class="btn btn-gold" id="authSubmit" type="submit">Log in securely</button>
+        <button class="btn" id="authHistory" type="button" hidden>Load history</button>
+        <button class="btn" id="authLogout" type="button" hidden>Log out</button>
+      </div>
+    </form>
+    <p class="auth-small" id="authSwitchWrap">New to DexAI? <button id="authSwitch" type="button">Create an account</button></p>
+    <p class="auth-small">Use a unique password. DexAI will never ask you to share your password in chat.</p>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -938,11 +984,117 @@ footer .brand { color: var(--text); font-size: 20px; }
     toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
   }
 
-  // Login is deliberately not faked.
-  // Real authentication requires backend signup/login routes and a database.
-  $("loginButton").addEventListener("click", () => {
-    toast("Secure login is not configured yet. The backend needs authentication routes.");
+  // Account UI backed by the DexAI authentication API.
+  let authToken = localStorage.getItem("dexai_token") || "";
+  let authMode = "login";
+  let signedInUser = null;
+  const authOverlay = $("authOverlay");
+  const authError = $("authError");
+  function setAuthMode(mode) {
+    authMode = mode;
+    $("authTitle").textContent = mode === "signup" ? "Create your space." : "Welcome back.";
+    $("authDescription").textContent = mode === "signup"
+      ? "Create an account to save conversations and track your usage."
+      : "Sign in to save your AI conversations and access your workspace.";
+    $("authNameWrap").hidden = mode !== "signup";
+    $("authSubmit").textContent = mode === "signup" ? "Create account" : "Log in securely";
+    $("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+    $("authSwitchWrap").hidden = Boolean(signedInUser);
+    $("authHistory").hidden = !signedInUser;
+    $("authLogout").hidden = !signedInUser;
+    authError.textContent = "";
+  }
+  function openAuth() {
+    setAuthMode(signedInUser ? "login" : "login");
+    if (signedInUser) {
+      $("authTitle").textContent = "Your DexAI account.";
+      $("authDescription").textContent = "Signed in as " + signedInUser.email + ". Your saved conversations stay linked to your account.";
+    }
+    authOverlay.classList.add("open");
+    $("authEmail").focus();
+  }
+  function closeAuth() { authOverlay.classList.remove("open"); }
+  function updateAccountButton() {
+    $("loginButton").textContent = signedInUser ? "My Account" : "Login";
+  }
+  $("loginButton").addEventListener("click", openAuth);
+  $("authClose").addEventListener("click", closeAuth);
+  authOverlay.addEventListener("click", e => { if (e.target === authOverlay) closeAuth(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeAuth(); });
+  $("authSwitch").addEventListener("click", () => setAuthMode(authMode === "login" ? "signup" : "login"));
+  async function loadMe() {
+    if (!authToken) { updateAccountButton(); return; }
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/auth/me", {
+        headers: { "Authorization": "Bearer " + authToken }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Session expired");
+      signedInUser = data.user;
+    } catch {
+      authToken = "";
+      signedInUser = null;
+      localStorage.removeItem("dexai_token");
+    }
+    updateAccountButton();
+  }
+  $("authForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    authError.textContent = "";
+    const email = $("authEmail").value.trim();
+    const password = $("authPassword").value;
+    const payload = { email, password };
+    if (authMode === "signup") payload.name = $("authName").value.trim();
+    $("authSubmit").disabled = true;
+    $("authSubmit").textContent = "Please wait…";
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/auth/" + authMode, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Account request failed.");
+      authToken = data.token;
+      signedInUser = data.user;
+      localStorage.setItem("dexai_token", authToken);
+      updateAccountButton();
+      closeAuth();
+      toast(authMode === "signup" ? "Your DexAI account is ready." : "Welcome back to DexAI.");
+      $("authForm").reset();
+      setAuthMode("login");
+    } catch (error) {
+      authError.textContent = error.message || "Could not connect to DexAI.";
+    } finally {
+      $("authSubmit").disabled = false;
+      $("authSubmit").textContent = authMode === "signup" ? "Create account" : "Log in securely";
+    }
   });
+  $("authLogout").addEventListener("click", () => {
+    authToken = "";
+    signedInUser = null;
+    localStorage.removeItem("dexai_token");
+    updateAccountButton();
+    setAuthMode("login");
+    closeAuth();
+    toast("You have logged out.");
+  });
+  $("authHistory").addEventListener("click", async () => {
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/history", {
+        headers: { "Authorization": "Bearer " + authToken }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not load history.");
+      messages.innerHTML = "";
+      if (!data.messages.length) addMessage("No saved conversations yet. Start chatting and your history will appear here.", "bot");
+      data.messages.forEach(item => addMessage(item.content, item.role === "user" ? "user" : "bot"));
+      closeAuth();
+      $("chat").scrollIntoView({ behavior: "smooth" });
+      toast("Conversation history loaded.");
+    } catch (error) { authError.textContent = error.message; }
+  });
+  loadMe();
 
   // Chat
   const form = $("chatForm");
@@ -986,7 +1138,10 @@ footer .brand { color: var(--text); font-size: 20px; }
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { "Authorization": "Bearer " + authToken } : {})
+        },
         body: JSON.stringify({ message })
       });
 
