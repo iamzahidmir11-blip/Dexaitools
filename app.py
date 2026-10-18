@@ -125,13 +125,20 @@ def home():
 
 @app.route("/health", methods=["GET"])
 def health():
-    status = {"service": "online", "database": "not_configured"}
+    status = {
+        "service": "online",
+        "database": "not_configured",
+        "auth_configured": bool(token_secret()),
+        "ai_configured": bool(os.getenv("GEMINI_API_KEY")),
+        "model": MODEL
+    }
     try:
         init_db()
         status["database"] = "connected"
     except Exception:
         status["database"] = "unavailable"
-    return jsonify(status), (200 if status["database"] == "connected" else 503)
+    ready = status["database"] == "connected" and status["auth_configured"] and status["ai_configured"]
+    return jsonify(status), (200 if ready else 503)
 
 @app.route("/api/auth/signup", methods=["POST", "OPTIONS"])
 def signup():
@@ -147,6 +154,8 @@ def signup():
         return jsonify({"error": "Password must be 8–128 characters."}), 400
     if not name:
         name = email.split("@")[0][:80]
+    if not token_secret():
+        return jsonify({"error": "Account security is not configured on the server yet. Please try again later."}), 503
     try:
         init_db()
         user_id = hashlib.sha256(os.urandom(32)).hexdigest()
