@@ -7,7 +7,7 @@ from functools import wraps
 import jwt
 import psycopg
 from psycopg.rows import dict_row
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from google import genai
 
@@ -120,8 +120,8 @@ def server_error(_error):
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"name": "DexAI", "status": "online", "version": "2.0",
-                    "features": ["chat", "accounts", "history", "usage-limits", "cache"]})
+    # Serve the premium DexAI frontend from the same public URL as the API.
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
 @app.route("/health", methods=["GET"])
 def health():
