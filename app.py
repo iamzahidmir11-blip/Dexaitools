@@ -13,7 +13,7 @@ from google import genai
 
 app = Flask(__name__)
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "20"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))
