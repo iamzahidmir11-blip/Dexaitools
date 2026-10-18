@@ -20,6 +20,8 @@ CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 MAX_MESSAGE_LENGTH = 4000
 SCHEMA_READY = False
 SCHEMA_LAST_CHECK = 0
+MEMORY_CACHE = {}
+MEMORY_USAGE = {}
 
 def db():
     url = os.getenv("DATABASE_URL")
@@ -225,9 +227,34 @@ def chat():
         return jsonify({"error": "AI configuration is incomplete."}), 503
     user = current_user()
     client_key = "user:" + user["id"] if user else "guest:" + (request.remote_addr or "unknown")
+    limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user and user["plan"] == "premium" else (FREE_DAILY_LIMIT if user else GUEST_DAILY_LIMIT)
+    # Keep guest AI chat available during initial setup; persistent accounts/history
+    # become available as soon as DATABASE_URL is connected in Render.
+    if not os.getenv("DATABASE_URL"):
+        day_key = datetime.now(timezone.utc).date().isoformat()
+        usage_key = client_key + ":" + day_key
+        used = MEMORY_USAGE.get(usage_key, 0)
+        if used >= limit:
+            return jsonify({"error": f"Daily limit reached ({limit} messages). Try again tomorrow."}), 429
+        cache_key = hashlib.sha256((client_key + "\\n" + message).encode()).hexdigest()
+        cached_item = MEMORY_CACHE.get(cache_key)
+        if cached_item and cached_item[0] > time.time():
+            answer = cached_item[1]
+            was_cached = True
+        else:
+            try:
+                client = genai.Client(api_key=api_key)
+                result = client.models.generate_content(model=MODEL, contents=message)
+                answer = (result.text or "").strip() or "Please try asking another question."
+                MEMORY_CACHE[cache_key] = (time.time() + CACHE_TTL_SECONDS, answer)
+                was_cached = False
+            except Exception:
+                app.logger.exception("AI request failed")
+                return jsonify({"error": "AI request failed. Please try again."}), 502
+        MEMORY_USAGE[usage_key] = used + 1
+        return jsonify({"reply": answer, "cached": was_cached, "remaining": max(0, limit - used - 1), "storage": "temporary"})
     try:
         init_db()
-        limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user and user["plan"] == "premium" else (FREE_DAILY_LIMIT if user else GUEST_DAILY_LIMIT)
         with db() as conn:
             usage = conn.execute(
                 "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
