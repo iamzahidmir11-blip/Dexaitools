@@ -108,7 +108,7 @@ def cors(response):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, OPTIONS"
     response.headers["Access-Control-Max-Age"] = "86400"
     return response
 
@@ -193,6 +193,29 @@ def me():
     if not user:
         return jsonify({"error": "Please log in."}), 401
     return jsonify({"user": dict(user)})
+
+@app.route("/api/auth/profile", methods=["PATCH", "OPTIONS"])
+def update_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Please sign in to manage your profile."}), 401
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("display_name", "")).strip()
+    if not name or len(name) > 80:
+        return jsonify({"error": "Display name must be 1–80 characters."}), 400
+    try:
+        init_db()
+        with db() as conn:
+            updated = conn.execute(
+                "UPDATE users SET display_name=%s WHERE id=%s RETURNING id,email,display_name,plan,created_at",
+                (name, user["id"])
+            ).fetchone()
+        return jsonify({"user": dict(updated)})
+    except Exception:
+        app.logger.exception("Profile update failed")
+        return jsonify({"error": "Profile update is temporarily unavailable."}), 503
 
 @app.route("/api/history", methods=["GET", "OPTIONS"])
 def history():
