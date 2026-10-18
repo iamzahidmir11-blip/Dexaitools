@@ -967,10 +967,18 @@ footer .brand { color: var(--text); font-size: 20px; }
       <div class="auth-error" id="authError" role="status"></div>
       <div class="auth-actions">
         <button class="btn btn-gold" id="authSubmit" type="submit">Log in securely</button>
-        <button class="btn" id="authHistory" type="button" hidden>Load history</button>
-        <button class="btn" id="authLogout" type="button" hidden>Log out</button>
       </div>
     </form>
+    <div id="profilePanel" hidden>
+      <label for="profileName">Display name</label>
+      <input id="profileName" name="profileName" autocomplete="name" maxlength="80" placeholder="Your name">
+      <div class="auth-actions" style="margin-top:12px">
+        <button class="btn btn-gold" id="saveProfile" type="button">Save profile</button>
+        <button class="btn" id="authHistory" type="button">Load history</button>
+        <button class="btn" id="authLogout" type="button">Log out</button>
+      </div>
+      <div class="auth-error" id="profileError" role="status"></div>
+    </div>
     <p class="auth-small" id="authSwitchWrap">New to DexAI? <button id="authSwitch" type="button">Create an account</button></p>
     <p class="auth-small">Use a unique password. DexAI will never ask you to share your password in chat.</p>
   </div>
@@ -1022,18 +1030,19 @@ footer .brand { color: var(--text); font-size: 20px; }
       ? "Create an account to save conversations and track your usage."
       : "Sign in to save your AI conversations and access your workspace.";
     $("authNameWrap").hidden = mode !== "signup";
+    $("authForm").hidden = Boolean(signedInUser);
+    $("profilePanel").hidden = !signedInUser;
     $("authSubmit").textContent = mode === "signup" ? "Create account" : "Log in securely";
     $("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
     $("authSwitchWrap").hidden = Boolean(signedInUser);
-    $("authHistory").hidden = !signedInUser;
-    $("authLogout").hidden = !signedInUser;
     authError.textContent = "";
   }
   function openAuth() {
     setAuthMode(signedInUser ? "login" : "login");
     if (signedInUser) {
       $("authTitle").textContent = "Your DexAI account.";
-      $("authDescription").textContent = "Signed in as " + signedInUser.email + ". Your saved conversations stay linked to your account.";
+      $("authDescription").textContent = "Signed in as " + signedInUser.email + ". Manage your profile and saved conversations here.";
+      $("profileName").value = signedInUser.display_name || "";
     }
     authOverlay.classList.add("open");
     $("authEmail").focus();
@@ -1118,6 +1127,32 @@ footer .brand { color: var(--text); font-size: 20px; }
     } finally {
       $("authSubmit").disabled = false;
       $("authSubmit").textContent = authMode === "signup" ? "Create account" : "Log in securely";
+    }
+  });
+  $("saveProfile").addEventListener("click", async () => {
+    const name = $("profileName").value.trim();
+    $("profileError").textContent = "";
+    if (!name || name.length > 80) {
+      $("profileError").textContent = "Display name must be 1–80 characters.";
+      return;
+    }
+    $("saveProfile").disabled = true;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
+        body: JSON.stringify({ display_name: name })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Profile update failed.");
+      signedInUser = data.user;
+      updateAccountButton();
+      toast("Profile saved.");
+      $("authDescription").textContent = "Signed in as " + signedInUser.email + ". Manage your profile and saved conversations here.";
+    } catch (error) {
+      $("profileError").textContent = error.message || "Profile update failed.";
+    } finally {
+      $("saveProfile").disabled = false;
     }
   });
   $("authLogout").addEventListener("click", () => {
