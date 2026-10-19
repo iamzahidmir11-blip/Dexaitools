@@ -1328,6 +1328,9 @@ footer .brand { color: var(--text); font-size: 20px; }
       <button type="button" class="active" data-desktop-page="overview"><span>⌂</span> Home</button>
       <button type="button" data-desktop-page="search"><span>⌕</span> Search chats</button>
       <button type="button" data-desktop-page="images"><span>▧</span> Image Studio</button>
+      <button type="button" data-desktop-page="video"><span>▶</span> Video Lab</button>
+      <button type="button" data-desktop-page="tools"><span>✎</span> AI Tools</button>
+      <button type="button" data-desktop-page="workspace"><span>▧</span> Text workspace</button>
       <div class="desktop-nav-caption">YOUR SPACE</div>
       <button type="button" data-desktop-page="library"><span>▤</span> Library</button>
       <button type="button" data-desktop-page="projects"><span>▦</span> Projects</button>
@@ -1407,7 +1410,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
-    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
+    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
     desktopTitle.textContent=titles[page]||"DexAI Desktop";
     const chats=getSavedChats();
     const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1434,6 +1437,10 @@ footer .brand { color: var(--text); font-size: 20px; }
       desktopBody.innerHTML='<h4>Create with Image Studio</h4><p>Jump directly to image creation without searching through the page.</p><button class="desktop-primary" id="desktopOpenImage">Open Image Studio ↗</button>';
     }else if(page==="video"){
       desktopBody.innerHTML='<h4>Video Lab</h4><p>Build a production-ready prompt for your video generator. Direct video rendering requires a connected video provider.</p><button class="desktop-primary" id="desktopOpenVideo">Open Video Lab ↗</button>';
+    }else if(page==="tools"){
+      desktopBody.innerHTML='<h4>AI Tools</h4><p>Quick access to text formatting, word counting, captions and creator utilities.</p><button class="desktop-primary" id="desktopOpenTools">Browse AI Tools ↗</button>';
+    }else if(page==="workspace"){
+      desktopBody.innerHTML='<h4>Text workspace</h4><p>Clean, format and transform text in one place.</p><button class="desktop-primary" id="desktopOpenWorkspace">Open Text Workspace ↗</button>';
     }else if(page==="profile"){
       const user=signedInUser;
       desktopBody.innerHTML=user?'<h4>Account profile</h4><p>Signed in as '+safe(user.email)+'</p><div class="desktop-profile"><label>Display name<input id="desktopProfileName" maxlength="80" value="'+safe(user.display_name||"")+'"></label><button class="desktop-primary" id="desktopSaveProfile">Save profile</button><div class="desktop-muted">Account security settings are managed through the DexAI account service.</div></div>':'<h4>Sign in to DexAI</h4><p>Sign in to manage your profile and private workspace.</p><button class="desktop-primary" id="desktopSignIn">Sign in / Create account</button>';
@@ -1443,6 +1450,8 @@ footer .brand { color: var(--text); font-size: 20px; }
     desktopBody.querySelector("[data-open-model]")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click()});
     $("desktopOpenImage")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="imageStudio";$("imageStudio").scrollIntoView({behavior:"smooth"});});
     $("desktopOpenVideo")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="videoStudio";$("videoStudio").scrollIntoView({behavior:"smooth"});});
+    $("desktopOpenTools")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="tools";$("tools").scrollIntoView({behavior:"smooth"});});
+    $("desktopOpenWorkspace")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="workspace";$("workspace").scrollIntoView({behavior:"smooth"});});
     $("desktopSignIn")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openAuth()});
     $("desktopSaveProfile")?.addEventListener("click",async()=>{const input=$("desktopProfileName");$("profileName").value=input.value;$("saveProfile").click();});
   }
