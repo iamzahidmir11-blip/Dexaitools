@@ -499,20 +499,21 @@ main { min-height: 75vh; }
   border-top: 1px solid rgba(255,255,255,.07);
   background: rgba(0,0,0,.12);
 }
-.composer-modes{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 13px}
-.composer-mode{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;border:1px solid rgba(255,255,255,.10);border-radius:11px;background:#11110f;color:#c8c0b0;font-size:12px;font-weight:600;transition:all .18s}
-.composer-mode span{font-size:15px;color:var(--gold)}
+.composer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.composer-modes{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0}
+.composer-mode{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:#11110f;color:#c8c0b0;font-size:11px;font-weight:600;transition:all .18s}
+.composer-mode span{font-size:13px;color:var(--gold)}
 .composer-mode:hover{border-color:rgba(216,181,106,.5);color:#fff2d1}
 .composer-mode.active{background:linear-gradient(135deg,rgba(216,181,106,.19),rgba(216,181,106,.06));border-color:rgba(216,181,106,.65);color:#fff0c7;box-shadow:inset 0 0 0 1px rgba(216,181,106,.07)}
-.composer-mode-hint{font-size:11px;color:var(--muted);margin-left:auto}
-
-.voice-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
-.voice-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(216,181,106,.28);border-radius:10px;padding:9px 12px;background:#11110f;color:#e9dfca;font-size:12px;font-weight:600;transition:.2s}
+.voice-controls{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;margin:0}
+.voice-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(216,181,106,.22);border-radius:9px;padding:7px 9px;background:#11110f;color:#e9dfca;font-size:11px;font-weight:600;transition:.2s;min-width:32px;min-height:31px}
 .voice-btn:hover,.voice-btn.active{border-color:var(--gold);background:rgba(216,181,106,.12);color:#fff0c7}
-.voice-btn .voice-icon{font-size:15px;color:var(--gold)}
-.voice-status{font-size:11px;color:var(--muted);line-height:1.5}
+.voice-btn .voice-icon{font-size:14px;color:var(--gold)}
+.voice-btn.icon-only{width:32px;padding:6px}
+.voice-status{font-size:10px;color:var(--muted);line-height:1.35;max-width:90px;white-space:normal}
 .voice-status.listening{color:#b9d7a2}
 .voice-status.speaking{color:var(--gold2)}
+@media(max-width:560px){.chat-form-wrap{padding:12px 12px 14px}.composer-toolbar{gap:8px}.composer-mode{padding:7px 8px;font-size:10px}.voice-controls{gap:4px}.voice-btn.icon-only{width:30px;min-width:30px;min-height:30px;padding:5px}.voice-status{max-width:62px;font-size:9px}}
 
 .chat-generated-image{display:block;max-width:min(100%,640px);max-height:640px;object-fit:contain;border-radius:13px;border:1px solid var(--border);margin:12px 0}
 .chat-image-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -872,11 +873,18 @@ footer .brand { color: var(--text); font-size: 20px; }
       </div>
 
       <div class="chat-form-wrap">
-        <div class="composer-modes" role="group" aria-label="Choose what DexAI should do">
-          <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true"><span>✦</span> Chat</button>
-          <button type="button" class="composer-mode" data-mode="image" aria-pressed="false"><span>▧</span> Image generation</button>
-          <button type="button" class="composer-mode" data-mode="video" aria-pressed="false"><span>▶</span> Video generation</button>
-          <span class="composer-mode-hint" id="composerModeHint">Ask anything, or choose a creative mode.</span>
+        <div class="composer-toolbar">
+          <div class="composer-modes" role="group" aria-label="Choose what DexAI should do">
+            <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true" title="Chat"><span>✦</span> Chat</button>
+            <button type="button" class="composer-mode" data-mode="image" aria-pressed="false" title="Create an image"><span>▧</span> Image</button>
+            <button type="button" class="composer-mode" data-mode="video" aria-pressed="false" title="Create a video prompt"><span>▶</span> Video</button>
+          </div>
+          <div class="voice-controls" aria-label="Voice assistant controls">
+            <button class="voice-btn icon-only" type="button" id="micButton" aria-label="Speak to type" title="Speak to type"><span class="voice-icon">🎙</span></button>
+            <button class="voice-btn icon-only" type="button" id="liveVoiceButton" aria-label="Start live voice" aria-pressed="false" title="Start live voice"><span class="voice-icon">◉</span></button>
+            <button class="voice-btn icon-only" type="button" id="readAnswerButton" aria-label="Read latest answer aloud" title="Read latest answer aloud"><span class="voice-icon">🔊</span></button>
+            <span class="voice-status" id="voiceStatus" role="status">Voice ready</span>
+          </div>
         </div>
         <div class="provider-row">
           <label for="providerSelect">AI engine</label>
@@ -889,12 +897,6 @@ footer .brand { color: var(--text); font-size: 20px; }
           </select>
           <label class="web-search-toggle" for="webSearchToggle"><input id="webSearchToggle" type="checkbox"> Web search</label>
           <span id="providerStatus">Checking connected AI engines…</span>
-        </div>
-        <div class="voice-controls" aria-label="Voice assistant controls">
-          <button class="voice-btn" type="button" id="micButton" aria-label="Dictate a message"><span class="voice-icon">🎙</span> Speak to type</button>
-          <button class="voice-btn" type="button" id="liveVoiceButton" aria-pressed="false"><span class="voice-icon">◉</span> Start live voice</button>
-          <button class="voice-btn" type="button" id="readAnswerButton"><span class="voice-icon">🔊</span> Read latest answer</button>
-          <span class="voice-status" id="voiceStatus" role="status">Mic and live voice work in supported browsers.</span>
         </div>
         <form class="chat-form" id="chatForm">
           <textarea id="chatInput" placeholder="Ask DexAI anything..." rows="1" maxlength="4000" aria-label="Your message" required></textarea>
