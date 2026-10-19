@@ -2548,12 +2548,10 @@ body.dex-focus-mode footer{display:none!important}
   document.querySelectorAll("[data-creator-prompt]").forEach(button => {
     button.addEventListener("click", () => {
       const prompt = button.dataset.creatorPrompt || "";
-      $("chat").classList.add("dex-menu-open");
       document.querySelectorAll("main>section").forEach(section => { if(section.id !== "chat" && section.id !== "plans") section.classList.remove("dex-menu-open"); });
+      $("chat").classList.add("dex-menu-open");
       $("chat").scrollIntoView({behavior:"smooth",block:"start"});
-      $("chatInput").value = prompt;
-      $("chatInput").dispatchEvent(new Event("input",{bubbles:true}));
-      $("chatInput").focus();
+      sendMessage(prompt);
     });
   });
 
