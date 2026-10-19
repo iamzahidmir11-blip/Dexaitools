@@ -1676,13 +1676,18 @@ body.dex-focus-mode footer{display:none!important}
   const desktopOverlay = $("desktopOverlay");
   const desktopBody = $("desktopBody");
   const desktopTitle = $("desktopTitle");
-  // Delegate clicks for workspace cards because their HTML is rebuilt dynamically.
-  desktopBody.addEventListener("click", event => {
-    const target = event.target instanceof Element ? event.target.closest("[data-go-page]") : null;
-    if (!target || !desktopBody.contains(target)) return;
+  // Capture navigation clicks before any bubbling listeners can rebuild the menu.
+  desktopOverlay.addEventListener("click", event => {
+    const target = event.target instanceof Element
+      ? event.target.closest("[data-desktop-page], [data-go-page]")
+      : null;
+    if (!target || !desktopOverlay.contains(target)) return;
+    const page = target.dataset.desktopPage || target.dataset.goPage;
+    if (!page) return;
     event.preventDefault();
-    showDesktopPage(target.dataset.goPage);
-  });
+    event.stopPropagation();
+    showDesktopPage(page);
+  }, true);
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   document.body.classList.add("dex-focus-mode");
   function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
@@ -1946,7 +1951,7 @@ body.dex-focus-mode footer{display:none!important}
       });
       setToolMenuOpen(false);
       toolMenuTrigger.innerHTML = '<span class="tool-dot"></span> ' + (composerMode === "image" ? "Image tools" : composerMode === "video" ? "Video tools" : "More tools") + ' <span class="chevron">⌄</span>';
-      $("composerModeHint").textContent = composerModeHints[composerMode];
+      if ($("composerModeHint")) $("composerModeHint").textContent = composerModeHints[composerMode];
       $("chatInput").placeholder = composerMode === "image"
         ? "Describe the image you want to create…"
         : composerMode === "video"
@@ -2812,7 +2817,7 @@ body.dex-focus-mode footer{display:none!important}
     if (!signedInUser) openAuth();
     else toast("Free plan: 50 AI messages per day.");
   });
-  $("premiumPlanButton").addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
+  $("premiumPlanButton")?.addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
 
   $("toolChatButton").addEventListener("click", () => {
     $("chat").scrollIntoView({ behavior: "smooth" });
