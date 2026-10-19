@@ -536,18 +536,39 @@ def chat():
     if attachments:
         if "gemini" not in available:
             return jsonify({"error": "File analysis currently needs Gemini to be configured on the server. Try again after its quota resets."}), 503
+        if requested_model and not requested_model.lower().startswith("gemini-"):
+            return jsonify({"error": "File analysis currently uses Gemini. Clear the custom model ID or choose a Gemini model."}), 400
         selected = ["gemini"]
     elif web_search:
         if "gemini" not in available:
             return jsonify({"error": "Web search needs the Gemini engine to be connected."}), 503
+        if requested_model and not requested_model.lower().startswith("gemini-"):
+            return jsonify({"error": "Web search currently uses Gemini. Choose a Gemini model or clear the custom model ID."}), 400
         selected = ["gemini"]
     elif provider == "compare":
+        if requested_model:
+            return jsonify({"error": "Choose one AI provider when using a custom model ID; model names are provider-specific."}), 400
         selected = available
     elif provider == "auto":
-        # Free-first auto mode: never silently spend on OpenAI API.
-        selected = [p for p in ("cloudflare", "gemini") if p in available]
-        if not selected:
-            return jsonify({"error": "No free AI provider is available right now. Configure Cloudflare Workers AI or wait for Gemini quota to reset. OpenAI API is only used when selected explicitly."}), 503
+        # Respect a typed model ID without silently switching providers or spending on OpenAI.
+        if requested_model:
+            lower_model = requested_model.lower()
+            if lower_model.startswith("@cf/"):
+                preferred = "cloudflare"
+            elif lower_model.startswith("gemini-"):
+                preferred = "gemini"
+            elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
+                preferred = "openai"
+            else:
+                return jsonify({"error": "This custom model ID does not identify its provider. Select the matching AI engine in Model settings."}), 400
+            if preferred not in available:
+                return jsonify({"error": "The provider for this model ID is not configured on the server. Check its API credentials in Render Environment."}), 503
+            selected = [preferred]
+        else:
+            # Free-first auto mode: never silently spend on OpenAI API.
+            selected = [p for p in ("cloudflare", "gemini") if p in available]
+            if not selected:
+                return jsonify({"error": "No free AI provider is available right now. Configure Cloudflare Workers AI or wait for Gemini quota to reset. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
         selected = [provider]
     else:
