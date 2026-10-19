@@ -339,7 +339,7 @@ def configured_providers():
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
 
-def call_ai_provider(provider, message):
+def call_ai_provider(provider, message, web_search=False):
     import json
     import urllib.request
     import urllib.error
@@ -349,8 +349,28 @@ def call_ai_provider(provider, message):
         if not api_key:
             raise RuntimeError("Gemini API is not configured.")
         client = genai.Client(api_key=api_key)
-        result = client.models.generate_content(model=MODEL, contents=message)
+        config = types.GenerateContentConfig(
+            tools=[types.Tool(google_search=types.GoogleSearch())]
+        ) if web_search else None
+        result = client.models.generate_content(model=MODEL, contents=message, config=config)
         answer = (result.text or "").strip()
+        if web_search:
+            sources = []
+            try:
+                for candidate in (getattr(result, "candidates", None) or []):
+                    grounding = getattr(candidate, "grounding_metadata", None)
+                    for chunk in (getattr(grounding, "grounding_chunks", None) or []):
+                        web = getattr(chunk, "web", None)
+                        uri = getattr(web, "uri", None)
+                        title = getattr(web, "title", None) or uri
+                        if uri and uri.startswith(("https://", "http://")) and uri not in [item[1] for item in sources]:
+                            sources.append((str(title)[:180], uri))
+            except Exception:
+                app.logger.exception("Could not read Gemini grounding sources")
+            if sources:
+                answer += "\\n\\n## Sources\\n" + "\\n".join(
+                    "- [" + title.replace("]", "") + "](" + uri + ")" for title, uri in sources[:8]
+                )
         if not answer:
             raise RuntimeError("Gemini returned an empty answer.")
         return answer
@@ -431,6 +451,7 @@ def chat():
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
     provider = str(data.get("provider", "auto")).lower()
+    web_search = bool(data.get("web_search", False))
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
@@ -441,7 +462,11 @@ def chat():
     available = [item["id"] for item in configured_providers()]
     if not available:
         return jsonify({"error": "No AI provider is configured on the server yet."}), 503
-    if provider == "compare":
+    if web_search:
+        if "gemini" not in available:
+            return jsonify({"error": "Web search needs the Gemini engine to be connected."}), 503
+        selected = ["gemini"]
+    elif provider == "compare":
         selected = available
     elif provider == "auto":
         selected = [next((p for p in ("gemini", "openai", "cloudflare") if p in available), available[0])]
@@ -485,7 +510,7 @@ def chat():
                     "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
                     "and ask a follow-up only if essential. Never invent facts.\n\nUser: " + message
                 )
-            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + message).encode()).hexdigest()
+            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + message).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
@@ -500,12 +525,12 @@ def chat():
                 if len(selected) == 1:
                     p = selected[0]
                     try:
-                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message), "ok": True})
+                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message, web_search=web_search and p == "gemini"), "ok": True})
                     except Exception as exc:
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
-                        futures = {pool.submit(call_ai_provider, p, prompt_message): p for p in selected}
+                        futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini"): p for p in selected}
                         for future in as_completed(futures):
                             p = futures[future]
                             try:
