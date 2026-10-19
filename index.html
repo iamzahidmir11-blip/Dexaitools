@@ -328,6 +328,8 @@ main { min-height: 75vh; }
   font-size: 13px;
 }
 
+.draft-status{min-height:14px;margin:8px 2px 0;text-align:left;color:#817968;font-size:10px;line-height:1.4;transition:color .2s}.draft-status.saved{color:#b8c99e}.draft-status.warning{color:#e3bf78}
+
 /* CENTRAL AI CHAT */
 
 .chat-shell {
@@ -1293,6 +1295,7 @@ body.dex-focus-mode footer{display:none!important}
           <button class="voice-btn icon-only composer-mic" type="button" id="micButton" aria-label="Speak to type" title="Speak to type">🎙</button>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
         </form>
+        <div class="draft-status" id="draftStatus" aria-live="polite">Drafts save automatically on this device.</div>
         <div class="chat-note">Please verify important information. Avoid sharing passwords or sensitive personal data.</div>
         <div id="usageStatus" class="chat-note" style="color:var(--gold);margin-top:7px">Sign in to see your daily chat allowance.</div>
         <div class="chat-error" id="chatError" role="status"></div>
@@ -1607,6 +1610,41 @@ body.dex-focus-mode footer{display:none!important}
   "use strict";
 
   const API_URL = "https://dexaitools.onrender.com/api/chat";
+  const DRAFT_KEY = "dexai_message_draft_v1";
+  const draftStatus = $("draftStatus");
+  let draftSaveTimer = null;
+  function setDraftStatus(message, state = "") {
+    if (!draftStatus) return;
+    draftStatus.textContent = message;
+    draftStatus.classList.toggle("saved", state === "saved");
+    draftStatus.classList.toggle("warning", state === "warning");
+  }
+  function saveMessageDraft() {
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer = setTimeout(() => {
+      try {
+        const draft = input.value.slice(0, 4000);
+        if (draft.trim()) localStorage.setItem(DRAFT_KEY, draft);
+        else localStorage.removeItem(DRAFT_KEY);
+        setDraftStatus(draft.trim() ? "Draft saved on this device." : "Drafts save automatically on this device.", draft.trim() ? "saved" : "");
+      } catch {
+        setDraftStatus("Draft saving is unavailable in this browser.", "warning");
+      }
+    }, 220);
+  }
+  try {
+    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (savedDraft && !input.value) {
+      input.value = savedDraft.slice(0, 4000);
+      input.style.height = "43px";
+      input.style.height = Math.min(input.scrollHeight, 120) + "px";
+      setDraftStatus("Restored your unsent draft from this device.", "saved");
+    }
+  } catch {
+    setDraftStatus("Draft saving is unavailable in this browser.", "warning");
+  }
+  window.addEventListener("online", () => setDraftStatus("Connection restored. Your draft is saved on this device.", "saved"));
+  window.addEventListener("offline", () => setDraftStatus("You're offline. Your draft stays saved on this device.", "warning"));
 
   // Bound network waits so the interface never stays on an endless spinner.
   async function fetchWithTimeout(url, options = {}) {
@@ -2577,6 +2615,8 @@ body.dex-focus-mode footer{display:none!important}
       ? "Create a production-ready AI video-generation prompt from this idea. Include duration, scene-by-scene action, camera movement, lighting, visual style, continuity constraints, negative prompt, and sound/dialogue direction. Be clear that this is a prompt, not a rendered video file. Idea: " + message
       : message;
     input.value = "";
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setDraftStatus("Message sent. Draft cleared.", "saved");
     input.style.height = "43px";
     sendButton.disabled = true;
     errorBox.textContent = "";
@@ -2715,6 +2755,7 @@ body.dex-focus-mode footer{display:none!important}
   input.addEventListener("input", () => {
     input.style.height = "43px";
     input.style.height = Math.min(input.scrollHeight, 120) + "px";
+    saveMessageDraft();
   });
 
   input.addEventListener("keydown", event => {
