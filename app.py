@@ -338,7 +338,7 @@ def configured_providers():
         providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
     if os.getenv("OPENAI_API_KEY"):
         providers.append({"id": "openai", "name": "OpenAI", "configured": True})
-    if os.getenv("CLOUDFLARE_API_TOKEN") and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
+    if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
 
@@ -421,7 +421,7 @@ def call_ai_provider(provider, message, web_search=False):
 
     if provider == "cloudflare":
         account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
-        api_token = os.getenv("CLOUDFLARE_API_TOKEN")
+        api_token = os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")
         if not account_id or not api_token:
             raise RuntimeError("Cloudflare Workers AI is not configured.")
         model = os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")
