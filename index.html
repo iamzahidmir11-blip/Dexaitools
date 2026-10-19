@@ -671,6 +671,26 @@ footer .brand { color: var(--text); font-size: 20px; }
 
 .toast.show { opacity: 1; transform: translate(-50%,0); }
 
+
+/* Rich, readable AI answers */
+.message.bot .md h1,.message.bot .md h2,.message.bot .md h3{font-family:"Playfair Display",serif;font-weight:500;color:var(--gold2);line-height:1.35;margin:12px 0 7px}
+.message.bot .md h1{font-size:21px}.message.bot .md h2{font-size:18px}.message.bot .md h3{font-size:15px}
+.message.bot .md p{margin:0 0 10px}.message.bot .md ul,.message.bot .md ol{padding-left:22px;margin:7px 0 12px}
+.message.bot .md li{margin:4px 0}.message.bot .md strong{color:#fff1c9}.message.bot .md code{font-family:ui-monospace,monospace;background:#090909;border:1px solid var(--border);padding:2px 5px;border-radius:5px;font-size:.92em}
+.message.bot .md pre{white-space:pre;overflow:auto;background:#090909;border:1px solid var(--border);border-radius:10px;padding:13px;margin:9px 0 12px}
+.message.bot .md pre code{border:0;padding:0;background:transparent}.message.bot .md blockquote{border-left:2px solid var(--gold);margin:8px 0;padding:3px 0 3px 12px;color:#cfc4ad}
+.studio-panel{max-width:900px;margin:0 auto;border:1px solid var(--border);border-radius:20px;padding:24px;background:linear-gradient(145deg,#15130e,#0d0d0b)}
+.studio-panel textarea{width:100%;min-height:110px;resize:vertical;background:#090909;border:1px solid var(--border);border-radius:12px;color:var(--text);padding:14px;outline:none;line-height:1.7}
+.studio-panel textarea:focus{border-color:var(--gold)}
+.studio-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.studio-status{color:var(--muted);font-size:12px;line-height:1.7;margin-top:12px}
+.generated-preview{display:block;max-width:100%;max-height:640px;object-fit:contain;margin:18px auto 0;border-radius:12px;border:1px solid var(--border)}
+.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.plan-card{position:relative}
+.plan-card.featured{border-color:rgba(216,181,106,.55);box-shadow:0 0 35px rgba(216,181,106,.07)}
+.plan-badge{display:inline-block;border:1px solid var(--border);border-radius:100px;padding:5px 9px;color:var(--gold);font-size:10px;letter-spacing:1px;margin-bottom:12px}
+@media(max-width:800px){.plan-grid{grid-template-columns:1fr}.studio-panel{padding:17px}}
+
 @media(max-width:800px) {
   header { padding: 0 4%; }
   nav {
@@ -752,6 +772,8 @@ footer .brand { color: var(--text); font-size: 20px; }
     <a href="#home">Home</a>
     <a href="#chat">AI Chat</a>
     <a href="#tools">AI Tools</a>
+    <a href="#imageStudio">Image Studio</a>
+    <a href="#videoStudio">Video Lab</a>
     <a href="#workspace">Workspace</a>
     <a href="#plans">Plans</a>
     <a href="#about">About</a>
@@ -880,6 +902,40 @@ footer .brand { color: var(--text); font-size: 20px; }
     </div>
   </section>
 
+
+  <section class="section" id="imageStudio">
+    <div class="section-heading">
+      <div class="mini">Creative AI Studio</div>
+      <h2>Turn Words Into <span class="gold-text">Images.</span></h2>
+      <p>Describe a scene, thumbnail, character or concept and create an image with the configured Gemini image model.</p>
+    </div>
+    <div class="studio-panel">
+      <label for="imagePrompt" style="display:block;color:#d6cdbb;font-size:12px;margin-bottom:8px">Image description</label>
+      <textarea id="imagePrompt" maxlength="1200" placeholder="Example: cinematic burgundy sports car on a rainy city street at night, premium editorial photography, realistic lighting..."></textarea>
+      <div class="studio-actions">
+        <button class="btn btn-gold" id="generateImage" type="button">✦ Generate Image</button>
+        <a class="btn" id="downloadImage" hidden download="dexai-image.png">Download image</a>
+      </div>
+      <div class="studio-status" id="imageStatus" role="status">Sign in to create images. Image generation requires image-model access on your Gemini API key.</div>
+      <img id="generatedImage" class="generated-preview" alt="Your generated DexAI image" hidden>
+    </div>
+  </section>
+
+  <section class="section" id="videoStudio">
+    <div class="section-heading">
+      <div class="mini">Creator Video Lab</div>
+      <h2>Plan Your Next <span class="gold-text">Video.</span></h2>
+      <p>Build detailed prompts for Shorts, ads, cinematic clips and AI video tools.</p>
+    </div>
+    <div class="studio-panel">
+      <label for="videoPrompt" style="display:block;color:#d6cdbb;font-size:12px;margin-bottom:8px">What should happen in the video?</label>
+      <textarea id="videoPrompt" maxlength="1500" placeholder="Example: 8-second realistic shot of a burgundy BMW M4 driving through a rainy city, smooth tracking camera, no dialogue..."></textarea>
+      <div class="studio-actions">
+        <button class="btn btn-gold" id="buildVideoPrompt" type="button">Create Video Prompt ↗</button>
+      </div>
+      <div class="studio-status" id="videoStatus">This builds a production-ready prompt using DexAI. Direct video rendering needs a video-generation provider and enabled API access; it is not falsely presented as active yet.</div>
+    </div>
+  </section>
   <section class="section" id="workspace">
     <div class="section-heading">
       <div class="mini">Your Creative Space</div>
@@ -912,24 +968,34 @@ footer .brand { color: var(--text); font-size: 20px; }
 
   <section class="section" id="plans">
     <div class="section-heading">
-      <div class="mini">Simple Usage Plans</div>
-      <h2>Choose Your <span class="gold-text">Pace.</span></h2>
-      <p>Daily AI chat limits are shown clearly. Premium upgrades are not enabled for purchase yet.</p>
+      <div class="mini">DexAI Membership</div>
+      <h2>Plans for <span class="gold-text">Every Creator.</span></h2>
+      <p>Pick the level that fits your workflow. Paid checkout is not activated yet.</p>
     </div>
-    <div class="tools-grid">
-      <article class="tool-card">
+    <div class="plan-grid">
+      <article class="tool-card plan-card">
+        <span class="plan-badge">START HERE</span>
         <div class="tool-icon">✧</div>
         <h3>Free</h3>
-        <p>10 AI messages per day, saved chat history and built-in text tools.</p>
-        <button type="button" id="freePlanButton">Current starter plan</button>
+        <p>10 daily AI actions, AI chat, saved conversations and browser-based text tools.</p>
+        <button type="button" id="freePlanButton">Current plan</button>
       </article>
-      <article class="tool-card">
+      <article class="tool-card plan-card featured">
+        <span class="plan-badge">FOR EVERYDAY CREATORS</span>
         <div class="tool-icon">✦</div>
-        <h3>Premium</h3>
-        <p>Up to 100 AI messages per day. Premium access is coming soon; no payment is collected yet.</p>
-        <button type="button" id="premiumPlanButton">Coming soon</button>
+        <h3>Plus</h3>
+        <p>Planned: 50 daily AI actions, image creation access and a larger creative workspace.</p>
+        <button type="button" id="plusPlanButton">Join Plus waitlist</button>
+      </article>
+      <article class="tool-card plan-card">
+        <span class="plan-badge">POWER USERS</span>
+        <div class="tool-icon">✹</div>
+        <h3>Pro</h3>
+        <p>Planned: 150 daily AI actions, priority creative tools and advanced workflow features.</p>
+        <button type="button" id="proPlanButton">Join Pro waitlist</button>
       </article>
     </div>
+    <p class="chat-note" style="margin-top:16px">Plus and Pro are previews only. No payment is taken and paid features are not activated until billing is configured.</p>
   </section>
 
   <section class="section" id="about">
@@ -1059,7 +1125,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   async function refreshUsage() {
     const el = $("usageStatus");
     if (!authToken || !signedInUser) {
-      el.textContent = "Sign in first to chat • Free plan includes 10 messages per day.";
+      el.textContent = "Sign in to unlock your private DexAI workspace.";
       return;
     }
     try {
@@ -1069,7 +1135,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Usage unavailable");
       const planName = (data.plan || "free").toUpperCase();
-      el.textContent = planName + " PLAN • " + data.remaining + " / " + data.daily_limit + " messages left today";
+      el.textContent = planName + " PLAN • Daily access active";
     } catch {
       el.textContent = "Signed in • Daily usage will appear when the server is available.";
     }
@@ -1188,6 +1254,48 @@ footer .brand { color: var(--text); font-size: 20px; }
   const sendButton = $("sendButton");
   const errorBox = $("chatError");
 
+
+  function renderMarkdown(target, text) {
+    const escapeHTML = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    const inline = value => escapeHTML(value)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/**(.+?)**/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])*([^*]+)*(?!*)/g, "$1<em>$2</em>");
+    const lines = String(text || "").replace(/\r/g, "").split("\n");
+    let html = "", inCode = false, codeLines = [], listType = "";
+    const closeList = () => { if (listType) { html += listType === "ol" ? "</ol>" : "</ul>"; listType = ""; } };
+    for (const line of lines) {
+      if (line.trim().startsWith("```")) {
+        closeList();
+        if (inCode) { html += "<pre><code>" + escapeHTML(codeLines.join("\n")) + "</code></pre>"; codeLines = []; inCode = false; }
+        else inCode = true;
+        continue;
+      }
+      if (inCode) { codeLines.push(line); continue; }
+      if (!line.trim()) { closeList(); continue; }
+      let match;
+      if ((match = line.match(/^(#{1,3})\s+(.+)$/))) {
+        closeList();
+        const level = match[1].length;
+        html += "<h" + level + ">" + inline(match[2]) + "</h" + level + ">";
+      } else if ((match = line.match(/^\s*[-*•]\s+(.+)$/))) {
+        if (listType !== "ul") { closeList(); html += "<ul>"; listType = "ul"; }
+        html += "<li>" + inline(match[1]) + "</li>";
+      } else if ((match = line.match(/^\s*\d+[.)]\s+(.+)$/))) {
+        if (listType !== "ol") { closeList(); html += "<ol>"; listType = "ol"; }
+        html += "<li>" + inline(match[1]) + "</li>";
+      } else if ((match = line.match(/^>\s?(.*)$/))) {
+        closeList(); html += "<blockquote>" + inline(match[1]) + "</blockquote>";
+      } else {
+        closeList(); html += "<p>" + inline(line) + "</p>";
+      }
+    }
+    if (inCode) html += "<pre><code>" + escapeHTML(codeLines.join("\n")) + "</code></pre>";
+    closeList();
+    target.className = "md";
+    target.innerHTML = html;
+  }
+
   function addMessage(text, role) {
     const item = document.createElement("div");
     item.className = "message " + role;
@@ -1197,7 +1305,8 @@ footer .brand { color: var(--text); font-size: 20px; }
     label.textContent = role === "user" ? "YOU" : "DEXAI";
 
     const content = document.createElement("div");
-    content.textContent = text;
+    if (role === "bot") renderMarkdown(content, text);
+    else content.textContent = text;
 
     item.append(label, content);
     messages.appendChild(item);
@@ -1260,11 +1369,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       }
 
       reply.textContent = data.reply;
-      if (typeof data.remaining === "number") {
-        $("usageStatus").textContent = (data.plan || "FREE").toUpperCase() + " PLAN • " + data.remaining + " / " + (data.daily_limit || 10) + " messages left today";
-      } else {
-        refreshUsage();
-      }
+      refreshUsage();
     } catch (error) {
       reply.textContent = "I couldn't get a response from the AI server.";
       errorBox.textContent =
@@ -1313,6 +1418,60 @@ footer .brand { color: var(--text); font-size: 20px; }
   $("toolChatButton").addEventListener("click", () => {
     $("chat").scrollIntoView({ behavior: "smooth" });
     setTimeout(() => input.focus(), 450);
+  });
+
+
+  $("plusPlanButton").addEventListener("click", () => toast("Plus is a preview. Paid checkout is not connected yet."));
+  $("proPlanButton").addEventListener("click", () => toast("Pro is a preview. Paid checkout is not connected yet."));
+
+  $("generateImage").addEventListener("click", async () => {
+    const prompt = $("imagePrompt").value.trim();
+    const status = $("imageStatus");
+    const button = $("generateImage");
+    if (!prompt) { status.textContent = "Describe the image first."; $("imagePrompt").focus(); return; }
+    if (!authToken || !signedInUser) {
+      openAuth();
+      authError.textContent = "Sign in before generating an image.";
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Creating image…";
+    status.textContent = "DexAI is creating your image. This may take a little while.";
+    $("generatedImage").hidden = true;
+    $("downloadImage").hidden = true;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) { authToken = ""; signedInUser = null; localStorage.removeItem("dexai_token"); updateAccountButton(); openAuth(); }
+        throw new Error(data.error || "Image generation failed.");
+      }
+      const dataURL = "data:" + (data.mime_type || "image/png") + ";base64," + data.image;
+      $("generatedImage").src = dataURL;
+      $("generatedImage").hidden = false;
+      $("downloadImage").href = dataURL;
+      $("downloadImage").hidden = false;
+      $("downloadImage").download = "dexai-image." + ((data.mime_type || "image/png").split("/")[1] || "png").replace("jpeg", "jpg");
+      status.textContent = "Image created. You can preview it here or save it to your device.";
+      refreshUsage();
+    } catch (error) {
+      status.textContent = error.message || "Image generation failed. Check that the Gemini image model is enabled for your API key.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "✦ Generate Image";
+    }
+  });
+
+  $("buildVideoPrompt").addEventListener("click", () => {
+    const idea = $("videoPrompt").value.trim();
+    if (!idea) { $("videoStatus").textContent = "Describe your video idea first."; $("videoPrompt").focus(); return; }
+    $("videoStatus").textContent = "Sending your idea to DexAI to build a detailed video prompt…";
+    $("chat").scrollIntoView({ behavior: "smooth" });
+    sendMessage("Create a production-ready AI video-generation prompt from this idea. Include duration, scene-by-scene action, camera movement, lighting, visual style, continuity constraints, negative prompt, and sound/dialogue direction. Do not claim a video file was generated. Idea: " + idea);
   });
 
   // Built-in browser text tools
