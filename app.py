@@ -464,7 +464,7 @@ def test_model_connection():
     requested = str(data.get("provider", "auto")).lower()
     available = [item["id"] for item in configured_providers()]
     if requested in {"auto", "compare"}:
-        provider = next((p for p in ("cloudflare", "openai", "gemini") if p in available), None)
+        provider = next((p for p in ("openai", "cloudflare", "gemini") if p in available), None)
     else:
         provider = requested
     if provider not in {"gemini", "openai", "cloudflare"} or provider not in available:
