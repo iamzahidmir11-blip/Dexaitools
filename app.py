@@ -462,6 +462,29 @@ def chat():
             if usage >= limit:
                 return jsonify({"error": "You have reached today’s message allowance for your plan. Please come back after the daily reset.", "plan": user["plan"]}), 429
 
+            # Lightweight conversation memory: reuse recent turns without another AI call.
+            recent_rows = conn.execute(
+                "SELECT role,content FROM conversations WHERE user_id=%s ORDER BY id DESC LIMIT 8",
+                (user["id"],)
+            ).fetchall()
+            recent_rows = list(reversed(recent_rows))
+            if recent_rows:
+                memory_context = "\n".join(
+                    ("User: " if row["role"] == "user" else "DexAI: ") + row["content"][:1200]
+                    for row in recent_rows
+                )
+                prompt_message = (
+                    "You are DexAI, a helpful, accurate assistant. Respond quickly and directly. "
+                    "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
+                    "and ask a follow-up only if essential. Use context for continuity, but never invent facts.\n\n"
+                    "Recent conversation context:\n" + memory_context + "\n\nCurrent user message:\n" + message
+                )
+            else:
+                prompt_message = (
+                    "You are DexAI, a helpful, accurate assistant. Respond quickly and directly. "
+                    "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
+                    "and ask a follow-up only if essential. Never invent facts.\n\nUser: " + message
+                )
             cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + message).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
@@ -477,12 +500,12 @@ def chat():
                 if len(selected) == 1:
                     p = selected[0]
                     try:
-                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, message), "ok": True})
+                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message), "ok": True})
                     except Exception as exc:
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
-                        futures = {pool.submit(call_ai_provider, p, message): p for p in selected}
+                        futures = {pool.submit(call_ai_provider, p, prompt_message): p for p in selected}
                         for future in as_completed(futures):
                             p = futures[future]
                             try:
