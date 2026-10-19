@@ -512,7 +512,10 @@ def chat():
     elif provider == "compare":
         selected = available
     elif provider == "auto":
-        selected = [next((p for p in ("openai", "cloudflare", "gemini") if p in available), available[0])]
+        # Free-first auto mode: never silently spend on OpenAI API.
+        selected = [p for p in ("cloudflare", "gemini") if p in available]
+        if not selected:
+            return jsonify({"error": "No free AI provider is available right now. Configure Cloudflare Workers AI or wait for Gemini quota to reset. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
         selected = [provider]
     else:
@@ -565,13 +568,23 @@ def chat():
                 from concurrent.futures import ThreadPoolExecutor, as_completed
                 labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI"}
                 results = []
-                if len(selected) == 1:
-                    p = selected[0]
-                    try:
-                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message, web_search=web_search and p == "gemini", model_override=requested_model if len(selected) == 1 else None), "ok": True})
-                    except Exception as exc:
-                        app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
-                        results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                auto_fallback = provider == "auto" and not web_search and not requested_model
+                if len(selected) == 1 or auto_fallback:
+                    for p in selected:
+                        try:
+                            reply = call_ai_provider(
+                                p, prompt_message,
+                                web_search=web_search and p == "gemini",
+                                model_override=requested_model if len(selected) == 1 else None
+                            )
+                            results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
+                            if auto_fallback:
+                                break
+                        except Exception as exc:
+                            app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
+                            results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                            if not auto_fallback:
+                                break
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
                         futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini"): p for p in selected}
