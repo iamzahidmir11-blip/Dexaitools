@@ -1274,6 +1274,13 @@ footer .brand { color: var(--text); font-size: 20px; }
 
 <div class="toast" id="toast" role="status"></div>
 
+<div id="modelSettingsOverlay" class="model-settings-overlay" hidden>
+  <div class="model-settings-card" role="dialog" aria-modal="true" aria-labelledby="modelSettingsTitle">
+    <div class="model-settings-heading"><div><span class="model-kicker">DEXAI CONFIGURATION</span><h2 id="modelSettingsTitle">Choose your model</h2><p>Provider and model controls stay separate from your chat composer.</p></div><button type="button" id="closeModelSettings" class="model-close" aria-label="Close model settings">×</button></div>
+    <div id="modelSettingsMount"></div>
+    <div class="model-settings-footer">A model ID works only if its provider API key, access and quota are valid.</div>
+  </div>
+</div>
 <script>
 (() => {
   "use strict";
@@ -1688,9 +1695,7 @@ footer .brand { color: var(--text); font-size: 20px; }
         const option = select.querySelector('option[value="' + id + '"]');
         if (option) option.disabled = false;
       });
-      status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
-      if (connected.has("openai") && select.value === "auto") select.value = "openai";
-      else if (connected.has("cloudflare") && select.value === "auto") select.value = "cloudflare";
+      status.textContent = (data.providers || []).length + " engine(s) configured. API access and quota still need testing.";
       const connectorStatus = $("connectorEngineStatus");
       if (connectorStatus) connectorStatus.textContent = (data.providers || []).length + " ENGINE(S) CONNECTED";
     } catch {
@@ -1877,7 +1882,7 @@ footer .brand { color: var(--text); font-size: 20px; }
     messages.replaceChildren();const chat={id:"chat_"+Date.now().toString(36),title:"New chat",messages:[],updated:Date.now()};const chats=readLocalChats();chats.unshift(chat);activeLocalChatId=chat.id;localStorage.setItem("dexai_active_chat",chat.id);writeLocalChats(chats);showWelcomeCard();renderLocalChatList();$("chatInput").focus();
   }
   $("newChatButton").addEventListener("click",startLocalChat);
-  $("sidebarChatHome").addEventListener("click",()=>{$("#chat").scrollIntoView({behavior:"smooth"});$("chatInput").focus();});
+  $("sidebarChatHome").addEventListener("click",()=>{$("chat").scrollIntoView({behavior:"smooth"});$("chatInput").focus();});
   ensureLocalChat();renderLocalChatList();
 
   function addMessage(text, role) {
@@ -2225,12 +2230,5 @@ footer .brand { color: var(--text); font-size: 20px; }
 })();
 </script>
 
-<div id="modelSettingsOverlay" class="model-settings-overlay" hidden>
-  <div class="model-settings-card" role="dialog" aria-modal="true" aria-labelledby="modelSettingsTitle">
-    <div class="model-settings-heading"><div><span class="model-kicker">DEXAI CONFIGURATION</span><h2 id="modelSettingsTitle">Choose your model</h2><p>Provider and model controls stay separate from your chat composer.</p></div><button type="button" id="closeModelSettings" class="model-close" aria-label="Close model settings">×</button></div>
-    <div id="modelSettingsMount"></div>
-    <div class="model-settings-footer">A model ID works only if its provider API key, access and quota are valid.</div>
-  </div>
-</div>
 </body>
 </html>
