@@ -1,6 +1,7 @@
 import os
 import time
 import hashlib
+import base64
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
@@ -10,12 +11,15 @@ from psycopg.rows import dict_row
 from flask import Flask, request, jsonify, g, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
+PLUS_DAILY_LIMIT = int(os.getenv("PLUS_DAILY_LIMIT", "50"))
+PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "150"))
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 MAX_MESSAGE_LENGTH = 4000
 SCHEMA_READY = False
@@ -69,6 +73,16 @@ def init_db():
         conn.execute("CREATE INDEX IF NOT EXISTS ai_cache_expiry_idx ON ai_cache(expires_at)")
     SCHEMA_READY = True
     SCHEMA_LAST_CHECK = time.time()
+
+def plan_limit(plan):
+    plan = (plan or "free").lower()
+    if plan == "plus":
+        return PLUS_DAILY_LIMIT
+    if plan == "pro":
+        return PRO_DAILY_LIMIT
+    if plan == "premium":
+        return int(os.getenv("PREMIUM_DAILY_LIMIT", "100"))
+    return FREE_DAILY_LIMIT
 
 def token_secret():
     return os.getenv("JWT_SECRET")
@@ -253,17 +267,66 @@ def usage():
         return jsonify({"error": "Sign in to view your daily chat usage."}), 401
     try:
         init_db()
-        limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user["plan"] == "premium" else FREE_DAILY_LIMIT
+        limit = plan_limit(user["plan"])
         client_key = "user:" + user["id"]
         with db() as conn:
             used = conn.execute(
                 "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
                 (client_key,)
             ).fetchone()["n"]
-        return jsonify({"plan": user["plan"], "daily_limit": limit, "used": used, "remaining": max(0, limit - used)})
+        return jsonify({"plan": user["plan"], "daily_access": used < limit})
     except Exception:
         app.logger.exception("Usage lookup failed")
         return jsonify({"error": "Usage information is temporarily unavailable."}), 503
+
+
+@app.route("/api/image", methods=["POST", "OPTIONS"])
+def generate_image():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Please sign in before generating images.", "code": "AUTH_REQUIRED"}), 401
+    data = request.get_json(silent=True) or {}
+    prompt = str(data.get("prompt", "")).strip()
+    if not prompt:
+        return jsonify({"error": "Describe the image you want to create."}), 400
+    if len(prompt) > 1200:
+        return jsonify({"error": "Image prompt is too long (maximum 1200 characters)."}), 413
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return jsonify({"error": "AI configuration is incomplete."}), 503
+    try:
+        init_db()
+        limit = plan_limit(user["plan"])
+        client_key = "user:" + user["id"]
+        with db() as conn:
+            used = conn.execute(
+                "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
+                (client_key,)
+            ).fetchone()["n"]
+            if used >= limit:
+                return jsonify({"error": "You have reached today’s creative allowance for your plan. Please come back after the daily reset."}), 429
+            client = genai.Client(api_key=api_key)
+            image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
+            response = client.models.generate_content(
+                model=image_model,
+                contents="Create one polished, high-quality image based on this prompt. Do not return only a description. Prompt: " + prompt,
+                config=types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"])
+            )
+            image_part = next((part for part in response.parts if getattr(part, "inline_data", None)), None)
+            if image_part is None:
+                raise RuntimeError("The configured image model returned no image data.")
+            image_data = base64.b64encode(image_part.inline_data.data).decode("ascii")
+            mime_type = image_part.inline_data.mime_type or "image/png"
+            conn.execute(
+                "INSERT INTO usage_events(user_id,client_key) VALUES (%s,%s)",
+                (user["id"], client_key)
+            )
+        return jsonify({"image": image_data, "mime_type": mime_type, "plan": user["plan"]})
+    except Exception:
+        app.logger.exception("Image generation failed")
+        return jsonify({"error": "Image generation is unavailable right now. The Gemini image model may need to be enabled for this API key."}), 502
 
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 def chat():
@@ -285,7 +348,7 @@ def chat():
         return jsonify({"error": "AI configuration is incomplete."}), 503
 
     client_key = "user:" + user["id"]
-    limit = int(os.getenv("PREMIUM_DAILY_LIMIT", "100")) if user["plan"] == "premium" else FREE_DAILY_LIMIT
+    limit = plan_limit(user["plan"])
     try:
         init_db()
         with db() as conn:
@@ -294,7 +357,7 @@ def chat():
                 (client_key,)
             ).fetchone()["n"]
             if usage >= limit:
-                return jsonify({"error": f"Daily limit reached ({limit} messages). Your limit resets at midnight UTC.", "remaining": 0, "plan": user["plan"]}), 429
+                return jsonify({"error": "You have reached today’s message allowance for your plan. Please come back after the daily reset.", "plan": user["plan"]}), 429
 
             cache_key = hashlib.sha256((client_key + "\\n" + message).encode()).hexdigest()
             cached = conn.execute(
@@ -324,8 +387,6 @@ def chat():
         return jsonify({
             "reply": answer,
             "cached": bool(cached),
-            "remaining": max(0, limit - usage - 1),
-            "daily_limit": limit,
             "plan": user["plan"]
         })
     except Exception:
