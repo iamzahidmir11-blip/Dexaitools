@@ -672,6 +672,11 @@ footer .brand { color: var(--text); font-size: 20px; }
 .toast.show { opacity: 1; transform: translate(-50%,0); }
 
 
+.provider-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.provider-row label{font-size:11px;letter-spacing:.5px;color:var(--gold)}
+.provider-row select{max-width:100%;background:#090909;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;outline:none}
+.provider-row select:focus{border-color:var(--gold)}
+.provider-row span{font-size:10px;color:var(--muted);line-height:1.5}
 /* Rich, readable AI answers */
 .message.bot .md h1,.message.bot .md h2,.message.bot .md h3{font-family:"Playfair Display",serif;font-weight:500;color:var(--gold2);line-height:1.35;margin:12px 0 7px}
 .message.bot .md h1{font-size:21px}.message.bot .md h2{font-size:18px}.message.bot .md h3{font-size:15px}
@@ -839,6 +844,17 @@ footer .brand { color: var(--text); font-size: 20px; }
       </div>
 
       <div class="chat-form-wrap">
+        <div class="provider-row">
+          <label for="providerSelect">AI engine</label>
+          <select id="providerSelect" aria-label="Choose AI engine">
+            <option value="auto">DexAI Auto · best available</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="openai" disabled>OpenAI · API key needed</option>
+            <option value="cloudflare" disabled>Cloudflare Workers AI · API key needed</option>
+            <option value="compare">Compare all connected AIs</option>
+          </select>
+          <span id="providerStatus">Checking connected AI engines…</span>
+        </div>
         <form class="chat-form" id="chatForm">
           <textarea id="chatInput" placeholder="Ask DexAI anything..." rows="1" maxlength="4000" aria-label="Your message" required></textarea>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
@@ -1247,6 +1263,27 @@ footer .brand { color: var(--text); font-size: 20px; }
   });
   loadMe();
 
+  async function loadProviderStatus() {
+    const select = $("providerSelect");
+    const status = $("providerStatus");
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/providers");
+      const data = await res.json();
+      const connected = new Set((data.providers || []).map(item => item.id));
+      ["gemini", "openai", "cloudflare"].forEach(id => {
+        const option = select.querySelector('option[value="' + id + '"]');
+        if (!option) return;
+        option.disabled = !connected.has(id);
+        const labels = {gemini:"Google Gemini",openai:"OpenAI",cloudflare:"Cloudflare Workers AI"};
+        option.textContent = connected.has(id) ? labels[id] + " · connected" : labels[id] + " · API key needed";
+      });
+      status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
+    } catch {
+      status.textContent = "Could not check AI engine status."; 
+    }
+  }
+  loadProviderStatus();
+
   // Chat
   const form = $("chatForm");
   const input = $("chatInput");
@@ -1342,7 +1379,7 @@ footer .brand { color: var(--text); font-size: 20px; }
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ message, provider: $("providerSelect").value })
       });
 
       let data;
@@ -1375,7 +1412,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       errorBox.textContent =
         error.message === "Failed to fetch"
           ? "Connection failed. Check your backend, CORS settings and internet connection."
-          : error.message + " Check your Gemini API configuration if this continues.";
+          : error.message + " Check the selected provider's API configuration if this continues.";
 
       console.error("DexAI request failed:", error);
     } finally {
