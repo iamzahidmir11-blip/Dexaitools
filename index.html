@@ -1676,18 +1676,24 @@ body.dex-focus-mode footer{display:none!important}
   const desktopOverlay = $("desktopOverlay");
   const desktopBody = $("desktopBody");
   const desktopTitle = $("desktopTitle");
-  // Capture navigation clicks before any bubbling listeners can rebuild the menu.
+  // Use one delegated handler for both fixed navigation and dynamically rendered menu cards.
+  // A single handler avoids duplicate page renders and keeps touch clicks reliable on mobile.
   desktopOverlay.addEventListener("click", event => {
     const target = event.target instanceof Element
-      ? event.target.closest("[data-desktop-page], [data-go-page]")
+      ? event.target.closest("button[data-desktop-page], button[data-go-page], a[data-desktop-page], a[data-go-page]")
       : null;
     if (!target || !desktopOverlay.contains(target)) return;
     const page = target.dataset.desktopPage || target.dataset.goPage;
     if (!page) return;
     event.preventDefault();
     event.stopPropagation();
-    showDesktopPage(page);
-  }, true);
+    try {
+      showDesktopPage(page);
+    } catch (error) {
+      console.error("DexAI menu navigation failed:", page, error);
+      toast("This section could not open. Please reload DexAI and try again.");
+    }
+  });
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   document.body.classList.add("dex-focus-mode");
   function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
@@ -1891,7 +1897,7 @@ body.dex-focus-mode footer{display:none!important}
   $("desktopClose").addEventListener("click",()=>setDesktopMenuOpen(false));
   $("desktopUpgradeLink").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
   desktopOverlay.addEventListener("click",e=>{if(e.target===desktopOverlay)setDesktopMenuOpen(false)});
-  document.querySelectorAll("[data-desktop-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.desktopPage)));
+  // Navigation is handled centrally by the delegated desktopOverlay click handler above.
   document.addEventListener("keydown",e=>{if(e.key==="Escape")desktopOverlay.classList.remove("open")});
   
   $("mobileMenu").addEventListener("click", () => {
