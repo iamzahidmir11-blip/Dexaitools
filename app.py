@@ -425,8 +425,8 @@ def call_ai_provider(provider, message, web_search=False):
         if not account_id or not api_token:
             raise RuntimeError("Cloudflare Workers AI is not configured.")
         model = os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")
-        url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/v1/chat/completions"
-        payload = {"model": model, "messages": [{"role": "user", "content": message}]}
+        url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/run/" + model
+        payload = {"messages": [{"role": "user", "content": message}]}
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
@@ -439,7 +439,8 @@ def call_ai_provider(provider, message, web_search=False):
         except urllib.error.HTTPError as exc:
             app.logger.warning("Cloudflare Workers AI returned HTTP %s", exc.code)
             raise RuntimeError("Cloudflare AI request failed. Check token permissions, model access and credits.")
-        answer = str((data.get("choices") or [{}])[0].get("message", {}).get("content", "")).strip()
+        result = data.get("result") or {}
+        answer = str(result.get("response", "")).strip()
         if not answer:
             raise RuntimeError("Cloudflare AI returned an empty answer.")
         return answer
