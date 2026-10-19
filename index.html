@@ -1078,14 +1078,15 @@ body.dex-focus-mode footer{display:none!important}
       <div class="chat-messages" id="chatMessages" aria-live="polite">
         <div class="welcome-card" id="welcomeCard">
           <div class="welcome-star">✧</div>
-          <h3>What shall we discover?</h3>
-          <p>Your ideas deserve intelligent answers.<br>Start a conversation with DexAI.</p>
-
+          <h3>Ask anything. Create something.</h3>
+          <p>Your everyday AI assistant for quick answers, learning, writing and content creation.</p>
           <div class="suggestions">
-            <button class="suggestion" data-prompt="Explain artificial intelligence in simple words.">Explain AI simply</button>
-            <button class="suggestion" data-prompt="Give me five creative YouTube Shorts ideas.">Creative ideas</button>
-            <button class="suggestion" data-prompt="Help me write a professional introduction.">Write something</button>
-            <button class="suggestion" data-prompt="Teach me an interesting new fact.">Teach me something</button>
+            <button class="suggestion" data-prompt="Explain this topic in simple words with an everyday example: artificial intelligence.">💬 Explain a topic</button>
+            <button class="suggestion" data-prompt="Give me 10 fresh YouTube Shorts ideas for a US audience, each with a strong hook and a satisfying ending.">🎬 Shorts ideas</button>
+            <button class="suggestion" data-prompt="Write a 30-second YouTube Shorts script with a 2-second hook, scene-by-scene visuals, voiceover, captions, and a clear payoff. Ask me for the niche if needed.">✍️ Write a script</button>
+            <button class="suggestion" data-prompt="Give me 10 clickable but honest video titles and 3 thumbnail concepts for this topic: [enter topic].">🚀 Titles & thumbnails</button>
+            <button class="suggestion" data-prompt="Help me with a normal everyday question. Explain clearly, step by step, and give a practical example.">🧠 Everyday help</button>
+            <button class="suggestion" data-prompt="Turn this idea into a social media caption with a strong opening, natural wording, and relevant hashtags: [enter idea].">📱 Caption & hashtags</button>
           </div>
         </div>
       </div>
@@ -1202,6 +1203,36 @@ body.dex-focus-mode footer{display:none!important}
         <h3>AI Assistant</h3>
         <p>Ask DexAI for help with writing, learning and ideas.</p>
         <button type="button" id="toolChatButton">Start Chat ↗</button>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">🎬</div>
+        <h3>Shorts Script Studio</h3>
+        <p>Hooks, scene beats, voiceover, captions and a strong ending.</p>
+        <button type="button" data-creator-prompt="Act as my short-form video scriptwriter. Ask for my niche if missing, then create a 30-second vertical video script with a 2-second hook, scene-by-scene visuals, voiceover, on-screen captions, sound cues, payoff and a natural CTA.">Create a script ↗</button>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">⚡</div>
+        <h3>Hook & Idea Lab</h3>
+        <p>Fresh concepts and opening hooks for Reels, Shorts and TikTok.</p>
+        <button type="button" data-creator-prompt="Generate 15 original short-form content ideas for my niche. For each give a strong first-2-second hook, concept, visual direction, curiosity loop and ending. Avoid misleading claims and repetitive ideas. Ask my niche if needed.">Generate ideas ↗</button>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">🚀</div>
+        <h3>Title & Description</h3>
+        <p>Search-friendly titles, descriptions and thumbnail directions.</p>
+        <button type="button" data-creator-prompt="Help package my video. Ask for the topic/platform if missing, then provide 10 honest clickable titles, a searchable description, 3 thumbnail concepts, keywords and a pinned-comment idea. Do not promise virality.">Package my video ↗</button>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">📅</div>
+        <h3>Content Planner</h3>
+        <p>A practical weekly publishing plan built around your niche.</p>
+        <button type="button" data-creator-prompt="Build me a realistic 7-day content plan for my platform and niche. Include topic, hook, format, production notes and a call to action. Ask for platform, niche and posting capacity if missing.">Plan my week ↗</button>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">💬</div>
+        <h3>Everyday AI</h3>
+        <p>Ask general questions, learn concepts, solve problems and write better.</p>
+        <button type="button" data-creator-prompt="Help me with my everyday question. Explain clearly, use simple language, and give a practical example or steps when useful.">Ask DexAI ↗</button>
       </article>
     </div>
   </section>
@@ -2181,7 +2212,7 @@ body.dex-focus-mode footer{display:none!important}
     restoringLocalChat=false;renderLocalChatList();$("chatInput").focus();
   }
   function showWelcomeCard() {
-    messages.innerHTML='<div class="welcome-card" id="welcomeCard"><div class="welcome-star">✧</div><h3>What shall we discover?</h3><p>Your ideas deserve intelligent answers.<br>Start a conversation with DexAI.</p><div class="suggestions"><button class="suggestion" data-prompt="Explain artificial intelligence in simple words.">Explain AI simply</button><button class="suggestion" data-prompt="Give me five creative YouTube Shorts ideas.">Creative ideas</button><button class="suggestion" data-prompt="Help me write a professional introduction.">Write something</button><button class="suggestion" data-prompt="Teach me an interesting new fact.">Teach me something</button></div></div>';
+    messages.innerHTML='<div class="welcome-card" id="welcomeCard"><div class="welcome-star">✧</div><h3>Ask anything. Create something.</h3><p>Your everyday AI assistant for quick answers, learning, writing and content creation.</p><div class="suggestions"><button class="suggestion" data-prompt="Explain this topic in simple words with an everyday example: artificial intelligence.">💬 Explain a topic</button><button class="suggestion" data-prompt="Give me 10 fresh YouTube Shorts ideas for a US audience, each with a strong hook and a satisfying ending.">🎬 Shorts ideas</button><button class="suggestion" data-prompt="Write a 30-second YouTube Shorts script with a 2-second hook, scene-by-scene visuals, voiceover, captions, and a clear payoff. Ask me for the niche if needed.">✍️ Write a script</button><button class="suggestion" data-prompt="Give me 10 clickable but honest video titles and 3 thumbnail concepts for this topic: [enter topic].">🚀 Titles &amp; thumbnails</button><button class="suggestion" data-prompt="Help me with a normal everyday question. Explain clearly, step by step, and give a practical example.">🧠 Everyday help</button><button class="suggestion" data-prompt="Turn this idea into a social media caption with a strong opening, natural wording, and relevant hashtags: [enter idea].">📱 Caption &amp; hashtags</button></div></div>';
     messages.querySelectorAll(".suggestion").forEach(b=>b.addEventListener("click",()=>sendMessage(b.dataset.prompt||"")));
   }
   function startLocalChat() {
@@ -2511,6 +2542,18 @@ body.dex-focus-mode footer{display:none!important}
       }
 
       $("workspaceResult").textContent = result || "Your result will appear here.";
+    });
+  });
+
+  document.querySelectorAll("[data-creator-prompt]").forEach(button => {
+    button.addEventListener("click", () => {
+      const prompt = button.dataset.creatorPrompt || "";
+      $("chat").classList.add("dex-menu-open");
+      document.querySelectorAll("main>section").forEach(section => { if(section.id !== "chat" && section.id !== "plans") section.classList.remove("dex-menu-open"); });
+      $("chat").scrollIntoView({behavior:"smooth",block:"start"});
+      $("chatInput").value = prompt;
+      $("chatInput").dispatchEvent(new Event("input",{bubbles:true}));
+      $("chatInput").focus();
     });
   });
 
