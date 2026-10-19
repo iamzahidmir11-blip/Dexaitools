@@ -912,12 +912,15 @@ footer .brand { color: var(--text); font-size: 20px; }
         <div class="provider-row">
           <label for="providerSelect">AI engine</label>
           <select id="providerSelect" aria-label="Choose AI engine">
-            <option value="auto">DexAI Auto · best available</option>
+            <option value="auto">DexAI Auto</option>
             <option value="gemini">Google Gemini</option>
-            <option value="openai" disabled>OpenAI · API key needed</option>
-            <option value="cloudflare" disabled>Cloudflare Workers AI · API key needed</option>
-            <option value="compare">Compare all connected AIs</option>
+            <option value="openai">OpenAI / ChatGPT models</option>
+            <option value="cloudflare">Cloudflare Workers AI</option>
+            <option value="compare">Compare configured AIs</option>
           </select>
+          <label for="modelInput">Model ID</label>
+          <input id="modelInput" type="text" maxlength="200" placeholder="e.g. gpt-4.1-mini / gemini-2.5-flash" aria-label="Type model ID" style="width:min(310px,100%);max-width:100%;background:#090909;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;outline:none" />
+          <span class="chat-note" style="margin:0">Blank = server default</span>
           <label class="web-search-toggle" for="webSearchToggle"><input id="webSearchToggle" type="checkbox"> Web search</label>
           <button type="button" class="test-model-button" id="testModelButton">Test AI</button>
           <span id="providerStatus" role="status">Checking connected AI engines…</span>
@@ -1575,10 +1578,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       const connected = new Set((data.providers || []).map(item => item.id));
       ["gemini", "openai", "cloudflare"].forEach(id => {
         const option = select.querySelector('option[value="' + id + '"]');
-        if (!option) return;
-        option.disabled = !connected.has(id);
-        const labels = {gemini:"Google Gemini",openai:"OpenAI",cloudflare:"Cloudflare Workers AI"};
-        option.textContent = connected.has(id) ? labels[id] + " · connected" : labels[id] + " · API key needed";
+        if (option) option.disabled = false;
       });
       status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
       if (connected.has("openai") && select.value === "auto") select.value = "openai";
@@ -1605,7 +1605,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       const res = await fetch("https://dexaitools.onrender.com/api/test-model", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
-        body: JSON.stringify({ provider: $("providerSelect").value })
+        body: JSON.stringify({ provider: $("providerSelect").value, model: $("modelInput").value.trim() })
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Connection test failed.");
@@ -1734,7 +1734,7 @@ footer .brand { color: var(--text); font-size: 20px; }
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message: requestMessage, provider: $("providerSelect").value, web_search: $("webSearchToggle").checked && composerMode === "chat" })
+        body: JSON.stringify({ message: requestMessage, provider: $("providerSelect").value, model: $("modelInput").value.trim(), web_search: $("webSearchToggle").checked && composerMode === "chat" })
       });
 
       let data;
