@@ -2008,13 +2008,37 @@ footer .brand { color: var(--text); font-size: 20px; }
     else if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(()=>toast("Chat copied for sharing.")).catch(()=>toast("Could not copy this chat."));}
     else toast("Sharing is not supported by this browser.");
   }
+  async function syncThreadAction(id, patch) {
+    if (!authToken || !signedInUser) return;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/threads/" + encodeURIComponent(id), {
+        method: "PATCH",
+        headers: {"Content-Type":"application/json","Authorization":"Bearer "+authToken},
+        body: JSON.stringify(patch)
+      });
+      if (!res.ok) { const data=await res.json().catch(()=>({})); throw new Error(data.error||"Could not sync chat settings."); }
+    } catch (error) { toast(error.message||"Chat settings remain saved on this device."); }
+  }
+  async function ensureRemoteThread(chat) {
+    if (!authToken || !signedInUser || !chat) return null;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/threads", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
+        body:JSON.stringify({id:chat.id,title:chat.title||"New chat"})
+      });
+      const data=await res.json();
+      if (!res.ok) throw new Error(data.error||"Could not sync chat.");
+      return data.thread?.id||chat.id;
+    } catch(error) { console.warn("DexAI thread sync:",error.message); return null; }
+  }
   function runChatAction(action, chat) {
     const chats=readLocalChats();const target=chats.find(c=>c.id===chat.id);if(!target)return;
     if(action==="share"){shareLocalChat(target);return;}
-    if(action==="pin"){target.pinned=!target.pinned;toast(target.pinned?"Chat pinned.":"Chat unpinned.");}
-    else if(action==="project"){target.project=target.project?"":"My Project";toast(target.project?"Added to My Project.":"Removed from My Project.");}
-    else if(action==="archive"){target.archived=!target.archived;toast(target.archived?"Chat archived.":"Chat restored.");}
-    else if(action==="delete"){if(!confirm("Delete this chat from this browser? This cannot be undone."))return;const remaining=chats.filter(c=>c.id!==target.id);writeLocalChats(remaining);if(activeLocalChatId===target.id){activeLocalChatId="";localStorage.removeItem("dexai_active_chat");messages.replaceChildren();ensureLocalChat();showWelcomeCard();}renderLocalChatList();return;}
+    if(action==="pin"){target.pinned=!target.pinned;toast(target.pinned?"Chat pinned.":"Chat unpinned.");syncThreadAction(target.id,{pinned:target.pinned});}
+    else if(action==="project"){target.project=target.project?"":"My Project";toast(target.project?"Added to My Project.":"Removed from My Project.");syncThreadAction(target.id,{project:target.project});}
+    else if(action==="archive"){target.archived=!target.archived;toast(target.archived?"Chat archived.":"Chat restored.");syncThreadAction(target.id,{archived:target.archived});}
+    else if(action==="delete"){if(!confirm("Delete this chat from this browser and your synced account history? This cannot be undone."))return;if(authToken&&signedInUser)fetch("https://dexaitools.onrender.com/api/threads/"+encodeURIComponent(target.id),{method:"DELETE",headers:{"Authorization":"Bearer "+authToken}}).catch(()=>{});const remaining=chats.filter(c=>c.id!==target.id);writeLocalChats(remaining);if(activeLocalChatId===target.id){activeLocalChatId="";localStorage.removeItem("dexai_active_chat");messages.replaceChildren();ensureLocalChat();showWelcomeCard();}renderLocalChatList();return;}
     target.updated=Date.now();writeLocalChats(chats);renderLocalChatList();
   }
   function renderLocalChatList() {
@@ -2110,13 +2134,15 @@ footer .brand { color: var(--text); font-size: 20px; }
     const reply = addMessage("Thinking...", "bot");
 
     try {
+      const currentChat = ensureLocalChat();
+      const remoteThreadId = await ensureRemoteThread(currentChat);
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message: requestMessage, provider: selectedChatFiles.length ? "gemini" : $("providerSelect").value, model: $("modelInput").value.trim(), web_search: $("webSearchToggle").checked && composerMode === "chat", attachments: selectedChatFiles.map(({name,mime_type,data}) => ({name,mime_type,data})) })
+        body: JSON.stringify({ message: requestMessage, thread_id: remoteThreadId || undefined, provider: selectedChatFiles.length ? "gemini" : $("providerSelect").value, model: $("modelInput").value.trim(), web_search: $("webSearchToggle").checked && composerMode === "chat", attachments: selectedChatFiles.map(({name,mime_type,data}) => ({name,mime_type,data})) })
       });
 
       let data;
