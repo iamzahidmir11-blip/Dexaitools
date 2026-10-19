@@ -951,7 +951,7 @@ body.dex-focus-mode footer{display:none!important}
 .desktop-launcher{width:36px;height:36px;border:1px solid rgba(216,181,106,.22);border-radius:11px;background:#10100e;color:#e7d4a6;font-size:18px;cursor:pointer;display:inline-grid;place-items:center}
 .desktop-launcher:hover{background:#211c11;border-color:rgba(216,181,106,.55)}
 .desktop-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.68);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:clamp(8px,2vw,24px)}
-.desktop-overlay.open{display:flex}
+.desktop-overlay.open{display:flex;pointer-events:auto}.desktop-overlay.open .desktop-window{position:relative;z-index:1;pointer-events:auto}.desktop-body{position:relative;z-index:2;pointer-events:auto}
 .desktop-window{width:min(1050px,100%);height:min(720px,94dvh);min-height:420px;display:grid;grid-template-columns:230px minmax(0,1fr);overflow:hidden;border:1px solid rgba(216,181,106,.25);border-radius:20px;background:#0d0d0c;box-shadow:0 30px 100px #000c}
 .desktop-nav{padding:16px 10px;border-right:1px solid #25231d;background:#10100e;overflow:auto}
 .desktop-nav-brand{padding:8px 10px 18px;color:#f0d69a;font-size:15px;font-weight:800;letter-spacing:2px}
@@ -1676,6 +1676,13 @@ body.dex-focus-mode footer{display:none!important}
   const desktopOverlay = $("desktopOverlay");
   const desktopBody = $("desktopBody");
   const desktopTitle = $("desktopTitle");
+  // Delegate clicks for workspace cards because their HTML is rebuilt dynamically.
+  desktopBody.addEventListener("click", event => {
+    const target = event.target instanceof Element ? event.target.closest("[data-go-page]") : null;
+    if (!target || !desktopBody.contains(target)) return;
+    event.preventDefault();
+    showDesktopPage(target.dataset.goPage);
+  });
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   document.body.classList.add("dex-focus-mode");
   function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
