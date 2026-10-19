@@ -1138,6 +1138,24 @@ body.dex-focus-mode footer{display:none!important}
  .menu-main-cta,.menu-quiet-cta{width:100%}
 }
 
+
+/* Membership readiness and recurring-business section */
+.billing-status { display:flex; align-items:flex-start; gap:12px; margin-top:22px; padding:17px 19px; border:1px solid rgba(216,181,106,.28); border-radius:14px; background:linear-gradient(120deg,rgba(216,181,106,.08),rgba(255,255,255,.015)); }
+.billing-status-dot { flex:0 0 8px; width:8px; height:8px; margin-top:6px; border-radius:50%; background:#d8b56a; box-shadow:0 0 0 5px rgba(216,181,106,.11); }
+.billing-status strong { display:block; color:var(--text); font-size:13px; }
+.billing-status p { margin:5px 0 0; color:var(--muted); font-size:12px; line-height:1.65; }
+.billing-status.is-ready .billing-status-dot { background:#79c69b; box-shadow:0 0 0 5px rgba(121,198,155,.11); }
+.billing-status.is-error .billing-status-dot { background:#e6a06c; box-shadow:0 0 0 5px rgba(230,160,108,.11); }
+.revenue-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:35px; }
+.revenue-card { min-height:235px; padding:26px; border:1px solid var(--border); border-radius:18px; background:linear-gradient(155deg,rgba(255,255,255,.035),rgba(255,255,255,.012)); }
+.revenue-card-featured { border-color:rgba(216,181,106,.46); background:linear-gradient(155deg,rgba(216,181,106,.12),rgba(255,255,255,.018)); }
+.revenue-step { color:var(--gold); font:700 10px "DM Sans",sans-serif; letter-spacing:1.8px; }
+.revenue-symbol { display:grid; place-items:center; width:43px; height:43px; margin-top:26px; border:1px solid var(--border); border-radius:13px; color:var(--gold2); font-size:23px; }
+.revenue-card h3 { margin:18px 0 9px; font-size:18px; letter-spacing:-.4px; }
+.revenue-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.75; }
+.revenue-note { margin-top:18px; padding:17px 20px; border-left:2px solid var(--gold); background:rgba(216,181,106,.055); color:var(--muted); font-size:12px; line-height:1.8; }
+.revenue-note strong { color:var(--gold2); }
+@media(max-width:800px){.revenue-grid{grid-template-columns:1fr}.revenue-card{min-height:0;padding:22px}.revenue-symbol{margin-top:18px}}
 </style>
 </head>
 
@@ -1485,14 +1503,14 @@ body.dex-focus-mode footer{display:none!important}
     <div class="section-heading">
       <div class="mini">DexAI Membership</div>
       <h2>Plans for <span class="gold-text">Every Creator.</span></h2>
-      <p>Pick the level that fits your workflow. Paid checkout is not activated yet.</p>
+      <p>Start free, then upgrade when your workflow needs more room. Paid access activates only after secure checkout is configured.</p>
     </div>
     <div class="plan-grid">
       <article class="tool-card plan-card">
         <span class="plan-badge">START HERE</span>
         <div class="tool-icon">✧</div>
         <h3>Free</h3>
-        <p>20 daily AI messages, saved conversations and browser-based text tools.</p>
+        <p>50 daily AI messages by default, saved conversations and starter tools. Daily limits may vary with server configuration.</p>
         <button type="button" id="freePlanButton">Current plan</button>
       </article>
       <article class="tool-card plan-card featured">
@@ -1500,7 +1518,7 @@ body.dex-focus-mode footer{display:none!important}
         <div class="tool-icon">✦</div>
         <h3>Pro</h3>
         <span class="plan-price">$12<small> / month</small></span>
-        <p>Higher daily AI access, creative tools and a larger workspace. Price and availability confirmed at checkout.</p>
+        <p>Higher daily AI access, creative tools and a larger workspace. $12/month shown as a proposal; the secure checkout confirms the active price.</p>
         <button type="button" id="plusPlanButton">Upgrade to Pro</button>
       </article>
       <article class="tool-card plan-card pro-featured">
@@ -1508,11 +1526,26 @@ body.dex-focus-mode footer{display:none!important}
         <div class="tool-icon">✹</div>
         <h3>Pro Plus</h3>
         <span class="plan-price">$25<small> / month</small></span>
-        <p>Expanded AI access, advanced workflows and priority creative tools. Price and availability confirmed at checkout.</p>
+        <p>Expanded AI access, advanced workflows and a larger workspace. $25/month shown as a proposal; the secure checkout confirms the active price.</p>
         <button type="button" id="proPlanButton">Upgrade to Pro Plus</button>
       </article>
     </div>
-    <p class="chat-note" style="margin-top:16px">Pricing preview only. Checkout is not connected yet, so no payment is taken and paid access is not activated.</p>
+    <div class="billing-status" id="billingStatusBanner" role="status" aria-live="polite"><span class="billing-status-dot"></span><div><strong>Checking membership setup…</strong><p>DexAI will show whether secure subscription checkout is ready.</p></div></div>
+    <p class="chat-note" style="margin-top:12px">Monthly plans are a proposal until checkout confirms the price. No payment is taken from this page alone. Subscription revenue depends on customers finding ongoing value; earnings are not guaranteed.</p>
+  </section>
+
+  <section class="section revenue-section" id="revenue">
+    <div class="section-heading">
+      <div class="mini">The Sustainable Business Model</div>
+      <h2>Built for <span class="gold-text">recurring value.</span></h2>
+      <p>DexAI's business model is a useful free tier that helps people discover the product, with optional monthly memberships for people who need more capacity.</p>
+    </div>
+    <div class="revenue-grid">
+      <article class="revenue-card"><span class="revenue-step">01 / ATTRACT</span><div class="revenue-symbol">✧</div><h3>Free tools bring people in</h3><p>Useful free chat and browser tools help new users understand the product before paying.</p></article>
+      <article class="revenue-card revenue-card-featured"><span class="revenue-step">02 / RETAIN</span><div class="revenue-symbol">↻</div><h3>Monthly plans create recurring revenue</h3><p>Pro and Pro Plus can earn subscription revenue when users choose to pay and continue renewing.</p></article>
+      <article class="revenue-card"><span class="revenue-step">03 / REINVEST</span><div class="revenue-symbol">↗</div><h3>Improve what users return for</h3><p>Use feedback, reliability, fair usage limits and transparent costs to improve retention over time.</p></article>
+    </div>
+    <div class="revenue-note"><strong>Important:</strong> A pricing page does not itself generate income. Payments require an active payment account, verified prices, a signed webhook and working database. Keep provider/API costs below subscription revenue, and do not promise unlimited AI usage at a fixed price.</div>
   </section>
 
   <section class="section" id="about">
@@ -2813,6 +2846,44 @@ body.dex-focus-mode footer{display:none!important}
   });
 
 
+  async function refreshPlans() {
+    const banner = $("billingStatusBanner");
+    if (!banner) return;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/plans", { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Membership setup is not reachable.");
+      const pro = (data.plans || []).find(item => item.id === "pro");
+      const proPlus = (data.plans || []).find(item => item.id === "pro_plus");
+      if (pro) $("plusPlanButton").disabled = !pro.checkout_ready;
+      if (proPlus) $("proPlanButton").disabled = !proPlus.checkout_ready;
+      banner.classList.toggle("is-ready", Boolean(data.billing_ready));
+      banner.classList.toggle("is-error", !data.billing_ready);
+      banner.innerHTML = data.billing_ready
+        ? '<span class="billing-status-dot"></span><div><strong>Subscription checkout is configured.</strong><p>Secure checkout will confirm the current price before payment. Membership activates after a verified payment event.</p></div>'
+        : '<span class="billing-status-dot"></span><div><strong>Subscription setup is not complete yet.</strong><p>Account and AI features can be built now; paid memberships need Stripe keys, recurring price IDs, a signed webhook, and a working database connection.</p></div>';
+    } catch {
+      banner.classList.add("is-error");
+      banner.innerHTML = '<span class="billing-status-dot"></span><div><strong>Could not verify payment setup.</strong><p>Check the backend health endpoint before advertising paid plans.</p></div>';
+    }
+  }
+
+  async function refreshBillingStatus() {
+    if (!authToken || !signedInUser) return;
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/billing/status", {
+        headers: { "Authorization": "Bearer " + authToken, "Accept": "application/json" }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const banner = $("billingStatusBanner");
+      if (banner && data.plan && data.plan !== "free") {
+        banner.classList.add("is-ready");
+        banner.innerHTML = '<span class="billing-status-dot"></span><div><strong>' + data.plan.replaceAll("_", " ").toUpperCase() + ' membership · ' + (data.subscription_status || "status pending") + '</strong><p>Daily allowance: ' + data.daily_limit + ' messages. Manage billing through the customer portal when available.</p></div>';
+      }
+    } catch { /* Keep the public billing-readiness message visible. */ }
+  }
+
   async function startCheckout(plan) {
     if (!authToken || !signedInUser) {
       pendingPlan = plan;
@@ -2936,6 +3007,9 @@ body.dex-focus-mode footer{display:none!important}
       sendMessage(prompt);
     });
   });
+
+  refreshPlans();
+  refreshBillingStatus();
 
   document.querySelectorAll("[data-tool]").forEach(button => {
     button.addEventListener("click", () => {
