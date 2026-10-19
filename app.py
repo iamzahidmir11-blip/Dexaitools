@@ -64,6 +64,20 @@ def init_db():
           content TEXT NOT NULL,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )""")
+        conn.execute("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS thread_id TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS conversations_thread_idx ON conversations(user_id, thread_id, id)")
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS chat_threads (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          title TEXT NOT NULL DEFAULT 'New chat',
+          pinned BOOLEAN NOT NULL DEFAULT FALSE,
+          archived BOOLEAN NOT NULL DEFAULT FALSE,
+          project TEXT NOT NULL DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""")
+        conn.execute("CREATE INDEX IF NOT EXISTS chat_threads_user_updated_idx ON chat_threads(user_id, updated_at DESC)")
         conn.execute("""
         CREATE TABLE IF NOT EXISTS usage_events (
           id BIGSERIAL PRIMARY KEY,
@@ -133,7 +147,7 @@ def cors(response):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
     response.headers["Access-Control-Max-Age"] = "86400"
     return response
 
@@ -256,6 +270,76 @@ def update_profile():
         app.logger.exception("Profile update failed")
         return jsonify({"error": "Profile update is temporarily unavailable."}), 503
 
+@app.route("/api/threads", methods=["GET", "POST", "OPTIONS"])
+def threads():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Sign in to sync your chat history."}), 401
+    try:
+        init_db()
+        with db() as conn:
+            if request.method == "POST":
+                data = request.get_json(silent=True) or {}
+                thread_id = str(data.get("id", "")).strip()[:80]
+                title = str(data.get("title", "New chat")).strip()[:120] or "New chat"
+                if not thread_id:
+                    return jsonify({"error": "A chat ID is required."}), 400
+                conn.execute("INSERT INTO chat_threads(id,user_id,title) VALUES (%s,%s,%s) ON CONFLICT(id) DO NOTHING", (thread_id,user["id"],title))
+                owned = conn.execute("SELECT id,title,pinned,archived,project,created_at,updated_at FROM chat_threads WHERE id=%s AND user_id=%s", (thread_id,user["id"])).fetchone()
+                if not owned:
+                    return jsonify({"error": "This chat ID belongs to another account."}), 403
+                return jsonify({"thread": dict(owned)}), 201
+            rows = conn.execute("SELECT id,title,pinned,archived,project,created_at,updated_at FROM chat_threads WHERE user_id=%s ORDER BY pinned DESC, updated_at DESC LIMIT 200", (user["id"],)).fetchall()
+        return jsonify({"threads": [dict(r) for r in rows]})
+    except Exception:
+        app.logger.exception("Thread listing/creation failed")
+        return jsonify({"error": "Chat history is temporarily unavailable."}), 503
+
+
+@app.route("/api/threads/<thread_id>", methods=["GET", "PATCH", "DELETE", "OPTIONS"])
+def thread_detail(thread_id):
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Sign in to manage chat history."}), 401
+    try:
+        init_db()
+        with db() as conn:
+            thread = conn.execute("SELECT id,title,pinned,archived,project,created_at,updated_at FROM chat_threads WHERE id=%s AND user_id=%s", (thread_id,user["id"])).fetchone()
+            if not thread:
+                return jsonify({"error": "Chat not found."}), 404
+            if request.method == "DELETE":
+                conn.execute("DELETE FROM conversations WHERE user_id=%s AND thread_id=%s", (user["id"],thread_id))
+                conn.execute("DELETE FROM chat_threads WHERE id=%s AND user_id=%s", (thread_id,user["id"]))
+                return jsonify({"deleted": True, "id": thread_id})
+            if request.method == "PATCH":
+                data = request.get_json(silent=True) or {}
+                fields = {}
+                for key in ("title", "pinned", "archived", "project"):
+                    if key in data:
+                        value = data[key]
+                        if key == "title":
+                            value = str(value).strip()[:120] or "New chat"
+                        elif key == "project":
+                            value = str(value).strip()[:100]
+                        elif key in ("pinned", "archived") and not isinstance(value, bool):
+                            return jsonify({"error": key + " must be true or false."}), 400
+                        fields[key] = value
+                if fields:
+                    assignments = ", ".join(key + "=%s" for key in fields)
+                    values = list(fields.values()) + [thread_id, user["id"]]
+                    thread = conn.execute("UPDATE chat_threads SET " + assignments + ", updated_at=NOW() WHERE id=%s AND user_id=%s RETURNING id,title,pinned,archived,project,created_at,updated_at", tuple(values)).fetchone()
+                return jsonify({"thread": dict(thread)})
+            messages = conn.execute("SELECT role,content,created_at FROM conversations WHERE user_id=%s AND thread_id=%s ORDER BY id ASC LIMIT 500", (user["id"],thread_id)).fetchall()
+        return jsonify({"thread": dict(thread), "messages": [dict(row) for row in messages]})
+    except Exception:
+        app.logger.exception("Thread detail operation failed")
+        return jsonify({"error": "Chat operation is temporarily unavailable."}), 503
+
+
 @app.route("/api/history", methods=["GET", "OPTIONS"])
 def history():
     if request.method == "OPTIONS":
@@ -266,10 +350,7 @@ def history():
     try:
         init_db()
         with db() as conn:
-            rows = conn.execute(
-                "SELECT role,content,created_at FROM conversations WHERE user_id=%s ORDER BY id DESC LIMIT 100",
-                (user["id"],)
-            ).fetchall()
+            rows = conn.execute("SELECT role,content,created_at,thread_id FROM conversations WHERE user_id=%s ORDER BY id DESC LIMIT 100", (user["id"],)).fetchall()
         return jsonify({"messages": [dict(r) for r in reversed(rows)]})
     except Exception:
         return jsonify({"error": "History is temporarily unavailable."}), 503
@@ -630,6 +711,7 @@ def chat():
     attachments = data.get("attachments", []) or []
     provider = str(data.get("provider", "auto")).lower()
     web_search = bool(data.get("web_search", False))
+    thread_id = str(data.get("thread_id", "")).strip()[:80] or None
     requested_model = str(data.get("model", "")).strip()[:200] or None
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
@@ -707,6 +789,10 @@ def chat():
     try:
         init_db()
         with db() as conn:
+            if thread_id:
+                thread = conn.execute("SELECT id FROM chat_threads WHERE id=%s AND user_id=%s", (thread_id,user["id"])).fetchone()
+                if not thread:
+                    return jsonify({"error": "Chat not found or not synced yet. Create the chat again and retry."}), 404
             usage = conn.execute(
                 "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
                 (client_key,)
@@ -715,10 +801,10 @@ def chat():
                 return jsonify({"error": "You have reached today’s message allowance for your plan. Please come back after the daily reset.", "plan": user["plan"]}), 429
 
             # Lightweight conversation memory: reuse recent turns without another AI call.
-            recent_rows = conn.execute(
-                "SELECT role,content FROM conversations WHERE user_id=%s ORDER BY id DESC LIMIT 8",
-                (user["id"],)
-            ).fetchall()
+            if thread_id:
+                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id=%s ORDER BY id DESC LIMIT 8", (user["id"],thread_id)).fetchall()
+            else:
+                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id IS NULL ORDER BY id DESC LIMIT 8", (user["id"],)).fetchall()
             recent_rows = list(reversed(recent_rows))
             if recent_rows:
                 memory_context = "\n".join(
@@ -819,9 +905,11 @@ def chat():
                 (user["id"], client_key)
             )
             conn.execute(
-                "INSERT INTO conversations(user_id,role,content) VALUES (%s,'user',%s),(%s,'assistant',%s)",
-                (user["id"], message, user["id"], answer)
+                "INSERT INTO conversations(user_id,role,content,thread_id) VALUES (%s,'user',%s,%s),(%s,'assistant',%s,%s)",
+                (user["id"], message, thread_id, user["id"], answer, thread_id)
             )
+            if thread_id:
+                conn.execute("UPDATE chat_threads SET updated_at=NOW(), title=CASE WHEN title='New chat' THEN LEFT(%s,120) ELSE title END WHERE id=%s AND user_id=%s", (" ".join(message.split())[:120] or "New chat", thread_id, user["id"]))
             conn.execute("DELETE FROM ai_cache WHERE expires_at <= NOW()")
         return jsonify({
             "reply": answer,
