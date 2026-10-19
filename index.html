@@ -1050,6 +1050,90 @@ body.dex-focus-mode footer{display:none!important}
  .desktop-nav button{padding:8px;font-size:10px}
  .desktop-grid{grid-template-columns:1fr}
 }
+
+/* DexAI workspace menu: redesigned dashboard layout */
+.desktop-launcher{width:42px;height:42px;border-radius:13px;border:1px solid rgba(231,197,124,.42);background:linear-gradient(145deg,#211a0e,#11100d);box-shadow:inset 0 1px rgba(255,255,255,.05),0 5px 18px #0004;font-size:22px;color:#f2d79b;transition:transform .18s,border-color .18s,box-shadow .18s}
+.desktop-launcher:hover{transform:translateY(-1px);border-color:#e2bf73;box-shadow:0 0 0 3px rgba(226,191,115,.09),0 8px 24px #0005}
+.desktop-launcher[aria-expanded="true"]{background:#332714;border-color:#e2bf73}
+.desktop-window{width:min(1180px,100%);height:min(800px,94dvh);grid-template-columns:244px minmax(0,1fr);border-radius:24px;border-color:#393021;background:#0c0c0b;box-shadow:0 35px 120px #000d}
+.desktop-nav{padding:20px 13px;background:linear-gradient(180deg,#12110e,#0a0a09);scrollbar-width:thin}
+.desktop-nav-brand{font-size:0;padding:6px 10px 23px;letter-spacing:0;display:flex;align-items:center;gap:10px}
+.desktop-nav-brand:after{content:"DEXAI";font-size:15px;letter-spacing:2.3px;color:#f0d69a}
+.desktop-nav-brand:before{content:"✦";display:grid;place-items:center;width:32px;height:32px;border:1px solid #66502b;border-radius:11px;background:linear-gradient(145deg,#30230f,#17130b);color:#f5d995;font-size:15px}
+.desktop-nav button{min-height:41px;margin:3px 0;padding:10px 12px;border-radius:11px;color:#bdb5a6;font-size:12px;transition:background .16s,border-color .16s,color .16s}
+.desktop-nav button:hover{background:#1a1812;border-color:#383021;color:#f0dfb8}
+.desktop-nav button.active{background:linear-gradient(90deg,#2a2111,#1b170f);border-color:#5b4827;color:#f5d998;box-shadow:inset 2px 0 #d5b26c}
+.desktop-nav button span{font-size:15px}
+.desktop-upgrade-link{margin-top:14px;border:1px solid #5a4827;border-radius:13px;background:linear-gradient(120deg,#2b2110,#15120c);padding:12px}
+.desktop-content{background:radial-gradient(ellipse at 85% 0%,rgba(185,148,73,.07),transparent 42%),#0d0d0c}
+.desktop-head{min-height:65px;padding:16px 24px;background:rgba(13,13,12,.8);backdrop-filter:blur(12px)}
+.desktop-head h3{font-size:14px;letter-spacing:.3px}
+.desktop-body{padding:clamp(18px,3vw,34px)}
+.menu-hero{padding:clamp(18px,3vw,28px);border:1px solid #40331f;border-radius:20px;background:radial-gradient(ellipse at 95% 0%,rgba(222,184,106,.14),transparent 45%),linear-gradient(125deg,#1a1710,#11110e 70%);box-shadow:inset 0 1px rgba(255,255,255,.035)}
+.menu-eyebrow{display:flex;align-items:center;gap:8px;color:#d4b779;font-size:9px;font-weight:800;letter-spacing:2px}
+.menu-live-dot{width:6px;height:6px;border-radius:50%;background:#b5d59a;box-shadow:0 0 10px #b5d59a88}
+.desktop-body .menu-hero h4{margin:15px 0 8px;font-size:clamp(22px,3vw,31px);line-height:1.12;letter-spacing:-.8px;color:#f3e8cf}
+.desktop-body .menu-hero p{margin:0;max-width:500px;color:#aaa18e;font-size:12px}
+.menu-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.menu-main-cta,.menu-quiet-cta{display:flex;align-items:center;justify-content:center;gap:15px;min-height:42px;padding:0 15px;border-radius:11px;font-size:12px;font-weight:750;cursor:pointer}
+.menu-main-cta{border:1px solid #d7b875;background:linear-gradient(110deg,#e4c987,#b9944c);color:#1a1408;box-shadow:0 5px 20px #c7a65b18}
+.menu-main-cta span{font-size:16px}
+.menu-quiet-cta{border:1px solid #40392c;background:#171612;color:#ded2b9}
+.menu-search-wrap{display:flex;align-items:center;gap:10px;margin:18px 0 24px;padding:0 13px;border:1px solid #302b21;border-radius:12px;background:#12120f;color:#c5a969}
+.menu-search-wrap>span{font-size:20px}
+.menu-search-wrap .desktop-search{min-width:0;margin:0;padding:13px 0;border:0;background:transparent;font-size:12px}
+.menu-search-wrap:focus-within{border-color:#a9894d;box-shadow:0 0 0 3px #b9944c12}
+.menu-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 11px}
+.menu-section-head span{font-size:10px;font-weight:850;letter-spacing:1.5px;color:#e8d6ad}
+.menu-section-head small{font-size:9px;letter-spacing:1.2px;color:#756d5d}
+.menu-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+.menu-feature-card{display:flex;align-items:center;gap:12px;min-width:0;padding:15px;border:1px solid #302a1e;border-radius:14px;background:linear-gradient(130deg,#171610,#11110f);text-align:left;cursor:pointer;transition:transform .16s,border-color .16s,background .16s}
+.menu-feature-card:hover{transform:translateY(-2px);border-color:#725a2d;background:#1d1910}
+.menu-feature-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:1px solid #4b3b20;border-radius:12px;background:#241c0f;color:#e6c77f;font-size:19px}
+.menu-feature-copy{min-width:0;flex:1}
+.menu-feature-copy strong{display:block;font-size:12px;color:#eee2c7}
+.menu-feature-copy small{display:block;margin-top:5px;font-size:10px;line-height:1.4;color:#918878}
+.menu-feature-arrow{color:#a18a5b;font-size:15px}
+.menu-second-head{margin-top:25px}
+.menu-manage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.menu-manage-grid button{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border:1px solid #29261f;border-radius:11px;background:#11110f;color:#d8cfbc;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.menu-manage-grid button:hover{border-color:#5a4829;background:#19170f}
+.menu-manage-grid button>span{font-size:15px;color:#c8a864}
+.menu-manage-grid button strong{flex:1;font-size:11px;font-weight:650}
+.menu-manage-grid button b{font-size:12px;color:#7f7256}
+@media(max-width:720px){
+ .desktop-overlay{padding:0;align-items:stretch}
+ .desktop-window{display:flex;flex-direction:column;width:100%;height:100dvh;height:100svh;min-height:0;border-radius:0;border:0}
+ .desktop-nav{order:0;flex:0 0 auto;display:flex;align-items:center;gap:5px;overflow-x:auto;overflow-y:hidden;padding:8px 10px;border:0;border-bottom:1px solid #302a1d;scrollbar-width:thin;white-space:nowrap}
+ .desktop-nav-brand{flex:0 0 auto;padding:0 9px 0 0;margin:0;font-size:0}
+ .desktop-nav-brand:before{width:29px;height:29px;flex:0 0 29px}
+ .desktop-nav-brand:after{display:none}
+ .desktop-nav button{width:auto;flex:0 0 auto;min-height:35px;display:flex;align-items:center;gap:6px;padding:8px 10px;margin:0;font-size:11px}
+ .desktop-nav button span{font-size:13px}
+ .desktop-nav .desktop-nav-caption,.desktop-nav-spacer{display:none}
+ .desktop-upgrade-link{flex:0 0 auto;margin:0;padding:8px 10px;white-space:nowrap}
+ .desktop-upgrade-link small{display:none}
+ .desktop-content{flex:1;min-height:0;overflow:hidden}
+ .desktop-head{min-height:53px;padding:10px 15px}
+ .desktop-body{overflow:auto;min-height:0;padding:14px 13px calc(20px + env(safe-area-inset-bottom))}
+ .menu-hero{padding:18px;border-radius:16px}
+ .desktop-body .menu-hero h4{font-size:24px}
+ .menu-hero-actions{margin-top:17px}
+ .menu-main-cta,.menu-quiet-cta{min-height:40px;padding:0 12px}
+ .menu-quick-grid,.menu-manage-grid{grid-template-columns:1fr;gap:8px}
+ .menu-feature-card{padding:12px}
+ .menu-feature-icon{width:36px;height:36px;flex-basis:36px}
+ .menu-search-wrap{margin:14px 0 20px}
+ .menu-second-head{margin-top:22px}
+}
+@media(max-width:380px){
+ .desktop-nav{padding-inline:7px;gap:4px}
+ .desktop-nav button{padding:8px;font-size:10px}
+ .desktop-body .menu-hero h4{font-size:21px}
+ .menu-hero-actions{display:grid;grid-template-columns:1fr}
+ .menu-main-cta,.menu-quiet-cta{width:100%}
+}
+
 </style>
 </head>
 
@@ -1609,10 +1693,10 @@ body.dex-focus-mode footer{display:none!important}
     const chats=getSavedChats();
     const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     if(page==="overview"){
-      desktopBody.innerHTML='<h4>Your workspace, in one place</h4><p>These shortcuts open working DexAI sections. Some features require sign-in or a configured provider.</p><div class="desktop-row-actions"><button type="button" class="desktop-primary" id="menuNewChat">＋ New chat</button><button type="button" class="desktop-secondary" id="menuOpenSettings">⚙ Model settings</button><button type="button" class="desktop-secondary" id="menuExportChats">↓ Export chats</button></div><input class="desktop-search" id="desktopQuickSearch" placeholder="Search your chats…" aria-label="Search your chats"><div class="desktop-grid"><div class="desktop-card"><strong>⌕ Search chats</strong><small>Search titles and saved messages on this device.</small><button type="button" data-go-page="search">Search now</button></div><div class="desktop-card"><strong>▤ Library & History</strong><small>Open, export, restore or manage saved conversations.</small><button type="button" data-go-page="history">Open history</button></div><div class="desktop-card"><strong>✧ Prompt Library</strong><small>Use ready-made prompts or manage your own.</small><button type="button" data-go-page="prompts">Open prompts</button></div><div class="desktop-card"><strong>▥ Usage dashboard</strong><small>Check server-reported daily usage and plan.</small><button type="button" data-go-page="usage">View usage</button></div><div class="desktop-card"><strong>◈ My AI Memory</strong><small>Manage optional local preferences and insert them into a prompt.</small><button type="button" data-go-page="memory">Manage memory</button></div><div class="desktop-card"><strong>▧ Image Studio</strong><small>Open the image generation workspace.</small><button type="button" data-go-page="images">Open Image Studio</button></div><div class="desktop-card"><strong>▶ Video Lab</strong><small>Build video prompts; rendering needs a connected provider.</small><button type="button" data-go-page="video">Open Video Lab</button></div><div class="desktop-card"><strong>⌘ Connections</strong><small>Check provider and integration setup paths.</small><button type="button" data-go-page="plugins">View integrations</button></div></div>';
-      $("desktopQuickSearch").addEventListener("keydown",e=>{if(e.key!=="Enter")return;e.preventDefault();const q=e.currentTarget.value;showDesktopPage("search");const inp=$("desktopSearchInput");if(inp){inp.value=q;renderDesktopSearch(q);inp.focus();}});
-      $("menuNewChat").addEventListener("click",()=>{desktopOverlay.classList.remove("open");startLocalChat();$("chat").classList.add("dex-menu-open");$("chat").scrollIntoView({behavior:"smooth",block:"start"});$("chatInput").focus();location.hash="chat";});
-      $("menuOpenSettings").addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click();});
+      desktopBody.innerHTML='<div class="menu-hero"><div class="menu-eyebrow"><span class="menu-live-dot"></span> YOUR WORKSPACE</div><h4>What are we creating today?</h4><p>Jump straight into a tool, find a conversation, or manage your DexAI space.</p><div class="menu-hero-actions"><button type="button" class="menu-main-cta" id="menuNewChat">＋ Start a new chat <span>→</span></button><button type="button" class="menu-quiet-cta" id="menuOpenSettings">⚙ Settings</button></div></div><label class="menu-search-wrap"><span>⌕</span><input class="desktop-search" id="desktopQuickSearch" placeholder="Search your chats… then press Enter" aria-label="Search your chats"></label><div class="menu-section-head"><span>QUICK ACCESS</span><small>YOUR TOOLS</small></div><div class="desktop-grid menu-quick-grid"><button type="button" class="menu-feature-card" data-go-page="images"><span class="menu-feature-icon">▧</span><span class="menu-feature-copy"><strong>Image Studio</strong><small>Create and explore images</small></span><span class="menu-feature-arrow">↗</span></button><button type="button" class="menu-feature-card" data-go-page="video"><span class="menu-feature-icon">▶</span><span class="menu-feature-copy"><strong>Video Lab</strong><small>Build video prompts</small></span><span class="menu-feature-arrow">↗</span></button><button type="button" class="menu-feature-card" data-go-page="prompts"><span class="menu-feature-icon">✧</span><span class="menu-feature-copy"><strong>Prompt Library</strong><small>Reusable AI prompts</small></span><span class="menu-feature-arrow">↗</span></button><button type="button" class="menu-feature-card" data-go-page="tools"><span class="menu-feature-icon">✎</span><span class="menu-feature-copy"><strong>AI Tools</strong><small>Writing and creator tools</small></span><span class="menu-feature-arrow">↗</span></button></div><div class="menu-section-head menu-second-head"><span>YOUR SPACE</span><small>MANAGE</small></div><div class="menu-manage-grid"><button type="button" data-go-page="history"><span>↺</span><strong>History & Library</strong><b>→</b></button><button type="button" data-go-page="projects"><span>▦</span><strong>Projects</strong><b>→</b></button><button type="button" data-go-page="usage"><span>▥</span><strong>Usage dashboard</strong><b>→</b></button><button type="button" data-go-page="memory"><span>◈</span><strong>AI Memory</strong><b>→</b></button><button type="button" data-go-page="plugins"><span>⌘</span><strong>Connections</strong><b>→</b></button><button type="button" id="menuExportChats"><span>↓</span><strong>Export chats</strong><b>→</b></button></div>';
+      $("desktopQuickSearch").addEventListener("keydown",e=>{if(e.key!=="Enter")return;e.preventDefault();const q=e.currentTarget.value.trim();showDesktopPage("search");const inp=$("desktopSearchInput");if(inp){inp.value=q;renderDesktopSearch(q);inp.focus();}});
+      $("menuNewChat").addEventListener("click",()=>{setDesktopMenuOpen(false);startLocalChat();$("chat").classList.add("dex-menu-open");$("chat").scrollIntoView({behavior:"smooth",block:"start"});$("chatInput").focus();location.hash="chat";});
+      $("menuOpenSettings").addEventListener("click",()=>{setDesktopMenuOpen(false);$("modelSettingsButton").click();});
       $("menuExportChats").addEventListener("click",()=>{showDesktopPage("history");$("exportAllDexAIChats")?.click();});
     }else if(page==="search"){
       desktopBody.innerHTML='<h4>Find any conversation</h4><p>Search titles and messages saved in this browser.</p><input id="desktopSearchInput" class="desktop-search" placeholder="Type a word or phrase…" aria-label="Search chat history"><div id="desktopSearchResults" class="desktop-list"></div>';
