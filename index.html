@@ -1396,6 +1396,7 @@ body.dex-focus-mode footer{display:none!important}
       <button type="button" data-desktop-page="schedule"><span>◷</span> Schedule</button>
       <button type="button" data-desktop-page="plugins"><span>⌘</span> Plugins</button>
       <button type="button" data-desktop-page="history"><span>↺</span> History</button>
+      <button type="button" data-desktop-page="prompts"><span>✧</span> Prompt Library</button>
       <div class="desktop-nav-caption">ACCOUNT</div>
       <button type="button" data-desktop-page="profile"><span>◉</span> Profile</button>
       <div class="desktop-nav-spacer"></div>
@@ -1469,6 +1470,18 @@ body.dex-focus-mode footer{display:none!important}
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   document.body.classList.add("dex-focus-mode");
   function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
+  function useDexAIPrompt(prompt){
+    if(!prompt){toast("Prompt is empty.");return;}
+    desktopOverlay.classList.remove("open");
+    document.querySelectorAll("main>section").forEach(section=>{if(section.id!=="plans")section.classList.remove("dex-menu-open");});
+    $("chat").classList.add("dex-menu-open");
+    $("chat").scrollIntoView({behavior:"smooth",block:"start"});
+    location.hash="chat";
+    $("chatInput").value=prompt;
+    $("chatInput").dispatchEvent(new Event("input",{bubbles:true}));
+    $("chatInput").focus();
+    toast("Prompt loaded. Review it and press send when ready.");
+  }
   function downloadDexAIFile(filename, content, mimeType="application/json"){
     const blob=new Blob([content],{type:mimeType+";charset=utf-8"});
     const url=URL.createObjectURL(blob);
@@ -1526,7 +1539,7 @@ body.dex-focus-mode footer{display:none!important}
   }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
-    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
+    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",prompts:"Prompt Library",profile:"Your profile"};
     desktopTitle.textContent=titles[page]||"DexAI Desktop";
     const chats=getSavedChats();
     const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1550,6 +1563,29 @@ body.dex-focus-mode footer{display:none!important}
       $("scheduleForm").addEventListener("submit",e=>{e.preventDefault();const a=JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]");a.push({title:$("scheduleTitle").value.trim(),when:$("scheduleWhen").value});a.sort((x,y)=>new Date(x.when)-new Date(y.when));localStorage.setItem("dexai_local_schedule_v1",JSON.stringify(a));$("scheduleForm").reset();renderTasks();});renderTasks();
     }else if(page==="plugins"){
       desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Open available connection settings. External accounts need valid credentials and authorization before their features can run.</p><div class="desktop-grid"><div class="desktop-card"><strong>☁ Cloudflare</strong><small>Cloudflare provider options and backend configuration.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>⌘ GitHub</strong><small>Repository integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>▣ Render</strong><small>Deployment integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>✦ AI providers</strong><small>Choose a configured AI engine and model.</small><button data-open-model>Open Model settings</button></div></div>';
+    }else if(page==="prompts"){
+      const builtins=[
+        {title:"YouTube Shorts Script",category:"Creator",prompt:"Write a 30-second YouTube Shorts script for a US audience. Start with a strong 2-second hook, then give scene-by-scene visuals, voiceover, on-screen captions, sound effects, and a satisfying payoff. Ask me for the niche if needed."},
+        {title:"Viral Idea Brainstorm",category:"Creator",prompt:"Brainstorm 15 original short-form video ideas for a US audience. For each, include the core curiosity hook, a 1-sentence concept, and why viewers may keep watching. Avoid guaranteeing virality."},
+        {title:"Title & Thumbnail Lab",category:"Creator",prompt:"Create 10 honest, clickable YouTube titles and 5 thumbnail concepts for this topic. Optimize for curiosity and clarity without misleading clickbait. Ask me for the topic if missing."},
+        {title:"Study Coach",category:"Everyday",prompt:"Teach me this topic in simple language, give one everyday example, list the key points, then quiz me with 3 questions. Ask what topic I want to learn if not provided."},
+        {title:"Rewrite Professionally",category:"Writing",prompt:"Rewrite the text I provide so it is clear, polished, natural, and professional while preserving its meaning. If no text is supplied, ask me to paste it."},
+        {title:"Plan My Week",category:"Planning",prompt:"Help me create a realistic weekly plan from my goals, available time, and deadlines. Ask for the missing details first, and keep the plan practical."},
+        {title:"Code Debugger",category:"Tech",prompt:"Help debug my code carefully. Ask for the code and exact error if missing, explain the likely cause, then propose a minimal fix and a way to test it."},
+        {title:"Caption & Hashtags",category:"Creator",prompt:"Write 5 natural captions and a relevant, non-spammy hashtag set for my post. Ask for platform, topic, and tone if missing."}
+      ];
+      const saved=(()=>{try{const v=JSON.parse(localStorage.getItem("dexai_prompt_library_v1")||"[]");return Array.isArray(v)?v:[]}catch{return []}})();
+      desktopBody.innerHTML='<h4>Your reusable prompts</h4><p>Use a ready-made workflow or save your own prompt on this device. Saved prompts are local to this browser.</p><form id="savePromptForm" class="desktop-profile"><label>Prompt name<input id="savePromptTitle" maxlength="80" required placeholder="e.g. My video workflow"></label><label>Prompt text<textarea id="savePromptText" maxlength="3000" required rows="4" placeholder="What should DexAI do when you use this prompt?"></textarea></label><button type="submit" class="desktop-primary">＋ Save my prompt</button></form><h4 style="margin-top:24px">Ready-to-use workflows</h4><div class="desktop-list">'+builtins.map((p,i)=>'<div class="desktop-list-item prompt-list-item"><span><strong>'+safe(p.title)+'</strong><br><small>'+safe(p.category)+'</small><br><small>'+safe(p.prompt.slice(0,150))+'…</small></span><button class="desktop-primary" data-use-builtin="'+i+'">Use prompt</button></div>').join("")+'</div><h4 style="margin-top:24px">My saved prompts</h4><div class="desktop-list" id="savedPromptList"></div>';
+      const renderSavedPrompts=()=>{
+        const host=$("savedPromptList");
+        const items=(()=>{try{return JSON.parse(localStorage.getItem("dexai_prompt_library_v1")||"[]")}catch{return []}})();
+        host.innerHTML=items.length?items.map((p,i)=>'<div class="desktop-list-item prompt-list-item"><span><strong>'+safe(p.title)+'</strong><br><small>'+safe(String(p.prompt).slice(0,180))+'</small></span><div class="desktop-row-actions"><button class="desktop-primary" data-use-saved="'+i+'">Use</button><button class="desktop-secondary" data-delete-prompt="'+i+'">Delete</button></div></div>').join(""):'<div class="desktop-muted">No custom prompts saved yet.</div>';
+        host.querySelectorAll("[data-use-saved]").forEach(b=>b.addEventListener("click",()=>useDexAIPrompt(items[Number(b.dataset.useSaved)]?.prompt)));
+        host.querySelectorAll("[data-delete-prompt]").forEach(b=>b.addEventListener("click",()=>{const list=(()=>{try{return JSON.parse(localStorage.getItem("dexai_prompt_library_v1")||"[]")}catch{return []}})();list.splice(Number(b.dataset.deletePrompt),1);localStorage.setItem("dexai_prompt_library_v1",JSON.stringify(list));renderSavedPrompts();}));
+      };
+      $("savePromptForm").addEventListener("submit",e=>{e.preventDefault();const title=$("savePromptTitle").value.trim(),prompt=$("savePromptText").value.trim();if(!title||!prompt)return;const list=(()=>{try{return JSON.parse(localStorage.getItem("dexai_prompt_library_v1")||"[]")}catch{return []}})();list.unshift({title,prompt,created:Date.now()});localStorage.setItem("dexai_prompt_library_v1",JSON.stringify(list.slice(0,50)));$("savePromptForm").reset();renderSavedPrompts();toast("Prompt saved on this device.");});
+      desktopBody.querySelectorAll("[data-use-builtin]").forEach(b=>b.addEventListener("click",()=>useDexAIPrompt(builtins[Number(b.dataset.useBuiltin)]?.prompt)));
+      renderSavedPrompts();
     }else if(page==="history"){
       desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Backups stay on your device unless you choose to share them.</p><div class="desktop-row-actions"><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON)</button><button class="desktop-secondary" id="importDexAIChats">↑ Import backup</button><input type="file" id="importDexAIFile" accept=".json,application/json" hidden></div><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
       $("exportAllDexAIChats").addEventListener("click",exportAllDexAIChats);
