@@ -469,6 +469,7 @@ def test_model_connection():
         return jsonify({"error": "Sign in before testing the AI connection.", "code": "AUTH_REQUIRED"}), 401
     data = request.get_json(silent=True) or {}
     requested = str(data.get("provider", "auto")).lower()
+    requested_model = str(data.get("model", "")).strip()[:200] or None
     available = [item["id"] for item in configured_providers()]
     if requested in {"auto", "compare"}:
         provider = next((p for p in ("openai", "cloudflare", "gemini") if p in available), None)
