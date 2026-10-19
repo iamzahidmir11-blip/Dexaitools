@@ -480,6 +480,55 @@ def usage():
         return jsonify({"error": "Usage information is temporarily unavailable."}), 503
 
 
+@app.route("/api/plans", methods=["GET", "OPTIONS"])
+def plans():
+    if request.method == "OPTIONS":
+        return "", 204
+    pro_price = os.getenv("STRIPE_PRICE_PRO", "")
+    pro_plus_price = os.getenv("STRIPE_PRICE_PRO_PLUS", "")
+    stripe_ready = bool(os.getenv("STRIPE_SECRET_KEY") and pro_price and pro_plus_price)
+    return jsonify({
+        "currency": "USD",
+        "billing_ready": stripe_ready,
+        "plans": [
+            {"id": "free", "name": "Free", "monthly_price": 0, "daily_messages": plan_limit("free"), "features": ["Core chat", "Saved account history", "Starter tools"]},
+            {"id": "pro", "name": "Pro", "monthly_price": 12, "daily_messages": plan_limit("pro"), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_price), "features": ["Higher daily AI access", "Creative tools", "Personal workspace"]},
+            {"id": "pro_plus", "name": "Pro Plus", "monthly_price": 25, "daily_messages": plan_limit("pro_plus"), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_plus_price), "features": ["Expanded daily access", "Advanced workflows", "Power-user workspace"]}
+        ]
+    })
+
+
+@app.route("/api/billing/status", methods=["GET", "OPTIONS"])
+def billing_status():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Sign in to view your membership.", "code": "AUTH_REQUIRED"}), 401
+    plan = (user.get("plan") or "free").lower()
+    price_key = "STRIPE_PRICE_PRO_PLUS" if plan == "pro_plus" else "STRIPE_PRICE_PRO"
+    checkout_ready = bool(os.getenv("STRIPE_SECRET_KEY") and os.getenv(price_key))
+    try:
+        init_db()
+        with db() as conn:
+            row = conn.execute(
+                "SELECT subscription_status, stripe_customer_id, stripe_subscription_id FROM users WHERE id=%s",
+                (user["id"],)
+            ).fetchone()
+        return jsonify({
+            "plan": plan,
+            "subscription_status": (row or {}).get("subscription_status", "inactive"),
+            "has_customer": bool((row or {}).get("stripe_customer_id")),
+            "has_subscription": bool((row or {}).get("stripe_subscription_id")),
+            "checkout_ready": checkout_ready,
+            "portal_ready": bool(os.getenv("STRIPE_SECRET_KEY") and (row or {}).get("stripe_customer_id")),
+            "daily_limit": plan_limit(plan)
+        })
+    except Exception:
+        app.logger.exception("Billing status lookup failed")
+        return jsonify({"error": "Membership status is temporarily unavailable."}), 503
+
+
 @app.route("/api/image", methods=["POST", "OPTIONS"])
 def generate_image():
     if request.method == "OPTIONS":
