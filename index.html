@@ -505,6 +505,15 @@ main { min-height: 75vh; }
 .composer-mode:hover{border-color:rgba(216,181,106,.5);color:#fff2d1}
 .composer-mode.active{background:linear-gradient(135deg,rgba(216,181,106,.19),rgba(216,181,106,.06));border-color:rgba(216,181,106,.65);color:#fff0c7;box-shadow:inset 0 0 0 1px rgba(216,181,106,.07)}
 .composer-mode-hint{font-size:11px;color:var(--muted);margin-left:auto}
+
+.voice-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.voice-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(216,181,106,.28);border-radius:10px;padding:9px 12px;background:#11110f;color:#e9dfca;font-size:12px;font-weight:600;transition:.2s}
+.voice-btn:hover,.voice-btn.active{border-color:var(--gold);background:rgba(216,181,106,.12);color:#fff0c7}
+.voice-btn .voice-icon{font-size:15px;color:var(--gold)}
+.voice-status{font-size:11px;color:var(--muted);line-height:1.5}
+.voice-status.listening{color:#b9d7a2}
+.voice-status.speaking{color:var(--gold2)}
+
 .chat-generated-image{display:block;max-width:min(100%,640px);max-height:640px;object-fit:contain;border-radius:13px;border:1px solid var(--border);margin:12px 0}
 .chat-image-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .chat-image-actions a{display:inline-block;border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--gold2);text-decoration:none;font-size:12px}
@@ -881,6 +890,12 @@ footer .brand { color: var(--text); font-size: 20px; }
           <label class="web-search-toggle" for="webSearchToggle"><input id="webSearchToggle" type="checkbox"> Web search</label>
           <span id="providerStatus">Checking connected AI engines…</span>
         </div>
+        <div class="voice-controls" aria-label="Voice assistant controls">
+          <button class="voice-btn" type="button" id="micButton" aria-label="Dictate a message"><span class="voice-icon">🎙</span> Speak to type</button>
+          <button class="voice-btn" type="button" id="liveVoiceButton" aria-pressed="false"><span class="voice-icon">◉</span> Start live voice</button>
+          <button class="voice-btn" type="button" id="readAnswerButton"><span class="voice-icon">🔊</span> Read latest answer</button>
+          <span class="voice-status" id="voiceStatus" role="status">Mic and live voice work in supported browsers.</span>
+        </div>
         <form class="chat-form" id="chatForm">
           <textarea id="chatInput" placeholder="Ask DexAI anything..." rows="1" maxlength="4000" aria-label="Your message" required></textarea>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
@@ -1180,6 +1195,173 @@ footer .brand { color: var(--text); font-size: 20px; }
       $("chatInput").focus();
     });
   });
+
+  // Voice assistant using browser speech recognition and speech synthesis.
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let voiceRecognition = null;
+  let liveVoiceActive = false;
+  let oneShotMicActive = false;
+  let voiceIsSpeaking = false;
+  let lastAssistantText = "";
+  const voiceStatus = $("voiceStatus");
+  const micButton = $("micButton");
+  const liveVoiceButton = $("liveVoiceButton");
+  const readAnswerButton = $("readAnswerButton");
+  function setVoiceStatus(message, state = "") {
+    voiceStatus.textContent = message;
+    voiceStatus.classList.toggle("listening", state === "listening");
+    voiceStatus.classList.toggle("speaking", state === "speaking");
+  }
+  function configureRecognition(continuous) {
+    if (!SpeechRecognitionAPI) {
+      setVoiceStatus("Voice input needs a supported browser such as Chrome.", "");
+      toast("Try Chrome and allow microphone access.");
+      return null;
+    }
+    const rec = new SpeechRecognitionAPI();
+    rec.lang = navigator.language || "en-IN";
+    rec.continuous = continuous;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = () => {
+      micButton.classList.toggle("active", !liveVoiceActive);
+      liveVoiceButton.classList.toggle("active", liveVoiceActive);
+      setVoiceStatus(liveVoiceActive ? "Live voice is listening…" : "Listening… speak now.", "listening");
+    };
+    rec.onresult = event => {
+      let finalText = "";
+      let interimText = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript || "";
+        if (event.results[i].isFinal) finalText += transcript;
+        else interimText += transcript;
+      }
+      if (liveVoiceActive && finalText.trim()) {
+        $("chatInput").value = finalText.trim();
+        rec.stop();
+        sendMessage(finalText.trim());
+      } else if (liveVoiceActive && interimText.trim()) {
+        setVoiceStatus("Hearing: " + interimText.trim(), "listening");
+      } else if (finalText.trim()) {
+        $("chatInput").value = ($("chatInput").value + " " + finalText).trim();
+        $("chatInput").dispatchEvent(new Event("input", {bubbles:true}));
+        $("chatInput").focus();
+        setVoiceStatus("Speech added. Press send when ready.", "");
+      } else if (interimText.trim()) {
+        setVoiceStatus("Hearing: " + interimText.trim(), "listening");
+      }
+    };
+    rec.onerror = event => {
+      if (event.error !== "no-speech" && event.error !== "aborted") setVoiceStatus("Mic issue: " + event.error + ". Check browser microphone permission.", "");
+      oneShotMicActive = false;
+      micButton.classList.remove("active");
+    };
+    rec.onend = () => {
+      oneShotMicActive = false;
+      micButton.classList.remove("active");
+      if (liveVoiceActive && !voiceIsSpeaking && !sendButton.disabled) {
+        setVoiceStatus("Live voice reconnecting…", "listening");
+        setTimeout(startLiveRecognition, 450);
+      } else if (!liveVoiceActive && !voiceIsSpeaking) setVoiceStatus("Ready for voice input.", "");
+    };
+    return rec;
+  }
+  function startLiveRecognition() {
+    if (!liveVoiceActive || voiceIsSpeaking || sendButton.disabled) return;
+    try {
+      if (voiceRecognition) voiceRecognition.abort();
+      voiceRecognition = configureRecognition(true);
+      if (voiceRecognition) voiceRecognition.start();
+    } catch {
+      setVoiceStatus("Couldn't start microphone. Tap Start live voice again.", "");
+    }
+  }
+  function stopSpeaking() {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    voiceIsSpeaking = false;
+  }
+  function speakAssistant(text) {
+    if (!("speechSynthesis" in window) || !text) {
+      if (liveVoiceActive) setTimeout(startLiveRecognition, 450);
+      return;
+    }
+    stopSpeaking();
+    const clean = String(text).replace(/https?:\/\/\S+/g, " link ").slice(0, 5000);
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = navigator.language || "en-IN";
+    utterance.rate = 1.02;
+    utterance.pitch = 1;
+    utterance.onstart = () => {
+      voiceIsSpeaking = true;
+      setVoiceStatus("DexAI is speaking…", "speaking");
+    };
+    utterance.onend = () => {
+      voiceIsSpeaking = false;
+      if (liveVoiceActive) {
+        setVoiceStatus("Your turn — I'm listening…", "listening");
+        setTimeout(startLiveRecognition, 350);
+      } else setVoiceStatus("Answer finished.", "");
+    };
+    utterance.onerror = () => {
+      voiceIsSpeaking = false;
+      setVoiceStatus("Voice playback stopped.", "");
+      if (liveVoiceActive) setTimeout(startLiveRecognition, 450);
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+  micButton.addEventListener("click", () => {
+    if (!SpeechRecognitionAPI) {
+      setVoiceStatus("Voice input needs a supported browser such as Chrome.", "");
+      toast("Try Chrome and allow microphone access.");
+      return;
+    }
+    if (oneShotMicActive && voiceRecognition) {
+      voiceRecognition.stop();
+      oneShotMicActive = false;
+      return;
+    }
+    if (liveVoiceActive) {
+      toast("Stop live voice before using one-shot dictation.");
+      return;
+    }
+    voiceRecognition = configureRecognition(false);
+    if (!voiceRecognition) return;
+    try {
+      oneShotMicActive = true;
+      voiceRecognition.start();
+    } catch {
+      oneShotMicActive = false;
+      setVoiceStatus("Couldn't start mic. Check browser permission.", "");
+    }
+  });
+  liveVoiceButton.addEventListener("click", () => {
+    liveVoiceActive = !liveVoiceActive;
+    liveVoiceButton.setAttribute("aria-pressed", String(liveVoiceActive));
+    if (liveVoiceActive) {
+      if (!authToken || !signedInUser) {
+        liveVoiceActive = false;
+        liveVoiceButton.setAttribute("aria-pressed", "false");
+        openAuth();
+        authError.textContent = "Sign in before starting a live voice conversation.";
+        return;
+      }
+      liveVoiceButton.innerHTML = '<span class="voice-icon">■</span> Stop live voice';
+      liveVoiceButton.classList.add("active");
+      setVoiceStatus("Starting live voice…", "listening");
+      startLiveRecognition();
+    } else {
+      liveVoiceButton.innerHTML = '<span class="voice-icon">◉</span> Start live voice';
+      liveVoiceButton.classList.remove("active");
+      if (voiceRecognition) { try { voiceRecognition.abort(); } catch {} }
+      stopSpeaking();
+      setVoiceStatus("Live voice stopped.", "");
+    }
+  });
+  readAnswerButton.addEventListener("click", () => {
+    if (!lastAssistantText) { toast("Ask DexAI something first."); return; }
+    speakAssistant(lastAssistantText);
+  });
+
   const authOverlay = $("authOverlay");
   const authError = $("authError");
   function setAuthMode(mode) {
@@ -1504,6 +1686,8 @@ footer .brand { color: var(--text); font-size: 20px; }
       }
 
       renderMarkdown(reply, data.reply);
+      lastAssistantText = data.reply;
+      if (liveVoiceActive) speakAssistant(data.reply);
       refreshUsage();
     } catch (error) {
       reply.textContent = "I couldn't get a response from the AI server.";
