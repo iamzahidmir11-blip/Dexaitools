@@ -141,11 +141,13 @@ def home():
 @app.route("/health", methods=["GET"])
 @app.route("/api/health", methods=["GET"])
 def health():
+    configured = configured_providers()
     status = {
         "service": "online",
         "database": "not_configured",
         "auth_configured": bool(token_secret()),
-        "ai_configured": bool(os.getenv("GEMINI_API_KEY")),
+        "ai_configured": bool(configured),
+        "providers_configured": [item["id"] for item in configured],
         "model": MODEL,
         "model_tested": False
     }
@@ -471,12 +473,25 @@ def test_model_connection():
     requested = str(data.get("provider", "auto")).lower()
     requested_model = str(data.get("model", "")).strip()[:200] or None
     available = [item["id"] for item in configured_providers()]
-    if requested in {"auto", "compare"}:
-        provider = next((p for p in ("openai", "cloudflare", "gemini") if p in available), None)
+    if requested == "auto":
+        if requested_model:
+            lower_model = requested_model.lower()
+            if lower_model.startswith("@cf/"):
+                provider = "cloudflare"
+            elif lower_model.startswith("gemini-"):
+                provider = "gemini"
+            elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
+                provider = "openai"
+            else:
+                return jsonify({"ok": False, "error": "Select the provider for this custom model ID."}), 400
+        else:
+            provider = next((p for p in ("cloudflare", "gemini") if p in available), None)
+    elif requested == "compare":
+        provider = next((p for p in ("cloudflare", "gemini") if p in available), None)
     else:
         provider = requested
     if provider not in {"gemini", "openai", "cloudflare"} or provider not in available:
-        return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server."}), 503
+        return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server. Auto mode only tests configured free-first providers."}), 503
     started = time.monotonic()
     try:
         answer = call_ai_provider(provider, "Reply with exactly: DexAI model connection successful.", model_override=requested_model)
