@@ -902,6 +902,40 @@ footer .brand { color: var(--text); font-size: 20px; }
 .plan-price small{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
 @media(max-width:520px){.chat-actions-menu{right:0;width:175px}}
 
+ 
+/* Desktop-style workspace drawer */
+.desktop-launcher{width:36px;height:36px;border:1px solid rgba(216,181,106,.22);border-radius:11px;background:#10100e;color:#e7d4a6;font-size:18px;cursor:pointer;display:inline-grid;place-items:center}
+.desktop-launcher:hover{background:#211c11;border-color:rgba(216,181,106,.55)}
+.desktop-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.68);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:clamp(8px,2vw,24px)}
+.desktop-overlay.open{display:flex}
+.desktop-window{width:min(1050px,100%);height:min(720px,94dvh);min-height:420px;display:grid;grid-template-columns:230px minmax(0,1fr);overflow:hidden;border:1px solid rgba(216,181,106,.25);border-radius:20px;background:#0d0d0c;box-shadow:0 30px 100px #000c}
+.desktop-nav{padding:16px 10px;border-right:1px solid #25231d;background:#10100e;overflow:auto}
+.desktop-nav-brand{padding:8px 10px 18px;color:#f0d69a;font-size:15px;font-weight:800;letter-spacing:2px}
+.desktop-nav button{width:100%;display:flex;gap:10px;align-items:center;text-align:left;padding:10px 11px;margin:2px 0;border:1px solid transparent;border-radius:10px;background:transparent;color:#c8c1b2;font:inherit;font-size:12px;cursor:pointer}
+.desktop-nav button:hover,.desktop-nav button.active{background:#211d13;border-color:#40351f;color:#f1d9a0}
+.desktop-nav .desktop-nav-caption{padding:18px 10px 5px;color:#777166;font-size:9px;letter-spacing:1.5px}
+.desktop-content{min-width:0;display:flex;flex-direction:column}
+.desktop-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;border-bottom:1px solid #25231d}
+.desktop-head h3{margin:0;font-size:16px;color:#f2e8d3}
+.desktop-close{width:32px;height:32px;border:1px solid #333027;border-radius:9px;background:#171613;color:#e8dfcc;font-size:20px;cursor:pointer}
+.desktop-body{padding:20px;overflow:auto;color:#d9d2c4}
+.desktop-body h4{margin:0 0 9px;color:#efdaa9;font-size:14px}
+.desktop-body p{color:#aaa395;font-size:12px;line-height:1.65}
+.desktop-search{width:100%;padding:13px 14px;border:1px solid #373125;border-radius:12px;background:#151410;color:#f5eee0;outline:none}
+.desktop-search:focus{border-color:#b99754}
+.desktop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.desktop-card{padding:14px;border:1px solid #302b21;border-radius:13px;background:#14130f}
+.desktop-card strong{display:block;font-size:12px;color:#eee2c7}
+.desktop-card small{display:block;margin-top:6px;color:#999183;font-size:11px;line-height:1.5}
+.desktop-card button,.desktop-primary{margin-top:10px;padding:8px 11px;border:1px solid #6f582b;border-radius:9px;background:#241d10;color:#efd59b;font-size:11px;cursor:pointer}
+.desktop-list{display:grid;gap:7px;margin-top:12px}
+.desktop-list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;border:1px solid #2a271f;border-radius:10px;background:#14130f;font-size:12px}
+.desktop-muted{color:#938b7e;font-size:11px}
+.desktop-profile{display:grid;gap:12px;max-width:480px}
+.desktop-profile label{display:grid;gap:6px;font-size:11px;color:#aaa18f}
+.desktop-profile input{padding:11px;border:1px solid #373125;border-radius:9px;background:#151410;color:#f5eee0}
+@media(max-width:620px){.desktop-window{grid-template-columns:66px minmax(0,1fr);height:96dvh;border-radius:14px}.desktop-nav{padding:10px 5px}.desktop-nav-brand{padding:10px 3px;font-size:0;text-align:center}.desktop-nav-brand:after{content:"D";font-size:16px}.desktop-nav button{justify-content:center;padding:11px 3px;font-size:0}.desktop-nav button span{font-size:16px}.desktop-nav .desktop-nav-caption{font-size:0;padding:9px 0}.desktop-body{padding:13px}.desktop-grid{grid-template-columns:1fr}.desktop-head{padding:12px}}
+
 </style>
 </head>
 
@@ -976,7 +1010,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       <div class="chat-main">
         <div class="chat-topbar">
           <div><div class="chat-top-title">AI Chat <span class="live-pill"><i></i> Workspace</span></div><div class="chat-top-subtitle">Ideas, files and voice in one focused space.</div></div>
-          <button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Model <b>⌄</b></button>
+          <div style="display:flex;align-items:center;gap:8px"><button type="button" id="desktopLauncher" class="desktop-launcher" aria-label="Open DexAI desktop workspace" title="Workspace">⫶</button><button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Model <b>⌄</b></button></div>
         </div>
     <div class="chat-shell">
       <div class="chat-header">
@@ -1264,6 +1298,29 @@ footer .brand { color: var(--text); font-size: 20px; }
 </footer>
 
 
+<div class="desktop-overlay" id="desktopOverlay" role="dialog" aria-modal="true" aria-labelledby="desktopTitle">
+  <div class="desktop-window">
+    <nav class="desktop-nav" aria-label="DexAI desktop">
+      <div class="desktop-nav-brand">DEXAI DESKTOP</div>
+      <button type="button" class="active" data-desktop-page="overview"><span>⌂</span> Home</button>
+      <button type="button" data-desktop-page="search"><span>⌕</span> Search chats</button>
+      <button type="button" data-desktop-page="images"><span>▧</span> Image Studio</button>
+      <div class="desktop-nav-caption">YOUR SPACE</div>
+      <button type="button" data-desktop-page="library"><span>▤</span> Library</button>
+      <button type="button" data-desktop-page="projects"><span>▦</span> Projects</button>
+      <button type="button" data-desktop-page="schedule"><span>◷</span> Schedule</button>
+      <button type="button" data-desktop-page="plugins"><span>⌘</span> Plugins</button>
+      <button type="button" data-desktop-page="history"><span>↺</span> History</button>
+      <div class="desktop-nav-caption">ACCOUNT</div>
+      <button type="button" data-desktop-page="profile"><span>◉</span> Profile</button>
+    </nav>
+    <section class="desktop-content">
+      <header class="desktop-head"><h3 id="desktopTitle">DexAI Desktop</h3><button type="button" class="desktop-close" id="desktopClose" aria-label="Close desktop workspace">×</button></header>
+      <div class="desktop-body" id="desktopBody"></div>
+    </section>
+  </div>
+</div>
+
 <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-card">
     <button class="auth-close" id="authClose" type="button" aria-label="Close">×</button>
@@ -1319,6 +1376,60 @@ footer .brand { color: var(--text); font-size: 20px; }
   $("year").textContent = new Date().getFullYear();
 
   // Mobile navigation
+  const desktopOverlay = $("desktopOverlay");
+  const desktopBody = $("desktopBody");
+  const desktopTitle = $("desktopTitle");
+  function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
+  function showDesktopPage(page){
+    document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
+    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
+    desktopTitle.textContent=titles[page]||"DexAI Desktop";
+    const chats=getSavedChats();
+    const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    if(page==="overview"){
+      desktopBody.innerHTML='<h4>Your workspace, in one place</h4><p>Open your chats, find saved conversations, create images and manage your personal workspace.</p><input class="desktop-search" id="desktopQuickSearch" placeholder="Search your chats…" aria-label="Search your chats"><div class="desktop-grid"><div class="desktop-card"><strong>▤ Library</strong><small>Saved chat history and local workspace items.</small><button data-go-page="library">Open Library</button></div><div class="desktop-card"><strong>▦ Projects</strong><small>Find chats you have assigned to a project.</small><button data-go-page="projects">Open Projects</button></div><div class="desktop-card"><strong>▧ Image Studio</strong><small>Open the image generation workspace.</small><button data-go-page="images">Open Image Studio</button></div><div class="desktop-card"><strong>⌘ Plugins</strong><small>Review available integrations and connection status.</small><button data-go-page="plugins">View integrations</button></div></div>';
+      $("desktopQuickSearch").addEventListener("input",e=>{const q=e.target.value.toLowerCase();if(q){showDesktopPage("search");const inp=$("desktopSearchInput");if(inp){inp.value=q;renderDesktopSearch(q)}}});
+    }else if(page==="search"){
+      desktopBody.innerHTML='<h4>Find any conversation</h4><p>Search titles and messages saved in this browser.</p><input id="desktopSearchInput" class="desktop-search" placeholder="Type a word or phrase…" aria-label="Search chat history"><div id="desktopSearchResults" class="desktop-list"></div>';
+      $("desktopSearchInput").addEventListener("input",e=>renderDesktopSearch(e.target.value));
+      renderDesktopSearch("");
+    }else if(page==="library"){
+      const saved=chats.filter(c=>!c.archived);
+      desktopBody.innerHTML='<h4>Your Library</h4><p>Conversations are currently saved in this browser. Cloud sync across devices is not enabled yet.</p><div class="desktop-list">'+(saved.length?saved.map(c=>'<div class="desktop-list-item"><span>'+safe(c.title||"Untitled chat")+'</span><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button></div>').join(""):'<div class="desktop-muted">No saved chats yet. Start a conversation to build your library.</div>')+'</div>';
+    }else if(page==="projects"){
+      const projects=[...new Set(chats.filter(c=>c.project).map(c=>typeof c.project==="string"?c.project:"My Project"))];
+      desktopBody.innerHTML='<h4>Projects</h4><p>Group related conversations into projects. Project organization is local to this browser right now.</p><div class="desktop-list">'+(projects.length?projects.map(project=>'<div class="desktop-list-item"><span>▦ '+safe(project)+'</span><span class="desktop-muted">'+chats.filter(c=>c.project).length+' chats</span></div>').join(""):'<div class="desktop-muted">No projects yet. Use a chat’s ⋯ menu and choose “Add to project”.</div>')+'</div>';
+    }else if(page==="schedule"){
+      desktopBody.innerHTML='<h4>Schedule</h4><p>Plan recurring tasks and reminders for your workspace.</p><div class="desktop-card"><strong>Scheduled tasks are not connected yet</strong><small>This panel is ready for a scheduler integration, but it will not claim reminders are running until a scheduling backend is configured.</small></div>';
+    }else if(page==="plugins"){
+      desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Available integration surfaces. Each connection must be authorized before it can access an external account.</p><div class="desktop-grid"><div class="desktop-card"><strong>Cloudflare</strong><small>Backend integration · server credentials required</small></div><div class="desktop-card"><strong>GitHub</strong><small>Repository tools · OAuth/app authorization required</small></div><div class="desktop-card"><strong>Render</strong><small>Deployment tools · secure authorization required</small></div><div class="desktop-card"><strong>AI providers</strong><small>Manage model connections in Model settings.</small><button data-open-model>Open Model settings</button></div></div>';
+    }else if(page==="history"){
+      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats saved on this device.</p><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet.</div>')+'</div>';
+    }else if(page==="images"){
+      desktopBody.innerHTML='<h4>Create with Image Studio</h4><p>Describe the image you want to create. Generation depends on the configured provider and available API access.</p><button class="desktop-primary" id="desktopOpenImage">Open Image Studio ↗</button>';
+    }else if(page==="profile"){
+      const user=signedInUser;
+      desktopBody.innerHTML=user?'<h4>Account profile</h4><p>Signed in as '+safe(user.email)+'</p><div class="desktop-profile"><label>Display name<input id="desktopProfileName" maxlength="80" value="'+safe(user.display_name||"")+'"></label><button class="desktop-primary" id="desktopSaveProfile">Save profile</button><div class="desktop-muted">Account security settings are managed through the DexAI account service.</div></div>':'<h4>Sign in to DexAI</h4><p>Sign in to manage your profile and private workspace.</p><button class="desktop-primary" id="desktopSignIn">Sign in / Create account</button>';
+    }
+    desktopBody.querySelectorAll("[data-go-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.goPage)));
+    desktopBody.querySelectorAll("[data-open-chat]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openLocalChat(b.dataset.openChat);}));
+    desktopBody.querySelector("[data-open-model]")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click()});
+    $("desktopOpenImage")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="imageStudio";$("imageStudio").scrollIntoView({behavior:"smooth"});});
+    $("desktopSignIn")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openAuth()});
+    $("desktopSaveProfile")?.addEventListener("click",async()=>{const input=$("desktopProfileName");$("profileName").value=input.value;$("saveProfile").click();});
+  }
+  function renderDesktopSearch(query){
+    const host=$("desktopSearchResults");if(!host)return;const q=String(query||"").trim().toLowerCase();
+    const chats=getSavedChats().filter(c=>!q||(c.title||"").toLowerCase().includes(q)||(c.messages||[]).some(m=>String(m.content||"").toLowerCase().includes(q))).slice(0,50);
+    host.innerHTML=chats.length?chats.map(c=>'<div class="desktop-list-item"><span>'+String(c.title||"Untitled chat").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))+'</span><button class="desktop-primary" data-open-chat="'+String(c.id).replace(/[^a-zA-Z0-9_-]/g,"")+'">Open</button></div>').join(""):'<div class="desktop-muted">No matching conversations.</div>';
+    host.querySelectorAll("[data-open-chat]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openLocalChat(b.dataset.openChat)}));
+  }
+  $("desktopLauncher").addEventListener("click",()=>{desktopOverlay.classList.add("open");showDesktopPage("overview")});
+  $("desktopClose").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
+  desktopOverlay.addEventListener("click",e=>{if(e.target===desktopOverlay)desktopOverlay.classList.remove("open")});
+  document.querySelectorAll("[data-desktop-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.desktopPage)));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")desktopOverlay.classList.remove("open")});
+  
   $("mobileMenu").addEventListener("click", () => {
     $("mainNav").classList.toggle("open");
   });
