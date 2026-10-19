@@ -1493,6 +1493,37 @@ body.dex-focus-mode footer{display:none!important}
     downloadDexAIFile("dexai-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"DexAI",version:1,exported_at:new Date().toISOString(),chats},null,2));
     toast("Local chat backup downloaded.");
   }
+  async function importDexAIBackup(file){
+    if(!file)return;
+    if(file.size>10*1024*1024){toast("Backup is too large (10 MB maximum).");return;}
+    try{
+      const raw=await file.text();
+      const parsed=JSON.parse(raw);
+      const incoming=Array.isArray(parsed)?parsed:(Array.isArray(parsed.chats)?parsed.chats:(parsed.chat?[parsed.chat]:[]));
+      if(!incoming.length)throw new Error("This file does not contain a DexAI chat backup.");
+      const valid=incoming.filter(c=>c&&typeof c==="object"&&typeof c.id==="string"&&Array.isArray(c.messages)).slice(0,30).map(c=>({
+        id:c.id.replace(/[^a-zA-Z0-9_-]/g,"").slice(0,100)||("import_"+Date.now().toString(36)),
+        title:String(c.title||"Imported chat").slice(0,120),
+        updated:Number(c.updated)||Date.now(),
+        archived:Boolean(c.archived),
+        pinned:Boolean(c.pinned),
+        project:typeof c.project==="string"?c.project.slice(0,80):"",
+        messages:c.messages.slice(0,500).filter(m=>m&&typeof m==="object"&&["user","bot","assistant"].includes(m.role)&&typeof m.content==="string").map(m=>({role:m.role==="assistant"?"bot":m.role,content:m.content.slice(0,12000)}))
+      }));
+      if(!valid.length)throw new Error("No valid chats were found in this backup.");
+      const current=readLocalChats();
+      const byId=new Map(current.map(c=>[c.id,c]));
+      let added=0,updated=0;
+      for(const chat of valid){
+        const existing=byId.get(chat.id);
+        if(!existing){byId.set(chat.id,chat);added++;}
+        else if((chat.updated||0)>(existing.updated||0)){byId.set(chat.id,{...existing,...chat});updated++;}
+      }
+      const merged=[...byId.values()].sort((a,b)=>(b.updated||0)-(a.updated||0)).slice(0,30);
+      writeLocalChats(merged);renderLocalChatList();showDesktopPage("history");
+      toast("Backup restored: "+added+" added, "+updated+" updated. Up to 30 chats are kept on this device.");
+    }catch(error){toast(error.message||"Could not import this backup.");}
+  }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
     const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
@@ -1520,8 +1551,10 @@ body.dex-focus-mode footer{display:none!important}
     }else if(page==="plugins"){
       desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Open available connection settings. External accounts need valid credentials and authorization before their features can run.</p><div class="desktop-grid"><div class="desktop-card"><strong>☁ Cloudflare</strong><small>Cloudflare provider options and backend configuration.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>⌘ GitHub</strong><small>Repository integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>▣ Render</strong><small>Deployment integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>✦ AI providers</strong><small>Choose a configured AI engine and model.</small><button data-open-model>Open Model settings</button></div></div>';
     }else if(page==="history"){
-      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Export keeps a copy on your device; it does not share your chats publicly.</p><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON backup)</button><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
+      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Backups stay on your device unless you choose to share them.</p><div class="desktop-row-actions"><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON)</button><button class="desktop-secondary" id="importDexAIChats">↑ Import backup</button><input type="file" id="importDexAIFile" accept=".json,application/json" hidden></div><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
       $("exportAllDexAIChats").addEventListener("click",exportAllDexAIChats);
+      $("importDexAIChats").addEventListener("click",()=>$("importDexAIFile").click());
+      $("importDexAIFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];importDexAIBackup(file);e.target.value="";});
       desktopBody.querySelectorAll("[data-export-chat]").forEach(b=>b.addEventListener("click",()=>exportDexAIChat(b.dataset.exportChat,"txt")));
       desktopBody.querySelectorAll("[data-export-json]").forEach(b=>b.addEventListener("click",()=>exportDexAIChat(b.dataset.exportJson,"json")));
     }else if(page==="images"){
