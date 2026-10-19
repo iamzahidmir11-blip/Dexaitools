@@ -916,6 +916,7 @@ body.dex-focus-mode footer{display:none!important}
 .desktop-head h3{font-size:18px!important;font-weight:850!important}
 .desktop-body h4{font-size:17px!important;font-weight:850!important}
 .desktop-row-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.usage-dash-value{font-size:24px!important;font-weight:900!important;color:#f1d28a!important;margin:8px 0}.usage-track{height:7px;background:#2a2925;border-radius:20px;overflow:hidden;margin:12px 0}.usage-track span{display:block;height:100%;background:linear-gradient(90deg,#9c7c38,#f2d48c);border-radius:20px}.memory-consent{display:flex!important;flex-direction:row!important;align-items:center;gap:10px}.memory-consent input{width:auto!important;min-height:auto!important}
 .desktop-secondary,.desktop-danger{border:1px solid #38352b!important;background:#141414!important;color:#e8e4d9!important;border-radius:10px!important;padding:10px 13px!important;font:800 13px inherit;cursor:pointer}
 .desktop-secondary:hover{border-color:#b99b52!important;color:#f0d99b!important}
 .desktop-danger{border-color:#673a35!important;color:#ffb6a8!important}
@@ -1407,6 +1408,8 @@ body.dex-focus-mode footer{display:none!important}
       <button type="button" data-desktop-page="plugins"><span>⌘</span> Plugins</button>
       <button type="button" data-desktop-page="history"><span>↺</span> History</button>
       <button type="button" data-desktop-page="prompts"><span>✧</span> Prompt Library</button>
+      <button type="button" data-desktop-page="usage"><span>▥</span> Usage dashboard</button>
+      <button type="button" data-desktop-page="memory"><span>◈</span> My AI memory</button>
       <div class="desktop-nav-caption">ACCOUNT</div>
       <button type="button" data-desktop-page="profile"><span>◉</span> Profile</button>
       <div class="desktop-nav-spacer"></div>
@@ -1549,7 +1552,7 @@ body.dex-focus-mode footer{display:none!important}
   }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
-    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",prompts:"Prompt Library",profile:"Your profile"};
+    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",prompts:"Prompt Library",usage:"Usage dashboard",memory:"My AI memory",profile:"Your profile"};
     desktopTitle.textContent=titles[page]||"DexAI Desktop";
     const chats=getSavedChats();
     const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1573,6 +1576,28 @@ body.dex-focus-mode footer{display:none!important}
       $("scheduleForm").addEventListener("submit",e=>{e.preventDefault();const a=JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]");a.push({title:$("scheduleTitle").value.trim(),when:$("scheduleWhen").value});a.sort((x,y)=>new Date(x.when)-new Date(y.when));localStorage.setItem("dexai_local_schedule_v1",JSON.stringify(a));$("scheduleForm").reset();renderTasks();});renderTasks();
     }else if(page==="plugins"){
       desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Open available connection settings. External accounts need valid credentials and authorization before their features can run.</p><div class="desktop-grid"><div class="desktop-card"><strong>☁ Cloudflare</strong><small>Cloudflare provider options and backend configuration.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>⌘ GitHub</strong><small>Repository integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>▣ Render</strong><small>Deployment integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>✦ AI providers</strong><small>Choose a configured AI engine and model.</small><button data-open-model>Open Model settings</button></div></div>';
+    }else if(page==="usage"){
+      desktopBody.innerHTML='<h4>Usage dashboard</h4><p>Daily usage comes from your signed-in DexAI account. Local-only activity is not included in server usage.</p><div id="usageDashStatus" class="desktop-muted">Checking account usage…</div><div class="desktop-grid" id="usageDashCards"></div><button type="button" class="desktop-primary" id="refreshUsageDash">↻ Refresh usage</button><p class="desktop-muted">Usage limits and remaining messages are reported by the backend. This dashboard does not activate or change a subscription.</p>';
+      const loadUsageDash=async()=>{
+        const status=$("usageDashStatus"),cards=$("usageDashCards");
+        if(!authToken||!signedInUser){status.textContent="Sign in to view your account usage.";cards.innerHTML='<div class="desktop-card"><strong>Account required</strong><small>Your daily plan usage is private to your account.</small><button type="button" id="usageDashSignIn">Sign in</button></div>';$("usageDashSignIn")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openAuth()});return;}
+        status.textContent="Refreshing usage…";cards.innerHTML="";
+        try{
+          const res=await fetch("https://dexaitools.onrender.com/api/usage",{headers:{"Authorization":"Bearer "+authToken}});
+          const data=await res.json();if(!res.ok)throw new Error(data.error||"Usage unavailable");
+          const used=Math.max(0,Number(data.used)||0),limit=Math.max(0,Number(data.limit)||0),remaining=Math.max(0,Number(data.remaining)||0),pct=limit?Math.min(100,Math.round(used/limit*100)):0;
+          status.textContent="Usage updated "+new Date().toLocaleTimeString()+" · "+(data.daily_access?"Daily access available":"Daily limit reached");
+          cards.innerHTML='<div class="desktop-card"><strong>Plan</strong><small class="usage-dash-value">'+safe(String(data.plan||"free").toUpperCase())+'</small><small>Your current account plan</small></div><div class="desktop-card"><strong>Messages used</strong><small class="usage-dash-value">'+used+' / '+limit+'</small><div class="usage-track"><span style="width:'+pct+'%"></span></div><small>'+pct+'% of daily limit used</small></div><div class="desktop-card"><strong>Remaining today</strong><small class="usage-dash-value">'+remaining+'</small><small>Resets according to server daily usage window</small></div>';
+        }catch(err){status.textContent=err.message||"Could not load usage. Please try again.";cards.innerHTML='<div class="desktop-muted">Usage could not be loaded right now.</div>';}
+      };
+      $("refreshUsageDash").addEventListener("click",loadUsageDash);loadUsageDash();
+    }else if(page==="memory"){
+      const readMemory=()=>{try{const v=JSON.parse(localStorage.getItem("dexai_memory_notes_v1")||"{}");return v&&typeof v==="object"?v:{}}catch{return {}}};
+      const mem=readMemory();
+      desktopBody.innerHTML='<h4>My AI memory</h4><p>Save preferences you want to reuse in future prompts on this browser. This is optional and stays in local browser storage; it is not automatically sent to the AI or synced to your account.</p><form id="memoryNotesForm" class="desktop-profile"><label>How should DexAI help you?<textarea id="memoryNotesText" maxlength="2000" rows="6" placeholder="e.g. I prefer concise answers, Hinglish explanations, and step-by-step instructions.">'+safe(String(mem.notes||""))+'</textarea></label><label class="memory-consent"><input type="checkbox" id="memoryNotesEnabled" '+(mem.enabled?"checked":"")+'> Allow me to insert these notes into a prompt when I choose to use them</label><div class="desktop-row-actions"><button class="desktop-primary" type="submit">Save memory notes</button><button class="desktop-secondary" type="button" id="useMemoryNotes">Use in chat</button><button class="desktop-danger" type="button" id="clearMemoryNotes">Clear notes</button></div></form><div class="desktop-muted" id="memoryNotesStatus">Saved locally on this device only.</div>';
+      $("memoryNotesForm").addEventListener("submit",e=>{e.preventDefault();const obj={notes:$("memoryNotesText").value.trim(),enabled:$("memoryNotesEnabled").checked,updated:Date.now()};localStorage.setItem("dexai_memory_notes_v1",JSON.stringify(obj));$("memoryNotesStatus").textContent="Memory notes saved on this device. They are not automatically shared.";toast("Memory notes saved locally.");});
+      $("useMemoryNotes").addEventListener("click",()=>{const obj=readMemory();const notes=$("memoryNotesText").value.trim();if(!obj.enabled||!$("memoryNotesEnabled").checked){toast("Tick the opt-in checkbox and save before using memory.");return;}if(!notes){toast("Add some notes first.");return;}desktopOverlay.classList.remove("open");$("chat").classList.add("dex-menu-open");$("chat").scrollIntoView({behavior:"smooth",block:"start"});$("chatInput").value="Use these preferences for this request only:\n"+notes+"\n\nMy request: ";$("chatInput").dispatchEvent(new Event("input",{bubbles:true}));$("chatInput").focus();location.hash="chat";toast("Memory notes added to the prompt. Review before sending.");});
+      $("clearMemoryNotes").addEventListener("click",()=>{if(!confirm("Clear saved memory notes from this browser?"))return;localStorage.removeItem("dexai_memory_notes_v1");$("memoryNotesText").value="";$("memoryNotesEnabled").checked=false;$("memoryNotesStatus").textContent="No memory notes saved.";toast("Local memory notes cleared.");});
     }else if(page==="prompts"){
       const builtins=[
         {title:"YouTube Shorts Script",category:"Creator",prompt:"Write a 30-second YouTube Shorts script for a US audience. Start with a strong 2-second hook, then give scene-by-scene visuals, voiceover, on-screen captions, sound effects, and a satisfying payoff. Ask me for the niche if needed."},
