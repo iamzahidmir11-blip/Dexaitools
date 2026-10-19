@@ -1259,8 +1259,8 @@ footer .brand { color: var(--text); font-size: 20px; }
     const escapeHTML = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const inline = value => escapeHTML(value)
       .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/**(.+?)**/g, "<strong>$1</strong>")
-      .replace(/(^|[^*])*([^*]+)*(?!*)/g, "$1<em>$2</em>");
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, "$1<em>$2</em>");
     const lines = String(text || "").replace(/\r/g, "").split("\n");
     let html = "", inCode = false, codeLines = [], listType = "";
     const closeList = () => { if (listType) { html += listType === "ol" ? "</ol>" : "</ul>"; listType = ""; } };
