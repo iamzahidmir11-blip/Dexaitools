@@ -907,8 +907,8 @@ footer .brand { color: var(--text); font-size: 20px; }
 /* Compact app mode: keep the chat clean and put navigation inside the three-dot menu. */
 #mainNav{display:none!important}
 .hero{display:none!important}
-main>section:not(#chat):not(#plans){display:none!important}
-footer{display:none!important}
+body.dex-focus-mode main>section:not(#chat):not(#plans):not(.dex-menu-open){display:none!important}
+body.dex-focus-mode footer{display:none!important}
 .desktop-nav button{font-size:14px!important;font-weight:750!important;padding:12px 12px!important;min-height:42px}
 .desktop-nav .desktop-nav-caption{font-size:10px!important;font-weight:800!important;letter-spacing:1.6px}
 .desktop-nav-brand{font-size:16px!important;font-weight:900!important}
@@ -1436,6 +1436,8 @@ footer{display:none!important}
   const desktopBody = $("desktopBody");
   const desktopTitle = $("desktopTitle");
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
+  document.body.classList.add("dex-focus-mode");
+  function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
     const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
@@ -1456,9 +1458,12 @@ footer{display:none!important}
       const projects=[...new Set(chats.filter(c=>c.project).map(c=>typeof c.project==="string"?c.project:"My Project"))];
       desktopBody.innerHTML='<h4>Projects</h4><p>Group related conversations by using each chat’s menu to assign a project name. Signed-in project labels sync to your account.</p><div class="desktop-list">'+(projects.length?projects.map(project=>'<div class="desktop-list-item"><span>▦ '+safe(project)+'</span><span class="desktop-muted">'+chats.filter(c=>c.project===project).length+' chats</span></div>').join(""):'<div class="desktop-muted">No projects yet. Use a chat’s ⋯ menu and choose “Add to project”.</div>')+'</div>';
     }else if(page==="schedule"){
-      desktopBody.innerHTML='<h4>Schedule</h4><p>Plan recurring tasks and reminders for your workspace.</p><div class="desktop-card"><strong>Scheduled tasks are not connected yet</strong><small>This panel is ready for a scheduler integration, but it will not claim reminders are running until a scheduling backend is configured.</small></div>';
+      const savedTasks=(()=>{try{return JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]")}catch{return []}})();
+      desktopBody.innerHTML='<h4>Schedule & reminders</h4><p>Create reminders saved in this browser. These are local reminders; push notifications and cloud scheduling are not connected yet.</p><form id="scheduleForm" class="desktop-profile"><label>Reminder title<input id="scheduleTitle" required maxlength="120" placeholder="What do you need to remember?"></label><label>Date and time<input id="scheduleWhen" type="datetime-local" required></label><button class="desktop-primary" type="submit">＋ Save reminder</button></form><div class="desktop-list" id="scheduleList"></div>';
+      const renderTasks=()=>{const host=$("scheduleList");const tasks=(()=>{try{return JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]")}catch{return []}})();host.innerHTML=tasks.length?tasks.map((t,i)=>'<div class="desktop-list-item"><span><strong>'+safe(t.title)+'</strong><br><small>'+safe(new Date(t.when).toLocaleString())+'</small></span><button class="desktop-primary" data-delete-task="'+i+'">Delete</button></div>').join(""):'<div class="desktop-muted">No reminders saved yet.</div>';host.querySelectorAll("[data-delete-task]").forEach(b=>b.addEventListener("click",()=>{const a=JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]");a.splice(Number(b.dataset.deleteTask),1);localStorage.setItem("dexai_local_schedule_v1",JSON.stringify(a));renderTasks()}));};
+      $("scheduleForm").addEventListener("submit",e=>{e.preventDefault();const a=JSON.parse(localStorage.getItem("dexai_local_schedule_v1")||"[]");a.push({title:$("scheduleTitle").value.trim(),when:$("scheduleWhen").value});a.sort((x,y)=>new Date(x.when)-new Date(y.when));localStorage.setItem("dexai_local_schedule_v1",JSON.stringify(a));$("scheduleForm").reset();renderTasks();});renderTasks();
     }else if(page==="plugins"){
-      desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Available integration surfaces. Each connection must be authorized before it can access an external account.</p><div class="desktop-grid"><div class="desktop-card"><strong>Cloudflare</strong><small>Backend integration · server credentials required</small></div><div class="desktop-card"><strong>GitHub</strong><small>Repository tools · OAuth/app authorization required</small></div><div class="desktop-card"><strong>Render</strong><small>Deployment tools · secure authorization required</small></div><div class="desktop-card"><strong>AI providers</strong><small>Manage model connections in Model settings.</small><button data-open-model>Open Model settings</button></div></div>';
+      desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Open available connection settings. External accounts need valid credentials and authorization before their features can run.</p><div class="desktop-grid"><div class="desktop-card"><strong>☁ Cloudflare</strong><small>Cloudflare provider options and backend configuration.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>⌘ GitHub</strong><small>Repository integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>▣ Render</strong><small>Deployment integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>✦ AI providers</strong><small>Choose a configured AI engine and model.</small><button data-open-model>Open Model settings</button></div></div>';
     }else if(page==="history"){
       desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in.</p><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet.</div>')+'</div>';
     }else if(page==="images"){
@@ -1475,11 +1480,12 @@ footer{display:none!important}
     }
     desktopBody.querySelectorAll("[data-go-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.goPage)));
     desktopBody.querySelectorAll("[data-open-chat]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openLocalChat(b.dataset.openChat);}));
-    desktopBody.querySelector("[data-open-model]")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click()});
-    $("desktopOpenImage")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="imageStudio";$("imageStudio").scrollIntoView({behavior:"smooth"});});
-    $("desktopOpenVideo")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="videoStudio";$("videoStudio").scrollIntoView({behavior:"smooth"});});
-    $("desktopOpenTools")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="tools";$("tools").scrollIntoView({behavior:"smooth"});});
-    $("desktopOpenWorkspace")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="workspace";$("workspace").scrollIntoView({behavior:"smooth"});});
+    desktopBody.querySelectorAll("[data-open-model]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click()}));
+    desktopBody.querySelectorAll("[data-open-connectors]").forEach(b=>b.addEventListener("click",()=>openWorkspaceTarget("connectors")));
+    $("desktopOpenImage")?.addEventListener("click",()=>openWorkspaceTarget("imageStudio"));
+    $("desktopOpenVideo")?.addEventListener("click",()=>openWorkspaceTarget("videoStudio"));
+    $("desktopOpenTools")?.addEventListener("click",()=>openWorkspaceTarget("tools"));
+    $("desktopOpenWorkspace")?.addEventListener("click",()=>openWorkspaceTarget("workspace"));
     $("desktopSignIn")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openAuth()});
     $("desktopSaveProfile")?.addEventListener("click",async()=>{const input=$("desktopProfileName");$("profileName").value=input.value;$("saveProfile").click();});
   }
