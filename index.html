@@ -999,6 +999,57 @@ body.dex-focus-mode footer{display:none!important}
  .desktop-upgrade-link>span:first-child{font-size:16px}
  .desktop-upgrade-link>span:nth-child(2),.desktop-upgrade-link>b{display:none}
 }
+/* Three-dot workspace menu refresh: clearer hierarchy and responsive navigation */
+.desktop-overlay{padding:clamp(8px,2vw,22px);background:rgba(3,3,3,.78);backdrop-filter:blur(16px)}
+.desktop-window{width:min(1120px,100%);height:min(760px,94dvh);min-height:440px;border-radius:22px;border-color:rgba(221,185,109,.32);box-shadow:0 32px 120px rgba(0,0,0,.72);animation:dexMenuEnter .18s ease-out}
+@keyframes dexMenuEnter{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.desktop-nav{padding:18px 12px;background:linear-gradient(180deg,#12110e,#0c0c0b)}
+.desktop-nav-brand{display:flex;align-items:center;gap:9px;padding:10px 10px 20px;font-size:13px;letter-spacing:2.2px}
+.desktop-nav-brand:before{content:"✦";display:grid;place-items:center;width:27px;height:27px;border:1px solid #6b542c;border-radius:9px;background:#211a0d;color:#f3d99b;font-size:14px}
+.desktop-nav button{min-height:39px;font-size:12px;transition:background .16s,border-color .16s,color .16s}
+.desktop-nav button span{width:18px;flex:0 0 18px;text-align:center;font-size:15px}
+.desktop-content{background:radial-gradient(ellipse at 95% 0%,rgba(185,148,73,.055),transparent 38%),#0d0d0c}
+.desktop-head{min-height:62px;padding:16px 22px;background:rgba(14,14,12,.92)}
+.desktop-head h3{font-size:15px;letter-spacing:.2px}
+.desktop-close{display:grid;place-items:center;font-size:22px;transition:background .15s,border-color .15s}
+.desktop-close:hover{background:#2a2112;border-color:#8d6e37}
+.desktop-body{padding:clamp(16px,2.5vw,28px)}
+.desktop-body h4{font-size:19px;letter-spacing:-.3px}
+.desktop-body>p{max-width:680px;font-size:12px}
+.desktop-card{min-width:0;transition:transform .16s,border-color .16s,background .16s}
+.desktop-card:hover{border-color:#5a482a;background:#19170f;transform:translateY(-1px)}
+.desktop-card button,.desktop-primary,.desktop-secondary,.desktop-danger{min-height:36px;font-size:12px}
+.desktop-secondary{padding:8px 11px;border:1px solid #383329;border-radius:9px;background:#171613;color:#ddd3bf}
+.desktop-danger{padding:8px 11px;border:1px solid #653b32;border-radius:9px;background:#241311;color:#f0b6a8}
+.desktop-row-actions{gap:9px}
+.desktop-search{margin:8px 0 4px;min-height:44px}
+.desktop-nav button:focus-visible,.desktop-close:focus-visible,.desktop-card button:focus-visible{outline:2px solid #e7c77f;outline-offset:2px}
+@media(max-width:620px){
+ .desktop-overlay{padding:0;align-items:stretch}
+ .desktop-window{width:100%;height:100dvh;height:100svh;min-height:0;max-height:none;display:flex;flex-direction:column;border-radius:0;border:0}
+ .desktop-nav{order:0;flex:0 0 auto;display:flex;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;padding:9px 10px;border-right:0;border-bottom:1px solid #302a1d;scrollbar-width:thin;white-space:nowrap}
+ .desktop-nav-brand{flex:0 0 auto;padding:4px 10px 4px 2px;margin-right:3px;font-size:0;letter-spacing:0}
+ .desktop-nav-brand:before{width:30px;height:30px}
+ .desktop-nav button{width:auto;flex:0 0 auto;display:flex;justify-content:flex-start;gap:6px;min-height:36px;padding:8px 10px;margin:0;font-size:11px;border-radius:9px}
+ .desktop-nav button span{width:auto;flex:0 0 auto;font-size:13px}
+ .desktop-nav .desktop-nav-caption{display:none}
+ .desktop-content{flex:1 1 auto;min-height:0;overflow:hidden}
+ .desktop-head{min-height:54px;padding:10px 15px}
+ .desktop-head h3{font-size:14px}
+ .desktop-body{flex:1 1 auto;min-height:0;overflow:auto;padding:16px 14px calc(22px + env(safe-area-inset-bottom))}
+ .desktop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .desktop-card{padding:12px}
+ .desktop-card strong{font-size:11px}
+ .desktop-card small{font-size:10px}
+ .desktop-card button{width:100%;padding:8px 7px;font-size:10px}
+ .desktop-row-actions{display:grid;grid-template-columns:1fr 1fr}
+ .desktop-row-actions #menuNewChat{grid-column:1/-1}
+}
+@media(max-width:380px){
+ .desktop-nav{gap:4px;padding-inline:7px}
+ .desktop-nav button{padding:8px;font-size:10px}
+ .desktop-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -1674,12 +1725,16 @@ body.dex-focus-mode footer{display:none!important}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){
       e.preventDefault();desktopOverlay.classList.add("open");showDesktopPage("search");setTimeout(()=>$("desktopSearchInput")?.focus(),30);return;
     }
-    if(e.key==="Escape"&&desktopOverlay.classList.contains("open"))desktopOverlay.classList.remove("open");
+    if(e.key==="Escape"&&desktopOverlay.classList.contains("open"))setDesktopMenuOpen(false);
   });
-  $("desktopLauncher").addEventListener("click",()=>{desktopOverlay.classList.add("open");showDesktopPage("overview")});
-  $("desktopClose").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
+  const desktopLauncher=$("desktopLauncher");
+  function setDesktopMenuOpen(open){desktopOverlay.classList.toggle("open",open);desktopLauncher.setAttribute("aria-expanded",String(open));document.body.classList.toggle("dex-desktop-menu-open",open);if(open)setTimeout(()=>$("desktopClose")?.focus(),30);else desktopLauncher.focus();}
+  desktopLauncher.setAttribute("aria-haspopup","dialog");
+  desktopLauncher.setAttribute("aria-expanded","false");
+  desktopLauncher.addEventListener("click",()=>{setDesktopMenuOpen(true);showDesktopPage("overview")});
+  $("desktopClose").addEventListener("click",()=>setDesktopMenuOpen(false));
   $("desktopUpgradeLink").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
-  desktopOverlay.addEventListener("click",e=>{if(e.target===desktopOverlay)desktopOverlay.classList.remove("open")});
+  desktopOverlay.addEventListener("click",e=>{if(e.target===desktopOverlay)setDesktopMenuOpen(false)});
   document.querySelectorAll("[data-desktop-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.desktopPage)));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")desktopOverlay.classList.remove("open")});
   
