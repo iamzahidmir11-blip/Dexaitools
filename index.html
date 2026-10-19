@@ -1469,6 +1469,30 @@ body.dex-focus-mode footer{display:none!important}
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   document.body.classList.add("dex-focus-mode");
   function openWorkspaceTarget(id){const target=$(id);if(!target){toast("This workspace section is not available yet.");return;}document.querySelectorAll("main>section").forEach(section=>section.classList.remove("dex-menu-open"));if(target.matches("section"))target.classList.add("dex-menu-open");else target.closest("section")?.classList.add("dex-menu-open");desktopOverlay.classList.remove("open");target.scrollIntoView({behavior:"smooth",block:"start"});location.hash=id;}
+  function downloadDexAIFile(filename, content, mimeType="application/json"){
+    const blob=new Blob([content],{type:mimeType+";charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");link.href=url;link.download=filename;link.style.display="none";
+    document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  function exportDexAIChat(chatId, format="txt"){
+    const chat=readLocalChats().find(c=>c.id===chatId);
+    if(!chat){toast("Chat not found on this device.");return;}
+    if(format==="json"){
+      downloadDexAIFile("dexai-chat-"+chat.id+".json",JSON.stringify({exported_at:new Date().toISOString(),app:"DexAI",version:1,chat},null,2));
+      toast("Chat backup downloaded.");
+    }else{
+      const lines=[chat.title||"DexAI chat","Exported: "+new Date().toLocaleString(),"",...(chat.messages||[]).map(m=>((m.role==="user"?"YOU":m.role==="bot"?"DEXAI":String(m.role||"").toUpperCase())+"\n"+String(m.content||"")))];
+      downloadDexAIFile("dexai-chat-"+chat.id+".txt",lines.join("\n\n"),"text/plain");
+      toast("Chat transcript downloaded.");
+    }
+  }
+  function exportAllDexAIChats(){
+    const chats=readLocalChats();
+    if(!chats.length){toast("There are no local chats to export yet.");return;}
+    downloadDexAIFile("dexai-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"DexAI",version:1,exported_at:new Date().toISOString(),chats},null,2));
+    toast("Local chat backup downloaded.");
+  }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
     const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",tools:"AI Tools",workspace:"Text workspace",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
@@ -1496,7 +1520,10 @@ body.dex-focus-mode footer{display:none!important}
     }else if(page==="plugins"){
       desktopBody.innerHTML='<h4>Plugins & integrations</h4><p>Open available connection settings. External accounts need valid credentials and authorization before their features can run.</p><div class="desktop-grid"><div class="desktop-card"><strong>☁ Cloudflare</strong><small>Cloudflare provider options and backend configuration.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>⌘ GitHub</strong><small>Repository integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>▣ Render</strong><small>Deployment integration status and setup.</small><button data-open-connectors>Open connections</button></div><div class="desktop-card"><strong>✦ AI providers</strong><small>Choose a configured AI engine and model.</small><button data-open-model>Open Model settings</button></div></div>';
     }else if(page==="history"){
-      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in.</p><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet.</div>')+'</div>';
+      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Export keeps a copy on your device; it does not share your chats publicly.</p><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON backup)</button><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
+      $("exportAllDexAIChats").addEventListener("click",exportAllDexAIChats);
+      desktopBody.querySelectorAll("[data-export-chat]").forEach(b=>b.addEventListener("click",()=>exportDexAIChat(b.dataset.exportChat,"txt")));
+      desktopBody.querySelectorAll("[data-export-json]").forEach(b=>b.addEventListener("click",()=>exportDexAIChat(b.dataset.exportJson,"json")));
     }else if(page==="images"){
       desktopBody.innerHTML='<h4>Create with Image Studio</h4><p>Jump directly to image creation without searching through the page.</p><button class="desktop-primary" id="desktopOpenImage">Open Image Studio ↗</button>';
     }else if(page==="video"){
