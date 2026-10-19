@@ -496,6 +496,8 @@ main { min-height: 75vh; }
   border-bottom-left-radius: 4px;
 }
 
+.message-copy{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 9px;border:1px solid rgba(216,181,106,.18);border-radius:7px;background:rgba(216,181,106,.035);color:#b9ad94;font-size:10px;transition:.2s}.message-copy:hover{border-color:rgba(216,181,106,.55);color:#ffe8b0}.message-copy:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
 .message-label {
   display: block;
   font-size: 10px;
@@ -2585,6 +2587,33 @@ body.dex-focus-mode footer{display:none!important}
     else content.textContent = text;
 
     item.append(label, content);
+    if (role === "bot" && text !== "Thinking...") {
+      const copyButton = document.createElement("button");
+      copyButton.type = "button";
+      copyButton.className = "message-copy";
+      copyButton.textContent = "Copy response";
+      copyButton.setAttribute("aria-label", "Copy DexAI response");
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          copyButton.textContent = "Copied ✓";
+          setTimeout(() => { copyButton.textContent = "Copy response"; }, 1600);
+        } catch {
+          const helper = document.createElement("textarea");
+          helper.value = text;
+          helper.setAttribute("readonly", "");
+          helper.style.position = "fixed";
+          helper.style.opacity = "0";
+          document.body.appendChild(helper);
+          helper.select();
+          const copied = document.execCommand("copy");
+          helper.remove();
+          copyButton.textContent = copied ? "Copied ✓" : "Select and copy";
+          setTimeout(() => { copyButton.textContent = "Copy response"; }, 1600);
+        }
+      });
+      item.appendChild(copyButton);
+    }
     messages.appendChild(item);
     messages.scrollTop = messages.scrollHeight;
     saveLocalMessage(role, text);
