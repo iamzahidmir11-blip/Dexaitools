@@ -677,6 +677,14 @@ footer .brand { color: var(--text); font-size: 20px; }
 .provider-row select{max-width:100%;background:#090909;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;outline:none}
 .provider-row select:focus{border-color:var(--gold)}
 .provider-row span{font-size:10px;color:var(--muted);line-height:1.5}
+.web-search-toggle{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:9px;padding:8px 10px;color:#e8dfcb!important;letter-spacing:0!important;font-size:11px!important;cursor:pointer;background:rgba(216,181,106,.04)}
+.web-search-toggle input{accent-color:var(--gold);width:14px;height:14px}
+.message.bot .md a{color:#f0d99d;text-decoration:underline;text-decoration-color:#a78039;text-underline-offset:3px;overflow-wrap:anywhere}
+.connector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.connector-card{border:1px solid var(--border);border-radius:15px;padding:19px;background:linear-gradient(145deg,#15130e,#0d0d0b)}
+.connector-card h3{font-size:14px;margin:12px 0 7px}.connector-card p{font-size:12px;line-height:1.7;color:var(--muted);min-height:55px}
+.connector-status{font-size:10px;color:var(--gold);letter-spacing:.5px}
+@media(max-width:800px){.connector-grid{grid-template-columns:1fr}}
 /* Rich, readable AI answers */
 .message.bot .md h1,.message.bot .md h2,.message.bot .md h3{font-family:"Playfair Display",serif;font-weight:500;color:var(--gold2);line-height:1.35;margin:12px 0 7px}
 .message.bot .md h1{font-size:21px}.message.bot .md h2{font-size:18px}.message.bot .md h3{font-size:15px}
@@ -780,6 +788,7 @@ footer .brand { color: var(--text); font-size: 20px; }
     <a href="#imageStudio">Image Studio</a>
     <a href="#videoStudio">Video Lab</a>
     <a href="#workspace">Workspace</a>
+    <a href="#connectors">Connectors</a>
     <a href="#plans">Plans</a>
     <a href="#about">About</a>
   </nav>
@@ -853,6 +862,7 @@ footer .brand { color: var(--text); font-size: 20px; }
             <option value="cloudflare" disabled>Cloudflare Workers AI · API key needed</option>
             <option value="compare">Compare all connected AIs</option>
           </select>
+          <label class="web-search-toggle" for="webSearchToggle"><input id="webSearchToggle" type="checkbox"> Web search</label>
           <span id="providerStatus">Checking connected AI engines…</span>
         </div>
         <form class="chat-form" id="chatForm">
@@ -979,6 +989,34 @@ footer .brand { color: var(--text); font-size: 20px; }
 
         <div class="workspace-result" id="workspaceResult"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="connectors">
+    <div class="section-heading">
+      <div class="mini">Tools & Integrations</div>
+      <h2>Connect Your <span class="gold-text">Workflow.</span></h2>
+      <p>Turn on web research or connect additional engines using your own provider credentials. Keys stay on the server, never in this page.</p>
+    </div>
+    <div class="connector-grid">
+      <article class="connector-card">
+        <div class="tool-icon">⌕</div><h3>Live Web Search</h3>
+        <div class="connector-status">GEMINI SEARCH GROUNDING</div>
+        <p>Search current web information and include source links in answers. Enable Web search above the chat input.</p>
+        <button class="btn" type="button" data-enable-search>Use web search ↗</button>
+      </article>
+      <article class="connector-card">
+        <div class="tool-icon">✦</div><h3>AI Engines</h3>
+        <div class="connector-status" id="connectorEngineStatus">Checking connection…</div>
+        <p>Use Auto or choose a configured engine. Compare mode runs all configured providers in parallel.</p>
+        <button class="btn" type="button" data-jump-chat>Manage in chat ↗</button>
+      </article>
+      <article class="connector-card">
+        <div class="tool-icon">⌘</div><h3>Connect More Tools</h3>
+        <div class="connector-status">SETUP REQUIRED</div>
+        <p>GitHub, Cloudflare, Render and other apps need secure OAuth/API integration before DexAI can act on them. They are not falsely marked connected.</p>
+        <a class="btn" href="https://github.com/iamzahidmir11-blip/Dexaitools" target="_blank" rel="noopener noreferrer">Open DexAI project ↗</a>
+      </article>
     </div>
   </section>
 
@@ -1278,11 +1316,23 @@ footer .brand { color: var(--text); font-size: 20px; }
         option.textContent = connected.has(id) ? labels[id] + " · connected" : labels[id] + " · API key needed";
       });
       status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
+      const connectorStatus = $("connectorEngineStatus");
+      if (connectorStatus) connectorStatus.textContent = (data.providers || []).length + " ENGINE(S) CONNECTED";
     } catch {
       status.textContent = "Could not check AI engine status."; 
     }
   }
   loadProviderStatus();
+  document.querySelectorAll("[data-enable-search]").forEach(button => button.addEventListener("click", () => {
+    $("webSearchToggle").checked = true;
+    $("chat").scrollIntoView({ behavior: "smooth" });
+    toast("Web search enabled. Ask for current information to research the web.");
+    setTimeout(() => $("chatInput").focus(), 450);
+  }));
+  document.querySelectorAll("[data-jump-chat]").forEach(button => button.addEventListener("click", () => {
+    $("chat").scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => $("providerSelect").focus(), 450);
+  }));
 
   // Chat
   const form = $("chatForm");
@@ -1297,7 +1347,8 @@ footer .brand { color: var(--text); font-size: 20px; }
     const inline = value => escapeHTML(value)
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, "$1<em>$2</em>");
+      .replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, "$1<em>$2</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>');
     const lines = String(text || "").replace(/\r/g, "").split("\n");
     let html = "", inCode = false, codeLines = [], listType = "";
     const closeList = () => { if (listType) { html += listType === "ol" ? "</ol>" : "</ul>"; listType = ""; } };
@@ -1379,7 +1430,7 @@ footer .brand { color: var(--text); font-size: 20px; }
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message, provider: $("providerSelect").value })
+        body: JSON.stringify({ message, provider: $("providerSelect").value, web_search: $("webSearchToggle").checked })
       });
 
       let data;
