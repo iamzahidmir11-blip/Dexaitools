@@ -500,11 +500,23 @@ main { min-height: 75vh; }
   background: rgba(0,0,0,.12);
 }
 .composer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
-.composer-modes{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0}
-.composer-mode{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:#11110f;color:#c8c0b0;font-size:11px;font-weight:600;transition:all .18s}
+.composer-modes{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0}
+.composer-mode{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#11110f;color:#c8c0b0;font-size:11px;font-weight:600;transition:all .18s}
 .composer-mode span{font-size:13px;color:var(--gold)}
 .composer-mode:hover{border-color:rgba(216,181,106,.5);color:#fff2d1}
 .composer-mode.active{background:linear-gradient(135deg,rgba(216,181,106,.19),rgba(216,181,106,.06));border-color:rgba(216,181,106,.65);color:#fff0c7;box-shadow:inset 0 0 0 1px rgba(216,181,106,.07)}
+.tool-menu-wrap{position:relative}
+.tool-menu-trigger{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid rgba(216,181,106,.19);border-radius:10px;background:rgba(216,181,106,.035);color:#cfc5b0;font-size:11px;font-weight:600;transition:.2s}
+.tool-menu-trigger:hover,.tool-menu-trigger[aria-expanded="true"]{border-color:rgba(216,181,106,.55);background:rgba(216,181,106,.09);color:#fff0c7}
+.tool-menu-trigger .chevron{display:inline-block;color:var(--gold);transition:transform .2s;font-size:12px}
+.tool-menu-trigger[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+.tool-menu-trigger .tool-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 9px rgba(216,181,106,.5)}
+.tool-menu{position:absolute;left:0;top:calc(100% + 9px);z-index:150;min-width:190px;padding:7px;border:1px solid rgba(216,181,106,.24);border-radius:14px;background:rgba(17,16,13,.98);box-shadow:0 18px 45px rgba(0,0,0,.48),0 0 25px rgba(216,181,106,.06);backdrop-filter:blur(18px);display:grid;gap:4px;animation:toolMenuIn .16s ease}
+.tool-menu[hidden]{display:none}
+.tool-menu .composer-mode{width:100%;justify-content:flex-start;padding:10px 11px;border-color:transparent;background:transparent}
+.tool-menu .composer-mode.active{border-color:rgba(216,181,106,.4);background:rgba(216,181,106,.09)}
+.tool-menu-caption{padding:5px 9px 7px;color:#827b6d;font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
+@keyframes toolMenuIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .voice-controls{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;margin:0}
 .voice-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(216,181,106,.22);border-radius:9px;padding:7px 9px;background:#11110f;color:#e9dfca;font-size:11px;font-weight:600;transition:.2s;min-width:32px;min-height:31px}
 .voice-btn:hover,.voice-btn.active{border-color:var(--gold);background:rgba(216,181,106,.12);color:#fff0c7}
@@ -876,8 +888,14 @@ footer .brand { color: var(--text); font-size: 20px; }
         <div class="composer-toolbar">
           <div class="composer-modes" role="group" aria-label="Choose what DexAI should do">
             <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true" title="Chat"><span>✦</span> Chat</button>
-            <button type="button" class="composer-mode" data-mode="image" aria-pressed="false" title="Create an image"><span>▧</span> Image</button>
-            <button type="button" class="composer-mode" data-mode="video" aria-pressed="false" title="Create a video prompt"><span>▶</span> Video</button>
+            <div class="tool-menu-wrap" id="toolMenuWrap">
+              <button type="button" class="tool-menu-trigger" id="toolMenuTrigger" aria-expanded="false" aria-controls="toolMenu"><span class="tool-dot"></span> More tools <span class="chevron">⌄</span></button>
+              <div class="tool-menu" id="toolMenu" role="group" aria-label="Creative tools" hidden>
+                <div class="tool-menu-caption">Create with DexAI</div>
+                <button type="button" class="composer-mode" data-mode="image" aria-pressed="false" title="Create an image"><span>▧</span> Image generation</button>
+                <button type="button" class="composer-mode" data-mode="video" aria-pressed="false" title="Create a video prompt"><span>▶</span> Video tools <span style="margin-left:auto;color:#8d8576;font-size:10px">↗</span></button>
+              </div>
+            </div>
           </div>
           <div class="voice-controls" aria-label="Voice assistant controls">
             <button class="voice-btn icon-only" type="button" id="micButton" aria-label="Speak to type" title="Speak to type"><span class="voice-icon">🎙</span></button>
@@ -1181,6 +1199,22 @@ footer .brand { color: var(--text); font-size: 20px; }
     image: "Describe the image; DexAI will create it in this chat.",
     video: "Describe a video; DexAI will build a ready-to-use video prompt. Video rendering needs a video provider."
   };
+  const toolMenu = $("toolMenu");
+  const toolMenuTrigger = $("toolMenuTrigger");
+  function setToolMenuOpen(open) {
+    toolMenu.hidden = !open;
+    toolMenuTrigger.setAttribute("aria-expanded", String(open));
+  }
+  toolMenuTrigger.addEventListener("click", event => {
+    event.stopPropagation();
+    setToolMenuOpen(toolMenu.hidden);
+  });
+  document.addEventListener("click", event => {
+    if (!event.target.closest("#toolMenuWrap")) setToolMenuOpen(false);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") setToolMenuOpen(false);
+  });
   document.querySelectorAll("[data-mode]").forEach(button => {
     button.addEventListener("click", () => {
       composerMode = button.dataset.mode;
@@ -1189,6 +1223,8 @@ footer .brand { color: var(--text); font-size: 20px; }
         item.classList.toggle("active", active);
         item.setAttribute("aria-pressed", String(active));
       });
+      setToolMenuOpen(false);
+      toolMenuTrigger.innerHTML = '<span class="tool-dot"></span> ' + (composerMode === "image" ? "Image tools" : composerMode === "video" ? "Video tools" : "More tools") + ' <span class="chevron">⌄</span>';
       $("composerModeHint").textContent = composerModeHints[composerMode];
       $("chatInput").placeholder = composerMode === "image"
         ? "Describe the image you want to create…"
