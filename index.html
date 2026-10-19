@@ -1608,6 +1608,26 @@ body.dex-focus-mode footer{display:none!important}
 
   const API_URL = "https://dexaitools.onrender.com/api/chat";
 
+  // Bound network waits so the interface never stays on an endless spinner.
+  async function fetchWithTimeout(url, options = {}) {
+    const timeoutMs = String(url).includes("/api/image") ? 90000
+      : String(url).includes("/api/billing/checkout") ? 30000 : 60000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw new Error(timeoutMs >= 90000
+          ? "This request took too long. The image service may be waking up or busy. Please try again."
+          : "The server took too long to respond. Please try again in a moment.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   const $ = (id) => document.getElementById(id);
 
   $("year").textContent = new Date().getFullYear();
@@ -2566,7 +2586,7 @@ body.dex-focus-mode footer{display:none!important}
     try {
       const currentChat = ensureLocalChat();
       const remoteThreadId = await ensureRemoteThread(currentChat);
-      const response = await fetch(API_URL, {
+      const response = await fetchWithTimeout(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2649,7 +2669,7 @@ body.dex-focus-mode footer{display:none!important}
     errorBox.textContent = "";
     const reply = addMessage("Creating your image…", "bot");
     try {
-      const res = await fetch("https://dexaitools.onrender.com/api/image", {
+      const res = await fetchWithTimeout("https://dexaitools.onrender.com/api/image", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
         body: JSON.stringify({ prompt })
@@ -2735,7 +2755,7 @@ body.dex-focus-mode footer{display:none!important}
     button.disabled = true;
     button.textContent = "Opening secure checkout…";
     try {
-      const res = await fetch("https://dexaitools.onrender.com/api/billing/checkout", {
+      const res = await fetchWithTimeout("https://dexaitools.onrender.com/api/billing/checkout", {
         method: "POST",
         headers: {"Content-Type":"application/json","Authorization":"Bearer "+authToken},
         body: JSON.stringify({plan})
