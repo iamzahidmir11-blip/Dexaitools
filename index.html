@@ -692,7 +692,7 @@ footer .brand { color: var(--text); font-size: 20px; }
 .toast.show { opacity: 1; transform: translate(-50%,0); }
 
 
-.provider-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.provider-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}.test-model-button{border:1px solid var(--border);border-radius:9px;padding:8px 10px;background:rgba(216,181,106,.08);color:var(--gold2);font-size:11px;font-weight:700}.test-model-button:disabled{opacity:.55;cursor:wait}
 .provider-row label{font-size:11px;letter-spacing:.5px;color:var(--gold)}
 .provider-row select{max-width:100%;background:#090909;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;outline:none}
 .provider-row select:focus{border-color:var(--gold)}
@@ -896,7 +896,8 @@ footer .brand { color: var(--text); font-size: 20px; }
             <option value="compare">Compare all connected AIs</option>
           </select>
           <label class="web-search-toggle" for="webSearchToggle"><input id="webSearchToggle" type="checkbox"> Web search</label>
-          <span id="providerStatus">Checking connected AI engines…</span>
+          <button type="button" class="test-model-button" id="testModelButton">Test AI</button>
+          <span id="providerStatus" role="status">Checking connected AI engines…</span>
         </div>
         <form class="chat-form" id="chatForm">
           <textarea id="chatInput" placeholder="Ask DexAI anything..." rows="1" maxlength="4000" aria-label="Your message" required></textarea>
@@ -1546,6 +1547,35 @@ footer .brand { color: var(--text); font-size: 20px; }
     }
   }
   loadProviderStatus();
+  $("testModelButton").addEventListener("click", async () => {
+    const button = $("testModelButton");
+    const status = $("providerStatus");
+    if (!authToken || !signedInUser) {
+      openAuth();
+      authError.textContent = "Sign in to test the AI connection.";
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Testing…";
+    status.textContent = "Checking selected AI engine…";
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/test-model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
+        body: JSON.stringify({ provider: $("providerSelect").value })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Connection test failed.");
+      status.textContent = data.provider + " replied in " + data.elapsed_ms + " ms.";
+      toast("AI connection test passed.");
+    } catch (error) {
+      status.textContent = error.message || "AI connection test failed. Check the server logs.";
+      toast("AI test failed — see the status beside the selector.");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Test AI";
+    }
+  });
   document.querySelectorAll("[data-enable-search]").forEach(button => button.addEventListener("click", () => {
     $("webSearchToggle").checked = true;
     $("chat").scrollIntoView({ behavior: "smooth" });
