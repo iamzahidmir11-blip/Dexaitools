@@ -499,6 +499,16 @@ main { min-height: 75vh; }
   border-top: 1px solid rgba(255,255,255,.07);
   background: rgba(0,0,0,.12);
 }
+.composer-modes{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 13px}
+.composer-mode{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;border:1px solid rgba(255,255,255,.10);border-radius:11px;background:#11110f;color:#c8c0b0;font-size:12px;font-weight:600;transition:all .18s}
+.composer-mode span{font-size:15px;color:var(--gold)}
+.composer-mode:hover{border-color:rgba(216,181,106,.5);color:#fff2d1}
+.composer-mode.active{background:linear-gradient(135deg,rgba(216,181,106,.19),rgba(216,181,106,.06));border-color:rgba(216,181,106,.65);color:#fff0c7;box-shadow:inset 0 0 0 1px rgba(216,181,106,.07)}
+.composer-mode-hint{font-size:11px;color:var(--muted);margin-left:auto}
+.chat-generated-image{display:block;max-width:min(100%,640px);max-height:640px;object-fit:contain;border-radius:13px;border:1px solid var(--border);margin:12px 0}
+.chat-image-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.chat-image-actions a{display:inline-block;border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--gold2);text-decoration:none;font-size:12px}
+@media(max-width:560px){.composer-mode{padding:9px 10px;font-size:11px}.composer-mode-hint{width:100%;margin-left:2px}}
 
 .chat-form {
   display: flex;
@@ -853,6 +863,12 @@ footer .brand { color: var(--text); font-size: 20px; }
       </div>
 
       <div class="chat-form-wrap">
+        <div class="composer-modes" role="group" aria-label="Choose what DexAI should do">
+          <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true"><span>✦</span> Chat</button>
+          <button type="button" class="composer-mode" data-mode="image" aria-pressed="false"><span>▧</span> Image generation</button>
+          <button type="button" class="composer-mode" data-mode="video" aria-pressed="false"><span>▶</span> Video generation</button>
+          <span class="composer-mode-hint" id="composerModeHint">Ask anything, or choose a creative mode.</span>
+        </div>
         <div class="provider-row">
           <label for="providerSelect">AI engine</label>
           <select id="providerSelect" aria-label="Choose AI engine">
@@ -1141,6 +1157,29 @@ footer .brand { color: var(--text); font-size: 20px; }
   let authMode = "login";
   let signedInUser = null;
   let pendingMessage = "";
+  let composerMode = "chat";
+  const composerModeHints = {
+    chat: "Ask anything, or choose a creative mode.",
+    image: "Describe the image; DexAI will create it in this chat.",
+    video: "Describe a video; DexAI will build a ready-to-use video prompt. Video rendering needs a video provider."
+  };
+  document.querySelectorAll("[data-mode]").forEach(button => {
+    button.addEventListener("click", () => {
+      composerMode = button.dataset.mode;
+      document.querySelectorAll("[data-mode]").forEach(item => {
+        const active = item.dataset.mode === composerMode;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-pressed", String(active));
+      });
+      $("composerModeHint").textContent = composerModeHints[composerMode];
+      $("chatInput").placeholder = composerMode === "image"
+        ? "Describe the image you want to create…"
+        : composerMode === "video"
+          ? "Describe your video idea…"
+          : "Ask DexAI anything...";
+      $("chatInput").focus();
+    });
+  });
   const authOverlay = $("authOverlay");
   const authError = $("authError");
   function setAuthMode(mode) {
@@ -1413,9 +1452,17 @@ footer .brand { color: var(--text); font-size: 20px; }
       return;
     }
 
+    if (composerMode === "image") {
+      await generateImageInChat(message);
+      return;
+    }
+
     $("welcomeCard")?.remove();
 
-    addMessage(message, "user");
+    addMessage(composerMode === "video" ? "Create a video from this idea: " + message : message, "user");
+    const requestMessage = composerMode === "video"
+      ? "Create a production-ready AI video-generation prompt from this idea. Include duration, scene-by-scene action, camera movement, lighting, visual style, continuity constraints, negative prompt, and sound/dialogue direction. Be clear that this is a prompt, not a rendered video file. Idea: " + message
+      : message;
     input.value = "";
     input.style.height = "43px";
     sendButton.disabled = true;
@@ -1430,7 +1477,7 @@ footer .brand { color: var(--text); font-size: 20px; }
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message, provider: $("providerSelect").value, web_search: $("webSearchToggle").checked })
+        body: JSON.stringify({ message: requestMessage, provider: $("providerSelect").value, web_search: $("webSearchToggle").checked && composerMode === "chat" })
       });
 
       let data;
@@ -1466,6 +1513,59 @@ footer .brand { color: var(--text); font-size: 20px; }
           : error.message + " Check the selected provider's API configuration if this continues.";
 
       console.error("DexAI request failed:", error);
+    } finally {
+      sendButton.disabled = false;
+      input.focus();
+      messages.scrollTop = messages.scrollHeight;
+    }
+  }
+
+  async function generateImageInChat(prompt) {
+    if (!authToken || !signedInUser) {
+      pendingMessage = prompt;
+      openAuth();
+      authError.textContent = "Sign in before generating an image.";
+      return;
+    }
+    $("welcomeCard")?.remove();
+    addMessage("Create an image: " + prompt, "user");
+    input.value = "";
+    input.style.height = "43px";
+    sendButton.disabled = true;
+    errorBox.textContent = "";
+    const reply = addMessage("Creating your image…", "bot");
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + authToken },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          authToken = ""; signedInUser = null;
+          localStorage.removeItem("dexai_token"); updateAccountButton(); openAuth();
+        }
+        throw new Error(data.error || "Image generation failed.");
+      }
+      const mime = data.mime_type || "image/png";
+      const dataURL = "data:" + mime + ";base64," + data.image;
+      reply.textContent = "Your image is ready.";
+      const image = document.createElement("img");
+      image.className = "chat-generated-image";
+      image.alt = "Image generated by DexAI";
+      image.src = dataURL;
+      const actions = document.createElement("div");
+      actions.className = "chat-image-actions";
+      const download = document.createElement("a");
+      download.href = dataURL;
+      download.download = "dexai-image." + (mime.split("/")[1] || "png").replace("jpeg", "jpg");
+      download.textContent = "Download image ↓";
+      actions.appendChild(download);
+      reply.append(image, actions);
+      refreshUsage();
+    } catch (error) {
+      reply.textContent = "Image generation failed: " + (error.message || "Please check the image model configuration.");
     } finally {
       sendButton.disabled = false;
       input.focus();
