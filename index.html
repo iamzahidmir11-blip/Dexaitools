@@ -542,7 +542,7 @@ main { min-height: 75vh; }
 .chat-image-actions a{display:inline-block;border:1px solid var(--border);border-radius:9px;padding:8px 12px;color:var(--gold2);text-decoration:none;font-size:12px}
 @media(max-width:560px){.composer-mode{padding:9px 10px;font-size:11px}.composer-mode-hint{width:100%;margin-left:2px}}
 
-.chat-form {
+.attachment-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 9px}.attach-button{border:1px solid rgba(216,181,106,.28);border-radius:9px;padding:8px 11px;background:#11110f;color:#e8d9b7;font-size:11px;font-weight:600}.attach-button:hover{border-color:var(--gold);background:rgba(216,181,106,.08)}.attachment-list{display:flex;gap:6px;flex-wrap:wrap}.attachment-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:6px 9px;border:1px solid rgba(216,181,106,.2);border-radius:9px;color:#d6cdbb;font-size:10px}.attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}.attachment-chip button{border:0;background:transparent;color:#e6a5a5;padding:0 2px;font-size:14px}.attachment-help{color:#777166;font-size:10px;line-height:1.5}.chat-form {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -935,8 +935,14 @@ footer .brand { color: var(--text); font-size: 20px; }
           <button type="button" class="test-model-button" id="testModelButton">Test AI</button>
           <span id="providerStatus" role="status">Checking connected AI engines…</span>
         </div>
+        <div class="attachment-row">
+          <button class="attach-button" type="button" id="attachFilesButton" aria-label="Attach files">＋ Attach files</button>
+          <input id="chatFileInput" type="file" accept="image/*,video/mp4,video/webm,application/pdf,text/plain,.txt,.pdf" multiple hidden>
+          <div id="attachmentList" class="attachment-list" aria-live="polite"></div>
+          <span class="attachment-help">Up to 3 files · 18 MB total · images, PDF, text, MP4/WebM</span>
+        </div>
         <form class="chat-form" id="chatForm">
-          <textarea id="chatInput" placeholder="Ask DexAI anything..." rows="1" maxlength="4000" aria-label="Your message" required></textarea>
+          <textarea id="chatInput" placeholder="Ask DexAI anything or attach a file..." rows="1" maxlength="4000" aria-label="Your message"></textarea>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
         </form>
         <div class="chat-note">Please verify important information. Avoid sharing passwords or sensitive personal data.</div>
@@ -1646,7 +1652,44 @@ footer .brand { color: var(--text); font-size: 20px; }
   const messages = $("chatMessages");
   const sendButton = $("sendButton");
   const errorBox = $("chatError");
+  const fileInput = $("chatFileInput");
+  const attachmentList = $("attachmentList");
+  let selectedChatFiles = [];
 
+  function renderAttachmentChips() {
+    attachmentList.replaceChildren();
+    selectedChatFiles.forEach((file, index) => {
+      const chip = document.createElement("div");
+      chip.className = "attachment-chip";
+      const name = document.createElement("span");
+      name.textContent = file.name + " (" + (file.size / (1024 * 1024)).toFixed(1) + " MB)";
+      const remove = document.createElement("button");
+      remove.type = "button"; remove.textContent = "×"; remove.setAttribute("aria-label", "Remove " + file.name);
+      remove.addEventListener("click", () => { selectedChatFiles.splice(index, 1); renderAttachmentChips(); });
+      chip.append(name, remove); attachmentList.appendChild(chip);
+    });
+  }
+
+  $("attachFilesButton").addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", async () => {
+    const picked = Array.from(fileInput.files || []);
+    fileInput.value = "";
+    for (const file of picked) {
+      if (selectedChatFiles.length >= 3) { toast("Attach up to 3 files per message."); break; }
+      if (file.size > 18 * 1024 * 1024 || selectedChatFiles.reduce((sum, item) => sum + item.size, 0) + file.size > 18 * 1024 * 1024) {
+        toast("Files must fit within 18 MB total. Large 4K videos may need compression first."); continue;
+      }
+      const supported = file.type.startsWith("image/") || ["video/mp4","video/webm","application/pdf","text/plain"].includes(file.type) || /\.(pdf|txt)$/i.test(file.name);
+      if (!supported) { toast("Supported files: images, MP4/WebM videos, PDFs and TXT."); continue; }
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file);
+        });
+        selectedChatFiles.push({name:file.name, mime_type:file.type || (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "text/plain"), size:file.size, data:String(dataUrl).split(",")[1]});
+      } catch { toast("Could not read " + file.name + ". Please try again."); }
+    }
+    renderAttachmentChips();
+  });
 
   function renderMarkdown(target, text) {
     const escapeHTML = value => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -1710,7 +1753,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   }
 
   async function sendMessage(text) {
-    const message = text.trim();
+    const message = text.trim() || (selectedChatFiles.length ? "Please analyze the attached file(s) and summarize the important details." : "");
     if (!message || sendButton.disabled) return;
     if (!authToken || !signedInUser) {
       pendingMessage = message;
@@ -1726,7 +1769,8 @@ footer .brand { color: var(--text); font-size: 20px; }
 
     $("welcomeCard")?.remove();
 
-    addMessage(composerMode === "video" ? "Create a video from this idea: " + message : message, "user");
+    const shownMessage = composerMode === "video" ? "Create a video from this idea: " + message : message;
+    addMessage(shownMessage + (selectedChatFiles.length ? "\n\n📎 " + selectedChatFiles.map(file => file.name).join(", ") : ""), "user");
     const requestMessage = composerMode === "video"
       ? "Create a production-ready AI video-generation prompt from this idea. Include duration, scene-by-scene action, camera movement, lighting, visual style, continuity constraints, negative prompt, and sound/dialogue direction. Be clear that this is a prompt, not a rendered video file. Idea: " + message
       : message;
@@ -1744,7 +1788,7 @@ footer .brand { color: var(--text); font-size: 20px; }
           "Content-Type": "application/json",
           "Authorization": "Bearer " + authToken
         },
-        body: JSON.stringify({ message: requestMessage, provider: $("providerSelect").value, model: $("modelInput").value.trim(), web_search: $("webSearchToggle").checked && composerMode === "chat" })
+        body: JSON.stringify({ message: requestMessage, provider: selectedChatFiles.length ? "gemini" : $("providerSelect").value, model: $("modelInput").value.trim(), web_search: $("webSearchToggle").checked && composerMode === "chat", attachments: selectedChatFiles.map(({name,mime_type,data}) => ({name,mime_type,data})) })
       });
 
       let data;
@@ -1771,6 +1815,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       }
 
       renderMarkdown(reply, data.reply);
+      selectedChatFiles = []; renderAttachmentChips();
       lastAssistantText = data.reply;
       if (liveVoiceActive) speakAssistant(data.reply);
       refreshUsage();
