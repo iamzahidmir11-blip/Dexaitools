@@ -356,7 +356,8 @@ def call_ai_provider(provider, message, web_search=False, model_override=None):
         if web_search:
             config_options["tools"] = [types.Tool(google_search=types.GoogleSearch())]
         config = types.GenerateContentConfig(**config_options)
-        selected_model = (model_override or MODEL).strip()[:200]\n        result = client.models.generate_content(model=selected_model, contents=message, config=config)
+        selected_model = (model_override or MODEL).strip()[:200]
+        result = client.models.generate_content(model=selected_model, contents=message, config=config)
         answer = (result.text or "").strip()
         if not answer:
             feedback = getattr(result, "prompt_feedback", None)
@@ -492,7 +493,8 @@ def chat():
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
     provider = str(data.get("provider", "auto")).lower()
-    web_search = bool(data.get("web_search", False))\n    requested_model = str(data.get("model", "")).strip()[:200] or None
+    web_search = bool(data.get("web_search", False))
+    requested_model = str(data.get("model", "")).strip()[:200] or None
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
@@ -551,7 +553,7 @@ def chat():
                     "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
                     "and ask a follow-up only if essential. Never invent facts.\n\nUser: " + message
                 )
-            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + message).encode()).hexdigest()
+            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
