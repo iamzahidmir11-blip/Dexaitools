@@ -462,7 +462,7 @@ def test_model_connection():
     data = request.get_json(silent=True) or {}
     requested = str(data.get("provider", "auto")).lower()
     available = [item["id"] for item in configured_providers()]
-    if requested == "auto":
+    if requested in {"auto", "compare"}:
         provider = next((p for p in ("gemini", "openai", "cloudflare") if p in available), None)
     else:
         provider = requested
