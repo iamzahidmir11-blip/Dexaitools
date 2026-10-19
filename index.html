@@ -1456,7 +1456,7 @@ footer .brand { color: var(--text); font-size: 20px; }
         throw new Error("The AI returned an empty response.");
       }
 
-      reply.textContent = data.reply;
+      renderMarkdown(reply, data.reply);
       refreshUsage();
     } catch (error) {
       reply.textContent = "I couldn't get a response from the AI server.";
