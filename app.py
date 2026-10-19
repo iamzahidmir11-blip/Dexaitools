@@ -14,9 +14,10 @@ from google import genai
 from google.genai import types
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 28 * 1024 * 1024
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "20"))
+FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "50"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 PLUS_DAILY_LIMIT = int(os.getenv("PLUS_DAILY_LIMIT", "50"))
 PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "150"))
@@ -342,7 +343,7 @@ def configured_providers():
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
 
-def call_ai_provider(provider, message, web_search=False, model_override=None):
+def call_ai_provider(provider, message, web_search=False, model_override=None, attachments=None):
     import json
     import urllib.request
     import urllib.error
@@ -357,7 +358,12 @@ def call_ai_provider(provider, message, web_search=False, model_override=None):
             config_options["tools"] = [types.Tool(google_search=types.GoogleSearch())]
         config = types.GenerateContentConfig(**config_options)
         selected_model = (model_override or MODEL).strip()[:200]
-        result = client.models.generate_content(model=selected_model, contents=message, config=config)
+        contents = message
+        if attachments:
+            contents = [types.Part.from_text(text=message)]
+            for item in attachments:
+                contents.append(types.Part.from_bytes(data=base64.b64decode(item["data"]), mime_type=item["mime_type"]))
+        result = client.models.generate_content(model=selected_model, contents=contents, config=config)
         answer = (result.text or "").strip()
         if not answer:
             feedback = getattr(result, "prompt_feedback", None)
@@ -492,6 +498,7 @@ def chat():
 
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
+    attachments = data.get("attachments", []) or []
     provider = str(data.get("provider", "auto")).lower()
     web_search = bool(data.get("web_search", False))
     requested_model = str(data.get("model", "")).strip()[:200] or None
@@ -501,11 +508,35 @@ def chat():
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
     if provider not in {"auto", "compare", "gemini", "openai", "cloudflare"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
+    if not isinstance(attachments, list) or len(attachments) > 3:
+        return jsonify({"error": "Attach up to 3 files per message."}), 400
+    total_attachment_bytes = 0
+    for item in attachments:
+        if not isinstance(item, dict):
+            return jsonify({"error": "Invalid attachment format."}), 400
+        mime_type = str(item.get("mime_type", ""))
+        encoded = str(item.get("data", ""))
+        allowed = mime_type.startswith("image/") or mime_type in {"video/mp4", "video/webm", "application/pdf", "text/plain"}
+        if not allowed:
+            return jsonify({"error": "Supported files: images, MP4/WebM videos, PDFs and plain text."}), 415
+        try:
+            raw = base64.b64decode(encoded, validate=True)
+        except Exception:
+            return jsonify({"error": "An attachment could not be read. Please choose it again."}), 400
+        total_attachment_bytes += len(raw)
+        if len(raw) > 18 * 1024 * 1024:
+            return jsonify({"error": "Each attachment must be 18 MB or smaller."}), 413
+    if total_attachment_bytes > 18 * 1024 * 1024:
+        return jsonify({"error": "Total attachments must be 18 MB or smaller per message."}), 413
 
     available = [item["id"] for item in configured_providers()]
     if not available:
         return jsonify({"error": "No AI provider is configured on the server yet."}), 503
-    if web_search:
+    if attachments:
+        if "gemini" not in available:
+            return jsonify({"error": "File analysis currently needs Gemini to be configured on the server. Try again after its quota resets."}), 503
+        selected = ["gemini"]
+    elif web_search:
         if "gemini" not in available:
             return jsonify({"error": "Web search needs the Gemini engine to be connected."}), 503
         selected = ["gemini"]
@@ -556,7 +587,8 @@ def chat():
                     "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
                     "and ask a follow-up only if essential. Never invent facts.\n\nUser: " + message
                 )
-            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message).encode()).hexdigest()
+            attachment_fingerprint = hashlib.sha256("".join(hashlib.sha256(base64.b64decode(item["data"])).hexdigest() for item in attachments).encode()).hexdigest() if attachments else ""
+            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message + "\n" + attachment_fingerprint).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
@@ -575,7 +607,8 @@ def chat():
                             reply = call_ai_provider(
                                 p, prompt_message,
                                 web_search=web_search and p == "gemini",
-                                model_override=requested_model if len(selected) == 1 else None
+                                model_override=requested_model if len(selected) == 1 else None,
+                                attachments=attachments if p == "gemini" else None
                             )
                             results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
                             if auto_fallback:
@@ -587,7 +620,7 @@ def chat():
                                 break
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
-                        futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini"): p for p in selected}
+                        futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini", attachments=attachments if p == "gemini" else None): p for p in selected}
                         for future in as_completed(futures):
                             p = futures[future]
                             try:
