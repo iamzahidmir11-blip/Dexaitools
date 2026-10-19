@@ -1343,6 +1343,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   let authMode = "login";
   let signedInUser = null;
   let pendingMessage = "";
+  let pendingPlan = "";
   let composerMode = "chat";
   const composerModeHints = {
     chat: "Ask anything, or choose a creative mode.",
@@ -1647,7 +1648,11 @@ footer .brand { color: var(--text); font-size: 20px; }
       $("authForm").reset();
       setAuthMode("login");
       await refreshUsage();
-      if (pendingMessage) {
+      if (pendingPlan) {
+        const queuedPlan = pendingPlan;
+        pendingPlan = "";
+        startCheckout(queuedPlan);
+      } else if (pendingMessage) {
         const queuedMessage = pendingMessage;
         pendingMessage = "";
         sendMessage(queuedMessage);
@@ -2151,8 +2156,36 @@ footer .brand { color: var(--text); font-size: 20px; }
   });
 
 
-  $("plusPlanButton").addEventListener("click", () => toast("Plus is a preview. Paid checkout is not connected yet."));
-  $("proPlanButton").addEventListener("click", () => toast("Pro is a preview. Paid checkout is not connected yet."));
+  async function startCheckout(plan) {
+    if (!authToken || !signedInUser) {
+      pendingPlan = plan;
+      openAuth();
+      authError.textContent = "Sign in first. After login, DexAI will continue to the selected plan.";
+      return;
+    }
+    const button = plan === "pro" ? $("plusPlanButton") : $("proPlanButton");
+    const previousText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Opening secure checkout…";
+    try {
+      const res = await fetch("https://dexaitools.onrender.com/api/billing/checkout", {
+        method: "POST",
+        headers: {"Content-Type":"application/json","Authorization":"Bearer "+authToken},
+        body: JSON.stringify({plan})
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Checkout could not be started.");
+      if (!data.url) throw new Error("Stripe did not return a checkout link.");
+      window.location.href = data.url;
+    } catch (error) {
+      toast(error.message || "Billing setup is not ready yet.");
+    } finally {
+      button.disabled = false;
+      button.textContent = previousText;
+    }
+  }
+  $("plusPlanButton").addEventListener("click", () => startCheckout("pro"));
+  $("proPlanButton").addEventListener("click", () => startCheckout("pro_plus"));
 
   $("generateImage").addEventListener("click", async () => {
     const prompt = $("imagePrompt").value.trim();
