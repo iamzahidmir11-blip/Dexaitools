@@ -368,7 +368,7 @@ def call_ai_provider(provider, message, web_search=False):
             except Exception:
                 app.logger.exception("Could not read Gemini grounding sources")
             if sources:
-                answer += "\\n\\n## Sources\\n" + "\\n".join(
+                answer += "\n\n## Sources\n" + "\n".join(
                     "- [" + title.replace("]", "") + "](" + uri + ")" for title, uri in sources[:8]
                 )
         if not answer:
