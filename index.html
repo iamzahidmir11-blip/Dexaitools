@@ -2217,6 +2217,7 @@ body.dex-focus-mode footer{display:none!important}
     }
     updateAccountButton();
     await refreshUsage();
+      await refreshBillingStatus();
     if (signedInUser) await loadRemoteThreads();
   }
   $("authForm").addEventListener("submit", async event => {
@@ -2245,6 +2246,7 @@ body.dex-focus-mode footer{display:none!important}
       $("authForm").reset();
       setAuthMode("login");
       await refreshUsage();
+      await refreshBillingStatus();
       await loadRemoteThreads();
       if (pendingPlan) {
         const queuedPlan = pendingPlan;
