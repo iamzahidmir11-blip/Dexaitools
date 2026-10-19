@@ -936,6 +936,29 @@ footer .brand { color: var(--text); font-size: 20px; }
 .desktop-profile input{padding:11px;border:1px solid #373125;border-radius:9px;background:#151410;color:#f5eee0}
 @media(max-width:620px){.desktop-window{grid-template-columns:66px minmax(0,1fr);height:96dvh;border-radius:14px}.desktop-nav{padding:10px 5px}.desktop-nav-brand{padding:10px 3px;font-size:0;text-align:center}.desktop-nav-brand:after{content:"D";font-size:16px}.desktop-nav button{justify-content:center;padding:11px 3px;font-size:0}.desktop-nav button span{font-size:16px}.desktop-nav .desktop-nav-caption{font-size:0;padding:9px 0}.desktop-body{padding:13px}.desktop-grid{grid-template-columns:1fr}.desktop-head{padding:12px}}
 
+
+/* Compact top controls and a persistent upgrade entry */
+.chat-top-actions{display:flex;align-items:center;gap:7px}
+.top-upgrade-button{display:inline-flex;align-items:center;gap:5px;min-height:35px;padding:0 12px;border:1px solid rgba(216,181,106,.42);border-radius:10px;background:linear-gradient(135deg,#dfc17e,#b68a42);color:#17130a;font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap}
+.top-upgrade-button:hover{filter:brightness(1.08)}
+.desktop-nav{display:flex;flex-direction:column}
+.desktop-nav-spacer{flex:1;min-height:16px}
+.desktop-upgrade-link{display:flex;align-items:center;gap:9px;margin:10px 2px 2px;padding:11px 10px;border:1px solid rgba(216,181,106,.4);border-radius:12px;background:linear-gradient(135deg,rgba(216,181,106,.16),rgba(216,181,106,.045));color:#f0d59b;text-decoration:none}
+.desktop-upgrade-link>span:first-child{font-size:18px}
+.desktop-upgrade-link strong,.desktop-upgrade-link small{display:block}
+.desktop-upgrade-link strong{font-size:11px}
+.desktop-upgrade-link small{margin-top:3px;color:#a79a7e;font-size:9px}
+.desktop-upgrade-link b{margin-left:auto;font-size:13px}
+@media(max-width:620px){
+ .chat-top-actions{gap:5px}
+ .top-upgrade-button{min-height:32px;padding:0 8px;font-size:10px}
+ .model-settings-button{font-size:0!important;gap:0!important;width:34px;justify-content:center;padding:0!important}
+ .model-settings-button span{font-size:14px}
+ .model-settings-button b{display:none}
+ .desktop-upgrade-link{justify-content:center;padding:11px 3px}
+ .desktop-upgrade-link>span:first-child{font-size:16px}
+ .desktop-upgrade-link>span:nth-child(2),.desktop-upgrade-link>b{display:none}
+}
 </style>
 </head>
 
@@ -1010,7 +1033,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       <div class="chat-main">
         <div class="chat-topbar">
           <div><div class="chat-top-title">AI Chat <span class="live-pill"><i></i> Workspace</span></div><div class="chat-top-subtitle">Ideas, files and voice in one focused space.</div></div>
-          <div style="display:flex;align-items:center;gap:8px"><button type="button" id="desktopLauncher" class="desktop-launcher" aria-label="Open DexAI desktop workspace" title="Workspace">⫶</button><button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Model <b>⌄</b></button></div>
+          <div class="chat-top-actions"><a href="#plans" class="top-upgrade-button">✦ Upgrade</a><button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Settings <b>⌄</b></button><button type="button" id="desktopLauncher" class="desktop-launcher" aria-label="Open tools and workspace menu" title="More tools">⋯</button></div>
         </div>
     <div class="chat-shell">
       <div class="chat-header">
@@ -1313,6 +1336,8 @@ footer .brand { color: var(--text); font-size: 20px; }
       <button type="button" data-desktop-page="history"><span>↺</span> History</button>
       <div class="desktop-nav-caption">ACCOUNT</div>
       <button type="button" data-desktop-page="profile"><span>◉</span> Profile</button>
+      <div class="desktop-nav-spacer"></div>
+      <a class="desktop-upgrade-link" href="#plans" id="desktopUpgradeLink"><span>✦</span><span><strong>Upgrade plan</strong><small>Unlock more with Pro</small></span><b>↗</b></a>
     </nav>
     <section class="desktop-content">
       <header class="desktop-head"><h3 id="desktopTitle">DexAI Desktop</h3><button type="button" class="desktop-close" id="desktopClose" aria-label="Close desktop workspace">×</button></header>
@@ -1382,7 +1407,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   function getSavedChats(){ try{return JSON.parse(localStorage.getItem("dexai_local_chats_v1")||"[]")}catch{return []} }
   function showDesktopPage(page){
     document.querySelectorAll("[data-desktop-page]").forEach(b=>b.classList.toggle("active",b.dataset.desktopPage===page));
-    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
+    const titles={overview:"DexAI Desktop",search:"Search chats",images:"Image Studio",video:"Video Lab",library:"Library",projects:"Projects",schedule:"Schedule",plugins:"Plugins",history:"Chat history",profile:"Your profile"};
     desktopTitle.textContent=titles[page]||"DexAI Desktop";
     const chats=getSavedChats();
     const safe=(s)=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1406,7 +1431,9 @@ footer .brand { color: var(--text); font-size: 20px; }
     }else if(page==="history"){
       desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in.</p><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet.</div>')+'</div>';
     }else if(page==="images"){
-      desktopBody.innerHTML='<h4>Create with Image Studio</h4><p>Describe the image you want to create. Generation depends on the configured provider and available API access.</p><button class="desktop-primary" id="desktopOpenImage">Open Image Studio ↗</button>';
+      desktopBody.innerHTML='<h4>Create with Image Studio</h4><p>Jump directly to image creation without searching through the page.</p><button class="desktop-primary" id="desktopOpenImage">Open Image Studio ↗</button>';
+    }else if(page==="video"){
+      desktopBody.innerHTML='<h4>Video Lab</h4><p>Build a production-ready prompt for your video generator. Direct video rendering requires a connected video provider.</p><button class="desktop-primary" id="desktopOpenVideo">Open Video Lab ↗</button>';
     }else if(page==="profile"){
       const user=signedInUser;
       desktopBody.innerHTML=user?'<h4>Account profile</h4><p>Signed in as '+safe(user.email)+'</p><div class="desktop-profile"><label>Display name<input id="desktopProfileName" maxlength="80" value="'+safe(user.display_name||"")+'"></label><button class="desktop-primary" id="desktopSaveProfile">Save profile</button><div class="desktop-muted">Account security settings are managed through the DexAI account service.</div></div>':'<h4>Sign in to DexAI</h4><p>Sign in to manage your profile and private workspace.</p><button class="desktop-primary" id="desktopSignIn">Sign in / Create account</button>';
@@ -1415,6 +1442,7 @@ footer .brand { color: var(--text); font-size: 20px; }
     desktopBody.querySelectorAll("[data-open-chat]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openLocalChat(b.dataset.openChat);}));
     desktopBody.querySelector("[data-open-model]")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");$("modelSettingsButton").click()});
     $("desktopOpenImage")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="imageStudio";$("imageStudio").scrollIntoView({behavior:"smooth"});});
+    $("desktopOpenVideo")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");location.hash="videoStudio";$("videoStudio").scrollIntoView({behavior:"smooth"});});
     $("desktopSignIn")?.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openAuth()});
     $("desktopSaveProfile")?.addEventListener("click",async()=>{const input=$("desktopProfileName");$("profileName").value=input.value;$("saveProfile").click();});
   }
@@ -1426,6 +1454,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   }
   $("desktopLauncher").addEventListener("click",()=>{desktopOverlay.classList.add("open");showDesktopPage("overview")});
   $("desktopClose").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
+  $("desktopUpgradeLink").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
   desktopOverlay.addEventListener("click",e=>{if(e.target===desktopOverlay)desktopOverlay.classList.remove("open")});
   document.querySelectorAll("[data-desktop-page]").forEach(b=>b.addEventListener("click",()=>showDesktopPage(b.dataset.desktopPage)));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")desktopOverlay.classList.remove("open")});
