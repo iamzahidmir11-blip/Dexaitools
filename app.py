@@ -342,7 +342,7 @@ def configured_providers():
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
 
-def call_ai_provider(provider, message, web_search=False):
+def call_ai_provider(provider, message, web_search=False, model_override=None):
     import json
     import urllib.request
     import urllib.error
@@ -356,7 +356,7 @@ def call_ai_provider(provider, message, web_search=False):
         if web_search:
             config_options["tools"] = [types.Tool(google_search=types.GoogleSearch())]
         config = types.GenerateContentConfig(**config_options)
-        result = client.models.generate_content(model=MODEL, contents=message, config=config)
+        selected_model = (model_override or MODEL).strip()[:200]\n        result = client.models.generate_content(model=selected_model, contents=message, config=config)
         answer = (result.text or "").strip()
         if not answer:
             feedback = getattr(result, "prompt_feedback", None)
@@ -392,7 +392,7 @@ def call_ai_provider(provider, message, web_search=False):
         if not api_key:
             raise RuntimeError("OpenAI API is not configured.")
         payload = {
-            "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+            "model": (model_override or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")).strip()[:200],
             "input": message
         }
         req = urllib.request.Request(
@@ -424,7 +424,7 @@ def call_ai_provider(provider, message, web_search=False):
         api_token = os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")
         if not account_id or not api_token:
             raise RuntimeError("Cloudflare Workers AI is not configured.")
-        model = os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")
+        model = (model_override or os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")).strip()[:200]
         url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/run/" + model
         payload = {"messages": [{"role": "user", "content": message}]}
         req = urllib.request.Request(
@@ -471,12 +471,12 @@ def test_model_connection():
         return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server."}), 503
     started = time.monotonic()
     try:
-        answer = call_ai_provider(provider, "Reply with exactly: DexAI model connection successful.")
+        answer = call_ai_provider(provider, "Reply with exactly: DexAI model connection successful.", model_override=requested_model)
         if not answer.strip():
             raise RuntimeError("The provider returned an empty test response.")
         elapsed_ms = int((time.monotonic() - started) * 1000)
         app.logger.info("AI connection test passed provider=%s elapsed_ms=%s user_id=%s", provider, elapsed_ms, user["id"])
-        return jsonify({"ok": True, "provider": provider, "model": MODEL if provider == "gemini" else None, "elapsed_ms": elapsed_ms, "message": "AI connection successful."})
+        return jsonify({"ok": True, "provider": provider, "model": requested_model or (MODEL if provider == "gemini" else None), "elapsed_ms": elapsed_ms, "message": "AI connection successful."})
     except Exception:
         app.logger.exception("AI connection test failed provider=%s user_id=%s", provider, user["id"])
         return jsonify({"ok": False, "provider": provider, "error": "AI connection test failed. Check server logs, provider credentials, model access, quota and billing."}), 502
@@ -492,7 +492,7 @@ def chat():
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
     provider = str(data.get("provider", "auto")).lower()
-    web_search = bool(data.get("web_search", False))
+    web_search = bool(data.get("web_search", False))\n    requested_model = str(data.get("model", "")).strip()[:200] or None
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
@@ -510,7 +510,7 @@ def chat():
     elif provider == "compare":
         selected = available
     elif provider == "auto":
-        selected = [next((p for p in ("cloudflare", "openai", "gemini") if p in available), available[0])]
+        selected = [next((p for p in ("openai", "cloudflare", "gemini") if p in available), available[0])]
     elif provider in available:
         selected = [provider]
     else:
@@ -566,7 +566,7 @@ def chat():
                 if len(selected) == 1:
                     p = selected[0]
                     try:
-                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message, web_search=web_search and p == "gemini"), "ok": True})
+                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message, web_search=web_search and p == "gemini", model_override=requested_model if len(selected) == 1 else None), "ok": True})
                     except Exception as exc:
                         app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
