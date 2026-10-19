@@ -328,6 +328,98 @@ def generate_image():
         app.logger.exception("Image generation failed")
         return jsonify({"error": "Image generation is unavailable right now. The Gemini image model may need to be enabled for this API key."}), 502
 
+
+def configured_providers():
+    providers = []
+    if os.getenv("GEMINI_API_KEY"):
+        providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
+    if os.getenv("OPENAI_API_KEY"):
+        providers.append({"id": "openai", "name": "OpenAI", "configured": True})
+    if os.getenv("CLOUDFLARE_API_TOKEN") and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
+        providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
+    return providers
+
+def call_ai_provider(provider, message):
+    import json
+    import urllib.request
+    import urllib.error
+
+    if provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise RuntimeError("Gemini API is not configured.")
+        client = genai.Client(api_key=api_key)
+        result = client.models.generate_content(model=MODEL, contents=message)
+        answer = (result.text or "").strip()
+        if not answer:
+            raise RuntimeError("Gemini returned an empty answer.")
+        return answer
+
+    if provider == "openai":
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OpenAI API is not configured.")
+        payload = {
+            "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+            "input": message
+        }
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/responses",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("OpenAI API returned HTTP %s", exc.code)
+            raise RuntimeError("OpenAI request failed. Check its API key, model access and billing.")
+        answer = str(data.get("output_text", "")).strip()
+        if not answer:
+            parts = []
+            for item in data.get("output", []):
+                for part in item.get("content", []):
+                    if part.get("type") == "output_text":
+                        parts.append(part.get("text", ""))
+            answer = "\n".join(parts).strip()
+        if not answer:
+            raise RuntimeError("OpenAI returned an empty answer.")
+        return answer
+
+    if provider == "cloudflare":
+        account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
+        api_token = os.getenv("CLOUDFLARE_API_TOKEN")
+        if not account_id or not api_token:
+            raise RuntimeError("Cloudflare Workers AI is not configured.")
+        model = os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")
+        url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/v1/chat/completions"
+        payload = {"model": model, "messages": [{"role": "user", "content": message}]}
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": "Bearer " + api_token, "Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("Cloudflare Workers AI returned HTTP %s", exc.code)
+            raise RuntimeError("Cloudflare AI request failed. Check token permissions, model access and credits.")
+        answer = str((data.get("choices") or [{}])[0].get("message", {}).get("content", "")).strip()
+        if not answer:
+            raise RuntimeError("Cloudflare AI returned an empty answer.")
+        return answer
+
+    raise RuntimeError("Unknown AI provider.")
+
+@app.route("/api/providers", methods=["GET", "OPTIONS"])
+def providers_status():
+    if request.method == "OPTIONS":
+        return "", 204
+    return jsonify({"providers": configured_providers()})
+
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 def chat():
     if request.method == "OPTIONS":
@@ -338,14 +430,25 @@ def chat():
 
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
+    provider = str(data.get("provider", "auto")).lower()
     if not message:
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
+    if provider not in {"auto", "compare", "gemini", "openai", "cloudflare"}:
+        return jsonify({"error": "Choose a supported AI provider."}), 400
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return jsonify({"error": "AI configuration is incomplete."}), 503
+    available = [item["id"] for item in configured_providers()]
+    if not available:
+        return jsonify({"error": "No AI provider is configured on the server yet."}), 503
+    if provider == "compare":
+        selected = available
+    elif provider == "auto":
+        selected = [next((p for p in ("gemini", "openai", "cloudflare") if p in available), available[0])]
+    elif provider in available:
+        selected = [provider]
+    else:
+        return jsonify({"error": "That AI provider is not connected yet. Add its API credentials in Render Environment first.", "provider": provider}), 503
 
     client_key = "user:" + user["id"]
     limit = plan_limit(user["plan"])
@@ -359,17 +462,42 @@ def chat():
             if usage >= limit:
                 return jsonify({"error": "You have reached today’s message allowance for your plan. Please come back after the daily reset.", "plan": user["plan"]}), 429
 
-            cache_key = hashlib.sha256((client_key + "\\n" + message).encode()).hexdigest()
+            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + message).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
             ).fetchone()
             if cached:
                 answer = cached["response"]
+                results = [{"provider": provider, "name": "Cached answer", "reply": answer, "ok": True}]
             else:
-                client = genai.Client(api_key=api_key)
-                result = client.models.generate_content(model=MODEL, contents=message)
-                answer = (result.text or "").strip() or "Please try asking another question."
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+                labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI"}
+                results = []
+                if len(selected) == 1:
+                    p = selected[0]
+                    try:
+                        results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, message), "ok": True})
+                    except Exception as exc:
+                        results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                else:
+                    with ThreadPoolExecutor(max_workers=len(selected)) as pool:
+                        futures = {pool.submit(call_ai_provider, p, message): p for p in selected}
+                        for future in as_completed(futures):
+                            p = futures[future]
+                            try:
+                                results.append({"provider": p, "name": labels[p], "reply": future.result(), "ok": True})
+                            except Exception as exc:
+                                results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                    results.sort(key=lambda item: selected.index(item["provider"]))
+                successes = [r for r in results if r["ok"]]
+                if not successes:
+                    safe_errors = " ".join(r["name"] + ": " + r["reply"] for r in results)
+                    return jsonify({"error": safe_errors or "All connected AI providers failed."}), 502
+                if len(selected) == 1:
+                    answer = successes[0]["reply"]
+                else:
+                    answer = "\n\n".join("## " + r["name"] + ("\n\n" + r["reply"] if r["ok"] else "\n\n*Unavailable: " + r["reply"] + "*") for r in results)
                 conn.execute(
                     "INSERT INTO ai_cache(cache_key,response,expires_at) VALUES (%s,%s,NOW() + (%s * INTERVAL '1 second')) ON CONFLICT(cache_key) DO UPDATE SET response=EXCLUDED.response, expires_at=EXCLUDED.expires_at",
                     (cache_key, answer, CACHE_TTL_SECONDS)
@@ -386,12 +514,14 @@ def chat():
             conn.execute("DELETE FROM ai_cache WHERE expires_at <= NOW()")
         return jsonify({
             "reply": answer,
+            "results": results,
+            "provider": provider,
             "cached": bool(cached),
             "plan": user["plan"]
         })
     except Exception:
         app.logger.exception("AI request failed")
-        return jsonify({"error": "AI request failed. Check database and Gemini configuration, then try again."}), 502
+        return jsonify({"error": "AI request failed. Check database configuration and the selected provider credentials."}), 502
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
