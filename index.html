@@ -915,6 +915,16 @@ body.dex-focus-mode footer{display:none!important}
 .desktop-nav button span{font-size:18px;min-width:22px;text-align:center;color:#e2bd6f}
 .desktop-head h3{font-size:18px!important;font-weight:850!important}
 .desktop-body h4{font-size:17px!important;font-weight:850!important}
+.desktop-row-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.desktop-secondary,.desktop-danger{border:1px solid #38352b!important;background:#141414!important;color:#e8e4d9!important;border-radius:10px!important;padding:10px 13px!important;font:800 13px inherit;cursor:pointer}
+.desktop-secondary:hover{border-color:#b99b52!important;color:#f0d99b!important}
+.desktop-danger{border-color:#673a35!important;color:#ffb6a8!important}
+.desktop-danger:hover{background:#271614!important;border-color:#b55d4f!important}
+.prompt-list-item{align-items:center;gap:12px}
+.prompt-list-item>span{min-width:0;overflow-wrap:anywhere}
+.prompt-list-item small{color:#aaa!important;line-height:1.55}
+#savePromptText{width:100%;min-height:110px;resize:vertical;background:#101010;color:#f5f1e7;border:1px solid #38352b;border-radius:10px;padding:12px;font:inherit}
+@media(max-width:520px){.desktop-row-actions>*{flex:1 1 100%}.prompt-list-item{align-items:flex-start;flex-direction:column}.prompt-list-item .desktop-row-actions{width:100%}.prompt-list-item .desktop-row-actions>*{flex:1 1 auto}}
 .desktop-body p{font-size:14px!important;line-height:1.7}
 .desktop-card strong{font-size:14px!important;font-weight:800!important}
 .desktop-card small{font-size:12px!important;line-height:1.65}
