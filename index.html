@@ -879,6 +879,29 @@ footer .brand { color: var(--text); font-size: 20px; }
 @media(max-width:760px){header{height:65px}.chat-workspace{grid-template-columns:1fr;min-height:calc(100dvh - 78px);gap:8px}#chat.section{padding:8px 8px 18px}.chat-sidebar{display:none}.chat-topbar{padding:7px 4px 10px}.chat-shell{height:calc(100dvh - 145px);min-height:440px;border-radius:16px}.chat-messages{padding:16px 13px}.message{max-width:94%}.message.bot{max-width:100%}.chat-form-wrap{padding:10px 9px 12px}.model-settings-card{padding:18px}.voice-utilities{justify-content:flex-start}.chat-note{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
+
+/* DexAI chat actions and search */
+.chat-search-wrap{padding:0 2px 10px}
+.chat-search{width:100%;padding:10px 11px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0d0d0c;color:var(--text);outline:none;font:inherit;font-size:12px}
+.chat-search:focus{border-color:rgba(216,181,106,.55)}
+.local-chat-row{display:flex;align-items:center;gap:3px;position:relative}
+.local-chat-row .local-chat-item{flex:1;min-width:0;text-align:left}
+.local-chat-item{padding:9px 8px!important}
+.chat-more-button{flex:0 0 30px;width:30px;height:32px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8a091;font-size:19px;line-height:1;cursor:pointer}
+.chat-more-button:hover,.chat-more-button[aria-expanded="true"]{background:rgba(216,181,106,.09);border-color:rgba(216,181,106,.22);color:var(--gold2)}
+.chat-actions-menu{position:absolute;z-index:80;right:0;top:34px;width:190px;padding:5px;border:1px solid rgba(216,181,106,.24);border-radius:12px;background:#171613;box-shadow:0 14px 40px #000b}
+.chat-actions-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:transparent;color:#e8e1d4;text-align:left;font-size:12px;cursor:pointer}
+.chat-actions-menu button:hover{background:rgba(216,181,106,.1)}
+.chat-actions-menu button.danger{color:#ffaaa4}
+.chat-actions-menu .menu-divider{height:1px;background:rgba(255,255,255,.08);margin:4px}
+.sidebar-mini-action{width:100%;margin:2px 0 10px;padding:8px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:transparent;color:#aaa294;text-align:left;font-size:11px;cursor:pointer}
+.sidebar-mini-action:hover{border-color:rgba(216,181,106,.28);color:var(--gold2)}
+.local-chat-item.pinned:before{content:"📌 ";font-size:10px}
+.local-chat-item.archived{opacity:.6}
+.plan-price{display:block;margin:9px 0 4px;color:var(--gold2);font-size:25px;font-weight:700;letter-spacing:-.5px}
+.plan-price small{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
+@media(max-width:520px){.chat-actions-menu{right:0;width:175px}}
+
 </style>
 </head>
 
@@ -945,6 +968,8 @@ footer .brand { color: var(--text); font-size: 20px; }
         <a class="sidebar-link" href="#imageStudio"><span>▧</span> Image Studio</a>
         <a class="sidebar-link" href="#videoStudio"><span>▶</span> Video Lab</a>
         <div class="sidebar-label recent-label">RECENT CHATS</div>
+        <div class="chat-search-wrap"><input id="chatSearchInput" class="chat-search" type="search" placeholder="Find a chat…" aria-label="Find a chat"></div>
+        <button type="button" id="archivedChatsToggle" class="sidebar-mini-action">▸ Show archived chats</button>
         <div id="localChatList" class="local-chat-list"><div class="sidebar-empty">Your chats will appear here.</div></div>
         <div class="sidebar-foot"><span class="sidebar-gem">✦</span><div><strong>DexAI</strong><small>Golden intelligence</small></div></div>
       </aside>
@@ -1205,19 +1230,21 @@ footer .brand { color: var(--text); font-size: 20px; }
       <article class="tool-card plan-card featured">
         <span class="plan-badge">FOR EVERYDAY CREATORS</span>
         <div class="tool-icon">✦</div>
-        <h3>Plus</h3>
-        <p>More daily AI access, image creation options and a larger creative workspace.</p>
-        <button type="button" id="plusPlanButton">Join Plus waitlist</button>
+        <h3>Pro</h3>
+        <span class="plan-price">$12<small> / month</small></span>
+        <p>Higher daily AI access, creative tools and a larger workspace. Price and availability confirmed at checkout.</p>
+        <button type="button" id="plusPlanButton">Upgrade to Pro</button>
       </article>
       <article class="tool-card plan-card pro-featured">
         <span class="plan-badge">✦ BEST FOR POWER USERS</span>
         <div class="tool-icon">✹</div>
-        <h3>Pro</h3>
-        <p>Unlock an elevated AI experience with expanded daily access, priority creative tools and advanced workflows.</p>
-        <button type="button" id="proPlanButton">Join Pro waitlist</button>
+        <h3>Pro Plus</h3>
+        <span class="plan-price">$25<small> / month</small></span>
+        <p>Expanded AI access, advanced workflows and priority creative tools. Price and availability confirmed at checkout.</p>
+        <button type="button" id="proPlanButton">Upgrade to Pro Plus</button>
       </article>
     </div>
-    <p class="chat-note" style="margin-top:16px">Plus and Pro are previews only. No payment is taken and paid features are not activated until billing is configured.</p>
+    <p class="chat-note" style="margin-top:16px">Pricing preview only. Checkout is not connected yet, so no payment is taken and paid access is not activated.</p>
   </section>
 
   <section class="section" id="about">
@@ -1857,11 +1884,43 @@ footer .brand { color: var(--text); font-size: 20px; }
     if (!chat) { chat = {id:"chat_"+Date.now().toString(36),title:"New chat",messages:[],updated:Date.now()}; chats.unshift(chat); activeLocalChatId=chat.id; localStorage.setItem("dexai_active_chat",chat.id); writeLocalChats(chats); }
     return chat;
   }
+  let showArchivedChats = false;
+  function shareLocalChat(chat) {
+    const transcript=(chat.messages||[]).map(m=>(m.role==="user"?"You":"DexAI")+": "+m.content).join("\n\n");
+    const payload=(chat.title||"DexAI chat")+"\n\n"+transcript;
+    if(navigator.share){navigator.share({title:chat.title||"DexAI chat",text:payload}).catch(()=>{});}
+    else if(navigator.clipboard?.writeText){navigator.clipboard.writeText(payload).then(()=>toast("Chat copied for sharing.")).catch(()=>toast("Could not copy this chat."));}
+    else toast("Sharing is not supported by this browser.");
+  }
+  function runChatAction(action, chat) {
+    const chats=readLocalChats();const target=chats.find(c=>c.id===chat.id);if(!target)return;
+    if(action==="share"){shareLocalChat(target);return;}
+    if(action==="pin"){target.pinned=!target.pinned;toast(target.pinned?"Chat pinned.":"Chat unpinned.");}
+    else if(action==="project"){target.project=target.project?"":"My Project";toast(target.project?"Added to My Project.":"Removed from My Project.");}
+    else if(action==="archive"){target.archived=!target.archived;toast(target.archived?"Chat archived.":"Chat restored.");}
+    else if(action==="delete"){if(!confirm("Delete this chat from this browser? This cannot be undone."))return;const remaining=chats.filter(c=>c.id!==target.id);writeLocalChats(remaining);if(activeLocalChatId===target.id){activeLocalChatId="";localStorage.removeItem("dexai_active_chat");messages.replaceChildren();ensureLocalChat();showWelcomeCard();}renderLocalChatList();return;}
+    target.updated=Date.now();writeLocalChats(chats);renderLocalChatList();
+  }
   function renderLocalChatList() {
     const host=$("localChatList"); if(!host) return; const chats=readLocalChats(); host.replaceChildren();
-    if(!chats.length){const empty=document.createElement("div");empty.className="sidebar-empty";empty.textContent="Your chats will appear here.";host.appendChild(empty);return;}
-    chats.slice(0,20).forEach(chat=>{const b=document.createElement("button");b.type="button";b.className="local-chat-item"+(chat.id===activeLocalChatId?" active":"");b.textContent=chat.title||"New chat";b.title=b.textContent;b.addEventListener("click",()=>openLocalChat(chat.id));host.appendChild(b);});
+    const query=($("chatSearchInput")?.value||"").trim().toLowerCase();
+    const visible=chats.filter(c=>(showArchivedChats?Boolean(c.archived):!c.archived)&&(!query||(c.title||"").toLowerCase().includes(query)))
+      .sort((a,b)=>Number(Boolean(b.pinned))-Number(Boolean(a.pinned))||b.updated-a.updated);
+    if(!visible.length){const empty=document.createElement("div");empty.className="sidebar-empty";empty.textContent=query?"No chats match your search.":showArchivedChats?"No archived chats.":"Your chats will appear here.";host.appendChild(empty);return;}
+    visible.slice(0,30).forEach(chat=>{
+      const row=document.createElement("div");row.className="local-chat-row";
+      const b=document.createElement("button");b.type="button";b.className="local-chat-item"+(chat.id===activeLocalChatId?" active":"")+(chat.pinned?" pinned":"")+(chat.archived?" archived":"");b.textContent=chat.title||"New chat";b.title=b.textContent+(chat.project?" • My Project":"");b.addEventListener("click",()=>openLocalChat(chat.id));
+      const more=document.createElement("button");more.type="button";more.className="chat-more-button";more.textContent="⋯";more.setAttribute("aria-label","Chat actions");more.setAttribute("aria-expanded","false");
+      const menu=document.createElement("div");menu.className="chat-actions-menu";menu.hidden=true;
+      const actions=[["share","↗","Share chat"],["pin","⌁",chat.pinned?"Unpin chat":"Pin chat"],["project","▦",chat.project?"Remove from project":"Add to project"],["archive","□",chat.archived?"Restore from archive":"Archive chat"],["delete","⌫","Delete chat"]];
+      actions.forEach(([key,icon,label],idx)=>{if(idx===4){const divider=document.createElement("div");divider.className="menu-divider";menu.appendChild(divider);}const action=document.createElement("button");action.type="button";action.textContent=icon+"  "+label;if(key==="delete")action.className="danger";action.addEventListener("click",()=>{menu.hidden=true;runChatAction(key,chat);});menu.appendChild(action);});
+      more.addEventListener("click",event=>{event.stopPropagation();document.querySelectorAll(".chat-actions-menu").forEach(m=>{if(m!==menu)m.hidden=true;});menu.hidden=!menu.hidden;more.setAttribute("aria-expanded",String(!menu.hidden));});
+      row.append(b,more,menu);host.appendChild(row);
+    });
   }
+  $("chatSearchInput")?.addEventListener("input",renderLocalChatList);
+  $("archivedChatsToggle")?.addEventListener("click",()=>{showArchivedChats=!showArchivedChats;$("archivedChatsToggle").textContent=showArchivedChats?"▸ Hide archived chats":"▸ Show archived chats";renderLocalChatList();});
+  document.addEventListener("click",event=>{if(!event.target.closest(".local-chat-row"))document.querySelectorAll(".chat-actions-menu").forEach(m=>m.hidden=true);});
   function saveLocalMessage(role, content) {
     if(restoringLocalChat || !content || content==="Thinking..." || content==="Creating your image…") return;
     const chats=readLocalChats(); let chat=chats.find(c=>c.id===activeLocalChatId); if(!chat) chat=ensureLocalChat();
