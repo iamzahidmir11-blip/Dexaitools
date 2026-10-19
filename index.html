@@ -1581,7 +1581,8 @@ footer .brand { color: var(--text); font-size: 20px; }
         option.textContent = connected.has(id) ? labels[id] + " · connected" : labels[id] + " · API key needed";
       });
       status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
-      if (connected.has("cloudflare") && select.value === "auto") select.value = "cloudflare";
+      if (connected.has("openai") && select.value === "auto") select.value = "openai";
+      else if (connected.has("cloudflare") && select.value === "auto") select.value = "cloudflare";
       const connectorStatus = $("connectorEngineStatus");
       if (connectorStatus) connectorStatus.textContent = (data.providers || []).length + " ENGINE(S) CONNECTED";
     } catch {
