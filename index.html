@@ -570,7 +570,7 @@ main { min-height: 75vh; }
   color: #706b60;
 }
 
-.chat-error { color: #e6a5a5; font-size: 11px; margin-top: 10px; text-align: center; }
+.chat-error { color: #e6a5a5; font-size: 11px; margin-top: 10px; text-align: center; }.retry-button{margin-left:8px;border:1px solid var(--border);border-radius:8px;padding:5px 9px;background:#191710;color:var(--gold2);font-size:11px;font-weight:700}
 
 /* TOOLS */
 
@@ -1722,11 +1722,23 @@ footer .brand { color: var(--text); font-size: 20px; }
       if (liveVoiceActive) speakAssistant(data.reply);
       refreshUsage();
     } catch (error) {
-      reply.textContent = "I couldn't get a response from the AI server.";
-      errorBox.textContent =
-        error.message === "Failed to fetch"
-          ? "Connection failed. Check your backend, CORS settings and internet connection."
-          : error.message + " Check the selected provider's API configuration if this continues.";
+      reply.textContent = "DexAI couldn't complete this reply.";
+      const friendlyError = error.message === "Failed to fetch"
+        ? "Connection failed. Check your internet connection and backend status."
+        : error.message + " Check the selected provider's API configuration if this continues.";
+      errorBox.replaceChildren();
+      const errorText = document.createElement("span");
+      errorText.textContent = friendlyError + " ";
+      errorBox.appendChild(errorText);
+      const retryButton = document.createElement("button");
+      retryButton.type = "button";
+      retryButton.className = "retry-button";
+      retryButton.textContent = "Retry";
+      retryButton.addEventListener("click", () => {
+        errorBox.textContent = "";
+        sendMessage(message);
+      }, { once: true });
+      errorBox.appendChild(retryButton);
 
       console.error("DexAI request failed:", error);
     } finally {
