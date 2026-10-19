@@ -733,6 +733,11 @@ footer .brand { color: var(--text); font-size: 20px; }
 .plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .plan-card{position:relative}
 .plan-card.featured{border-color:rgba(216,181,106,.55);box-shadow:0 0 35px rgba(216,181,106,.07)}
+.pro-featured{border-color:rgba(255,64,88,.72)!important;background:radial-gradient(ellipse at top right,rgba(255,48,76,.19),transparent 55%),linear-gradient(145deg,#1c1013,#0d0d0b)!important;box-shadow:0 0 32px rgba(255,35,70,.13),inset 0 0 0 1px rgba(255,70,90,.08)}
+.pro-featured:hover{border-color:#ff536b!important;box-shadow:0 0 42px rgba(255,35,70,.23)}
+.pro-featured .plan-badge{border-color:rgba(255,75,95,.6);color:#ff7184;background:rgba(255,40,70,.08)}
+.pro-featured h3{color:#ff647a}.pro-featured .tool-icon{border-color:rgba(255,65,90,.55);color:#ff7184;background:rgba(255,40,70,.09)}
+.pro-featured button{display:block;width:100%;margin-top:12px;padding:12px 14px;border:1px solid #ff526c;border-radius:10px;background:linear-gradient(135deg,#ff647a,#c51f43);color:#fff;font-weight:800;box-shadow:0 6px 22px rgba(255,35,70,.2)}
 .plan-badge{display:inline-block;border:1px solid var(--border);border-radius:100px;padding:5px 9px;color:var(--gold);font-size:10px;letter-spacing:1px;margin-bottom:12px}
 @media(max-width:800px){.plan-grid{grid-template-columns:1fr}.studio-panel{padding:17px}}
 
@@ -1083,21 +1088,21 @@ footer .brand { color: var(--text); font-size: 20px; }
         <span class="plan-badge">START HERE</span>
         <div class="tool-icon">✧</div>
         <h3>Free</h3>
-        <p>10 daily AI actions, AI chat, saved conversations and browser-based text tools.</p>
+        <p>20 daily AI messages, saved conversations and browser-based text tools.</p>
         <button type="button" id="freePlanButton">Current plan</button>
       </article>
       <article class="tool-card plan-card featured">
         <span class="plan-badge">FOR EVERYDAY CREATORS</span>
         <div class="tool-icon">✦</div>
         <h3>Plus</h3>
-        <p>Planned: 50 daily AI actions, image creation access and a larger creative workspace.</p>
+        <p>More daily AI access, image creation options and a larger creative workspace.</p>
         <button type="button" id="plusPlanButton">Join Plus waitlist</button>
       </article>
-      <article class="tool-card plan-card">
-        <span class="plan-badge">POWER USERS</span>
+      <article class="tool-card plan-card pro-featured">
+        <span class="plan-badge">✦ BEST FOR POWER USERS</span>
         <div class="tool-icon">✹</div>
         <h3>Pro</h3>
-        <p>Planned: 150 daily AI actions, priority creative tools and advanced workflow features.</p>
+        <p>Unlock an elevated AI experience with expanded daily access, priority creative tools and advanced workflows.</p>
         <button type="button" id="proPlanButton">Join Pro waitlist</button>
       </article>
     </div>
@@ -1449,7 +1454,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Usage unavailable");
       const planName = (data.plan || "free").toUpperCase();
-      el.textContent = planName + " PLAN • Daily access active";
+      el.textContent = planName + " PLAN • " + (data.remaining ?? "—") + " messages left today (" + (data.used ?? "—") + "/" + (data.limit ?? "—") + ").";
     } catch {
       el.textContent = "Signed in • Daily usage will appear when the server is available.";
     }
@@ -1576,6 +1581,7 @@ footer .brand { color: var(--text); font-size: 20px; }
         option.textContent = connected.has(id) ? labels[id] + " · connected" : labels[id] + " · API key needed";
       });
       status.textContent = (data.providers || []).length + " AI engine(s) connected. Compare mode uses every configured engine.";
+      if (connected.has("cloudflare") && select.value === "auto") select.value = "cloudflare";
       const connectorStatus = $("connectorEngineStatus");
       if (connectorStatus) connectorStatus.textContent = (data.providers || []).length + " ENGINE(S) CONNECTED";
     } catch {
@@ -1863,7 +1869,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   $("freePlanButton").addEventListener("click", () => {
     $("chat").scrollIntoView({ behavior: "smooth" });
     if (!signedInUser) openAuth();
-    else toast("You are on the Free plan: 10 messages per day.");
+    else toast("Free plan: 20 AI messages per day.");
   });
   $("premiumPlanButton").addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
 
