@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#090909">
-<meta name="description" content="DexAI is an AI workspace for chatting, brainstorming, writing, and creative workflows. Explore AI tools in one place.">
+<meta name="description" content="DexAI is a premium AI chat workspace for writing, brainstorming, file analysis, voice input, and creative tools.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="author" content="DexAI">
 <meta property="og:type" content="website">
@@ -808,6 +808,77 @@ footer .brand { color: var(--text); font-size: 20px; }
 .auth-small button{border:0;background:none;color:var(--gold2);padding:0;text-decoration:underline}
 @media(max-width:480px){.auth-card{padding:22px}}
 
+
+/* DexAI full-chat workspace: focused layout, gold accents, separated controls */
+.hero{display:none}
+#chat.section{width:100%;max-width:none;margin:0;padding:14px clamp(10px,2vw,28px) 26px;scroll-margin-top:76px}
+.chat-workspace{display:grid;grid-template-columns:238px minmax(0,1fr);gap:16px;max-width:1600px;margin:0 auto;min-height:calc(100dvh - 105px)}
+.chat-sidebar{display:flex;flex-direction:column;gap:8px;padding:15px 12px;border:1px solid rgba(216,181,106,.16);border-radius:19px;background:linear-gradient(160deg,rgba(25,22,15,.96),rgba(12,12,11,.98));min-height:calc(100dvh - 105px)}
+.new-chat-button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:1px solid rgba(216,181,106,.42);border-radius:12px;background:linear-gradient(120deg,rgba(216,181,106,.16),rgba(216,181,106,.045));color:#fff0c7;font-weight:700;font-size:12px;text-align:left}
+.new-chat-button span{font-size:20px;color:var(--gold2)}
+.sidebar-label{margin:17px 8px 5px;color:#807968;font-size:9px;font-weight:700;letter-spacing:1.8px}
+.sidebar-link{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:#c9c1b1;font-size:12px;text-align:left}
+.sidebar-link span{color:var(--gold);font-size:15px}
+.sidebar-link:hover,.sidebar-link.active{border-color:rgba(216,181,106,.22);background:rgba(216,181,106,.08);color:#fff0c7}
+.local-chat-list{display:grid;gap:5px;overflow:auto;max-height:38vh}
+.local-chat-item{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid transparent;border-radius:9px;padding:10px;background:transparent;color:#b9b2a4;font-size:11px;text-align:left}
+.local-chat-item:hover,.local-chat-item.active{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.07);color:#fff}
+.sidebar-empty{padding:8px;color:#777166;font-size:11px;line-height:1.6}
+.sidebar-foot{display:flex;align-items:center;gap:10px;margin-top:auto;padding:14px 8px 4px;border-top:1px solid rgba(255,255,255,.07)}
+.sidebar-gem{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(216,181,106,.45);border-radius:10px;color:var(--gold2);box-shadow:0 0 22px rgba(216,181,106,.09)}
+.sidebar-foot strong,.sidebar-foot small{display:block}.sidebar-foot strong{font-size:12px}.sidebar-foot small{margin-top:3px;color:#8f8878;font-size:10px}
+.chat-main{min-width:0;display:flex;flex-direction:column}
+.chat-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 5px 13px}
+.chat-top-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;letter-spacing:-.3px}
+.chat-top-subtitle{margin-top:5px;color:#898274;font-size:11px}
+.live-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid rgba(151,186,117,.2);border-radius:99px;color:#b9cba7;font-size:9px;font-weight:600;letter-spacing:.3px}
+.live-pill i{width:5px;height:5px;border-radius:50%;background:#9bbd78;box-shadow:0 0 8px #9bbd78}
+.model-settings-button{display:flex;align-items:center;gap:10px;border:1px solid rgba(216,181,106,.24);border-radius:11px;padding:10px 13px;background:rgba(216,181,106,.06);color:#eadcbf;font-size:11px;font-weight:700}
+.model-settings-button span{color:var(--gold);font-size:15px}.model-settings-button b{color:#8d8576}
+.chat-shell{display:flex;flex:1;flex-direction:column;width:100%;max-width:none;min-height:500px;height:calc(100dvh - 164px);margin:0;border-radius:20px;border-color:rgba(216,181,106,.2);background:radial-gradient(ellipse at top,rgba(216,181,106,.035),transparent 50%),#0c0c0b;box-shadow:0 20px 80px rgba(0,0,0,.26)}
+.chat-header{display:none}.chat-messages{height:auto;flex:1;min-height:220px;padding:clamp(15px,3vw,34px);overscroll-behavior:contain}
+.welcome-card{max-width:760px;margin:0 auto;padding:clamp(25px,7vh,76px) 12px 30px}
+.welcome-star{display:grid;place-items:center;width:62px;height:62px;margin:0 auto 20px;border:1px solid rgba(216,181,106,.28);border-radius:20px;background:linear-gradient(145deg,#282113,#11100c);box-shadow:0 0 45px rgba(216,181,106,.1);font-size:32px}
+.welcome-card h3{font-size:clamp(26px,3vw,38px);letter-spacing:-.7px}.welcome-card p{font-size:13px}
+.suggestions{max-width:620px;margin:28px auto 0}.suggestion{font-size:11px;padding:11px 14px;background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.09);color:#d0c7b4}
+.message{max-width:min(84%,850px);font-size:14px;line-height:1.85;padding:14px 17px}
+.message.user{background:linear-gradient(125deg,#e0c27f,#b98e43);box-shadow:0 7px 25px rgba(216,181,106,.08)}
+.message.bot{background:transparent;border:0;padding-left:0;padding-right:0;max-width:min(92%,900px);font-size:14px}
+.chat-form-wrap{padding:12px clamp(10px,2vw,26px) 14px;border-top:1px solid rgba(255,255,255,.055);background:linear-gradient(180deg,rgba(12,12,11,.94),#0c0c0b)}
+.composer-toolbar{margin-bottom:9px}.composer-modes{display:none}.provider-row{display:none!important}
+.attachment-row{margin:0 0 8px;min-height:0}#attachFilesButton{display:none!important}.attachment-help{display:none}
+.chat-form{gap:9px;padding:7px 8px;border-radius:18px;background:#171612;border-color:rgba(216,181,106,.22);box-shadow:0 8px 35px rgba(0,0,0,.2)}
+.chat-form:focus-within{border-color:rgba(216,181,106,.5);box-shadow:0 0 0 3px rgba(216,181,106,.045)}
+.chat-form textarea{height:44px;max-height:160px;padding:13px 5px;font-size:14px}
+.plus-menu-wrap{position:relative;flex-shrink:0}.plus-menu-button{display:grid;place-items:center;width:39px;height:39px;border:1px solid rgba(216,181,106,.24);border-radius:12px;background:#222016;color:#f1dfad;font-size:25px;font-weight:400;line-height:1;transition:.2s}
+.plus-menu-button:hover,.plus-menu-button[aria-expanded="true"]{border-color:var(--gold);background:rgba(216,181,106,.13)}
+.plus-menu{position:absolute;left:0;bottom:calc(100% + 12px);z-index:300;display:grid;gap:4px;width:min(285px,calc(100vw - 35px));padding:9px;border:1px solid rgba(216,181,106,.26);border-radius:16px;background:rgba(18,17,14,.98);box-shadow:0 20px 60px rgba(0,0,0,.6);backdrop-filter:blur(20px)}
+.plus-menu[hidden]{display:none}.plus-menu-heading{padding:8px 10px 7px;color:#8f8777;font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
+.plus-menu>button,.plus-menu-link{display:flex;align-items:center;gap:12px;padding:11px 10px;border:0;border-radius:10px;background:transparent;color:#e9dfca;text-align:left}
+.plus-menu>button:hover,.plus-menu-link:hover{background:rgba(216,181,106,.08)}
+.plus-menu>button>span:first-child,.plus-menu-link>span:first-child{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(216,181,106,.2);border-radius:10px;color:var(--gold2);font-size:17px}
+.plus-menu strong,.plus-menu small{display:block}.plus-menu strong{font-size:12px}.plus-menu small{margin-top:4px;color:#928a7a;font-size:10px}
+.composer-mic{flex-shrink:0;width:39px;height:39px;border-radius:12px;border-color:transparent;background:transparent;color:#d6cdbb;font-size:17px}
+.composer-mic:hover,.composer-mic.active{background:rgba(216,181,106,.12);border-color:rgba(216,181,106,.35)}
+.send-button{width:41px;height:41px;border-radius:13px;font-size:21px}
+.voice-utilities{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:8px}
+.voice-utilities .voice-btn{min-height:28px;padding:6px 9px;font-size:10px}.voice-status{font-size:10px;color:#817a6b}
+.chat-note{text-align:left;font-size:10px;line-height:1.5}#usageStatus{text-align:right}.chat-error{text-align:left;font-size:11px}
+.model-settings-overlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(12px)}
+.model-settings-overlay[hidden]{display:none}.model-settings-card{width:min(640px,100%);max-height:min(85dvh,760px);overflow:auto;padding:24px;border:1px solid rgba(216,181,106,.28);border-radius:22px;background:linear-gradient(150deg,#1a1812,#0c0c0b);box-shadow:0 30px 100px rgba(0,0,0,.65)}
+.model-settings-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:20px}
+.model-kicker{font-size:9px;letter-spacing:2px;color:var(--gold)}.model-settings-heading h2{font-family:"Playfair Display",serif;font-weight:500;font-size:28px;margin:8px 0}
+.model-settings-heading p{color:#928a7b;font-size:12px;line-height:1.6;margin:0}
+.model-close{border:1px solid rgba(255,255,255,.1);border-radius:10px;background:#15140f;color:#e8ddc3;font-size:23px;width:37px;height:37px}
+.model-settings-card .provider-row{display:flex!important;align-items:stretch;flex-direction:column;gap:9px;margin:0}
+.model-settings-card .provider-row label{font-size:11px}
+.model-settings-card .provider-row select,.model-settings-card .provider-row input{width:100%!important;max-width:100%!important;min-height:42px}
+.model-settings-card .provider-row>span{font-size:11px}.model-settings-card .web-search-toggle{display:inline-flex!important;flex-direction:row!important;align-items:center}
+.model-settings-footer{margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);color:#817a6b;font-size:10px;line-height:1.6}
+@media(min-width:1200px){.chat-shell{height:calc(100dvh - 164px)}}
+@media(max-width:760px){header{height:65px}.chat-workspace{grid-template-columns:1fr;min-height:calc(100dvh - 78px);gap:8px}#chat.section{padding:8px 8px 18px}.chat-sidebar{display:none}.chat-topbar{padding:7px 4px 10px}.chat-shell{height:calc(100dvh - 145px);min-height:440px;border-radius:16px}.chat-messages{padding:16px 13px}.message{max-width:94%}.message.bot{max-width:100%}.chat-form-wrap{padding:10px 9px 12px}.model-settings-card{padding:18px}.voice-utilities{justify-content:flex-start}.chat-note{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 
@@ -866,12 +937,22 @@ footer .brand { color: var(--text); font-size: 20px; }
   </section>
 
   <section class="section" id="chat">
-    <div class="section-heading">
-      <div class="mini">The Intelligence Engine</div>
-      <h2>Your AI, <span class="gold-text">In the Center.</span></h2>
-      <p>Ask a question, explore an idea or start creating.</p>
-    </div>
-
+    <div class="chat-workspace">
+      <aside class="chat-sidebar" aria-label="Chat navigation">
+        <button type="button" id="newChatButton" class="new-chat-button"><span>＋</span> New chat</button>
+        <div class="sidebar-label">YOUR WORKSPACE</div>
+        <button type="button" class="sidebar-link active" id="sidebarChatHome"><span>✦</span> AI Chat</button>
+        <a class="sidebar-link" href="#imageStudio"><span>▧</span> Image Studio</a>
+        <a class="sidebar-link" href="#videoStudio"><span>▶</span> Video Lab</a>
+        <div class="sidebar-label recent-label">RECENT CHATS</div>
+        <div id="localChatList" class="local-chat-list"><div class="sidebar-empty">Your chats will appear here.</div></div>
+        <div class="sidebar-foot"><span class="sidebar-gem">✦</span><div><strong>DexAI</strong><small>Golden intelligence</small></div></div>
+      </aside>
+      <div class="chat-main">
+        <div class="chat-topbar">
+          <div><div class="chat-top-title">AI Chat <span class="live-pill"><i></i> Workspace</span></div><div class="chat-top-subtitle">Ideas, files and voice in one focused space.</div></div>
+          <button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Model <b>⌄</b></button>
+        </div>
     <div class="chat-shell">
       <div class="chat-header">
         <div class="chat-brand">
@@ -881,7 +962,7 @@ footer .brand { color: var(--text); font-size: 20px; }
             <div class="chat-subtitle">Powered by your DexAI backend</div>
           </div>
         </div>
-        <div class="online"><span></span> Ready to assist</div>
+        <div class="online"><span></span> Chat workspace</div>
       </div>
 
       <div class="chat-messages" id="chatMessages" aria-live="polite">
@@ -912,14 +993,13 @@ footer .brand { color: var(--text); font-size: 20px; }
               </div>
             </div>
           </div>
-          <div class="voice-controls" aria-label="Voice assistant controls">
-            <button class="voice-btn icon-only" type="button" id="micButton" aria-label="Speak to type" title="Speak to type"><span class="voice-icon">🎙</span></button>
-            <button class="voice-btn icon-only" type="button" id="liveVoiceButton" aria-label="Start live voice" aria-pressed="false" title="Start live voice"><span class="voice-icon">◉</span></button>
-            <button class="voice-btn icon-only" type="button" id="readAnswerButton" aria-label="Read latest answer aloud" title="Read latest answer aloud"><span class="voice-icon">🔊</span></button>
+          <div class="voice-utilities" aria-label="Voice assistant options">
+            <button class="voice-btn" type="button" id="liveVoiceButton" aria-pressed="false" title="Start live voice">◉ Live voice</button>
+            <button class="voice-btn" type="button" id="readAnswerButton" title="Read latest answer aloud">🔊 Read answer</button>
             <span class="voice-status" id="voiceStatus" role="status">Voice ready</span>
           </div>
         </div>
-        <div class="provider-row">
+        <div class="provider-row" id="modelSettingsPanel">
           <label for="providerSelect">AI engine</label>
           <select id="providerSelect" aria-label="Choose AI engine">
             <option value="auto">DexAI Auto</option>
@@ -936,18 +1016,30 @@ footer .brand { color: var(--text); font-size: 20px; }
           <span id="providerStatus" role="status">Checking connected AI engines…</span>
         </div>
         <div class="attachment-row">
-          <button class="attach-button" type="button" id="attachFilesButton" aria-label="Attach files">＋ Attach files</button>
+          <button class="attach-button" type="button" id="attachFilesButton" aria-label="Attach files">Attach photos & files</button>
           <input id="chatFileInput" type="file" accept="image/*,video/mp4,video/webm,application/pdf,text/plain,.txt,.pdf" multiple hidden>
           <div id="attachmentList" class="attachment-list" aria-live="polite"></div>
           <span class="attachment-help">Up to 3 files · 18 MB total · images, PDF, text, MP4/WebM</span>
         </div>
         <form class="chat-form" id="chatForm">
-          <textarea id="chatInput" placeholder="Ask DexAI anything or attach a file..." rows="1" maxlength="4000" aria-label="Your message"></textarea>
+          <div class="plus-menu-wrap">
+            <button type="button" id="plusMenuButton" class="plus-menu-button" aria-label="Open attachments and tools" aria-expanded="false">＋</button>
+            <div id="plusMenu" class="plus-menu" hidden>
+              <div class="plus-menu-heading">Add to your message</div>
+              <button type="button" id="plusAttachAction"><span>↥</span><span><strong>Photos & files</strong><small>Images, PDF, TXT, MP4/WebM</small></span></button>
+              <a href="#imageStudio" class="plus-menu-link"><span>▧</span><span><strong>Image Studio</strong><small>Create a new image</small></span></a>
+              <a href="#videoStudio" class="plus-menu-link"><span>▶</span><span><strong>Video Lab</strong><small>Build a video prompt</small></span></a>
+            </div>
+          </div>
+          <textarea id="chatInput" placeholder="Message DexAI…" rows="1" maxlength="4000" aria-label="Your message"></textarea>
+          <button class="voice-btn icon-only composer-mic" type="button" id="micButton" aria-label="Speak to type" title="Speak to type">🎙</button>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
         </form>
         <div class="chat-note">Please verify important information. Avoid sharing passwords or sensitive personal data.</div>
         <div id="usageStatus" class="chat-note" style="color:var(--gold);margin-top:7px">Sign in to see your daily chat allowance.</div>
         <div class="chat-error" id="chatError" role="status"></div>
+      </div>
+    </div>
       </div>
     </div>
   </section>
@@ -1733,6 +1825,61 @@ footer .brand { color: var(--text); font-size: 20px; }
     target.innerHTML = html;
   }
 
+
+  // Model configuration lives in its own modal, away from the composer.
+  const modelOverlay = $("modelSettingsOverlay"), modelPanel = $("modelSettingsPanel");
+  $("modelSettingsMount").appendChild(modelPanel);
+  $("modelSettingsButton").addEventListener("click", () => { modelOverlay.hidden = false; });
+  $("closeModelSettings").addEventListener("click", () => { modelOverlay.hidden = true; });
+  modelOverlay.addEventListener("click", event => { if (event.target === modelOverlay) modelOverlay.hidden = true; });
+  document.addEventListener("keydown", event => { if (event.key === "Escape") modelOverlay.hidden = true; });
+  const plusMenu = $("plusMenu"), plusButton = $("plusMenuButton");
+  function setPlusMenu(open) { plusMenu.hidden = !open; plusButton.setAttribute("aria-expanded", String(open)); }
+  plusButton.addEventListener("click", event => { event.stopPropagation(); setPlusMenu(plusMenu.hidden); });
+  $("plusAttachAction").addEventListener("click", () => { setPlusMenu(false); $("attachFilesButton").click(); });
+  document.addEventListener("click", event => { if (!event.target.closest(".plus-menu-wrap")) setPlusMenu(false); });
+  document.querySelectorAll(".plus-menu-link").forEach(link => link.addEventListener("click", () => setPlusMenu(false)));
+  const voiceUtilities = document.querySelector(".voice-utilities");
+  if (voiceUtilities) document.querySelector(".chat-form-wrap").appendChild(voiceUtilities);
+
+  const CHAT_STORE_KEY = "dexai_local_chats_v1";
+  let activeLocalChatId = localStorage.getItem("dexai_active_chat") || "";
+  let restoringLocalChat = false;
+  function readLocalChats() { try { const v = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch { return []; } }
+  function writeLocalChats(chats) { try { localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(chats.slice(0,30))); } catch {} }
+  function ensureLocalChat() {
+    const chats = readLocalChats(); let chat = chats.find(c => c.id === activeLocalChatId);
+    if (!chat) { chat = {id:"chat_"+Date.now().toString(36),title:"New chat",messages:[],updated:Date.now()}; chats.unshift(chat); activeLocalChatId=chat.id; localStorage.setItem("dexai_active_chat",chat.id); writeLocalChats(chats); }
+    return chat;
+  }
+  function renderLocalChatList() {
+    const host=$("localChatList"); if(!host) return; const chats=readLocalChats(); host.replaceChildren();
+    if(!chats.length){const empty=document.createElement("div");empty.className="sidebar-empty";empty.textContent="Your chats will appear here.";host.appendChild(empty);return;}
+    chats.slice(0,20).forEach(chat=>{const b=document.createElement("button");b.type="button";b.className="local-chat-item"+(chat.id===activeLocalChatId?" active":"");b.textContent=chat.title||"New chat";b.title=b.textContent;b.addEventListener("click",()=>openLocalChat(chat.id));host.appendChild(b);});
+  }
+  function saveLocalMessage(role, content) {
+    if(restoringLocalChat || !content || content==="Thinking..." || content==="Creating your image…") return;
+    const chats=readLocalChats(); let chat=chats.find(c=>c.id===activeLocalChatId); if(!chat) chat=ensureLocalChat();
+    chat.messages.push({role,content:String(content).slice(0,12000)});chat.updated=Date.now();
+    if(chat.title==="New chat" && role==="user") chat.title=String(content).replace(/\s+/g," ").slice(0,38)||"New chat";
+    chats.sort((a,b)=>b.updated-a.updated);writeLocalChats(chats);renderLocalChatList();
+  }
+  function openLocalChat(id) {
+    const chat=readLocalChats().find(c=>c.id===id);if(!chat)return;activeLocalChatId=id;localStorage.setItem("dexai_active_chat",id);restoringLocalChat=true;messages.replaceChildren();
+    if(chat.messages.length) chat.messages.forEach(m=>addMessage(m.content,m.role)); else showWelcomeCard();
+    restoringLocalChat=false;renderLocalChatList();$("chatInput").focus();
+  }
+  function showWelcomeCard() {
+    messages.innerHTML='<div class="welcome-card" id="welcomeCard"><div class="welcome-star">✧</div><h3>What shall we discover?</h3><p>Your ideas deserve intelligent answers.<br>Start a conversation with DexAI.</p><div class="suggestions"><button class="suggestion" data-prompt="Explain artificial intelligence in simple words.">Explain AI simply</button><button class="suggestion" data-prompt="Give me five creative YouTube Shorts ideas.">Creative ideas</button><button class="suggestion" data-prompt="Help me write a professional introduction.">Write something</button><button class="suggestion" data-prompt="Teach me an interesting new fact.">Teach me something</button></div></div>';
+    messages.querySelectorAll(".suggestion").forEach(b=>b.addEventListener("click",()=>sendMessage(b.dataset.prompt||"")));
+  }
+  function startLocalChat() {
+    messages.replaceChildren();const chat={id:"chat_"+Date.now().toString(36),title:"New chat",messages:[],updated:Date.now()};const chats=readLocalChats();chats.unshift(chat);activeLocalChatId=chat.id;localStorage.setItem("dexai_active_chat",chat.id);writeLocalChats(chats);showWelcomeCard();renderLocalChatList();$("chatInput").focus();
+  }
+  $("newChatButton").addEventListener("click",startLocalChat);
+  $("sidebarChatHome").addEventListener("click",()=>{$("#chat").scrollIntoView({behavior:"smooth"});$("chatInput").focus();});
+  ensureLocalChat();renderLocalChatList();
+
   function addMessage(text, role) {
     const item = document.createElement("div");
     item.className = "message " + role;
@@ -1748,7 +1895,7 @@ footer .brand { color: var(--text); font-size: 20px; }
     item.append(label, content);
     messages.appendChild(item);
     messages.scrollTop = messages.scrollHeight;
-
+    saveLocalMessage(role, text);
     return content;
   }
 
@@ -1816,6 +1963,10 @@ footer .brand { color: var(--text); font-size: 20px; }
       }
 
       renderMarkdown(reply, data.reply);
+      const activeChat = readLocalChats().find(item => item.id === activeLocalChatId);
+      if (activeChat && activeChat.messages.length && activeChat.messages[activeChat.messages.length-1].role === "bot" && activeChat.messages[activeChat.messages.length-1].content === "Thinking...") {
+        activeChat.messages[activeChat.messages.length-1].content = data.reply; activeChat.updated=Date.now(); writeLocalChats([activeChat,...readLocalChats().filter(item=>item.id!==activeLocalChatId)]); renderLocalChatList();
+      } else saveLocalMessage("bot", data.reply);
       selectedChatFiles = []; renderAttachmentChips();
       lastAssistantText = data.reply;
       if (liveVoiceActive) speakAssistant(data.reply);
@@ -1926,7 +2077,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   $("freePlanButton").addEventListener("click", () => {
     $("chat").scrollIntoView({ behavior: "smooth" });
     if (!signedInUser) openAuth();
-    else toast("Free plan: 20 AI messages per day.");
+    else toast("Free plan: 50 AI messages per day.");
   });
   $("premiumPlanButton").addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
 
@@ -2074,5 +2225,12 @@ footer .brand { color: var(--text); font-size: 20px; }
 })();
 </script>
 
+<div id="modelSettingsOverlay" class="model-settings-overlay" hidden>
+  <div class="model-settings-card" role="dialog" aria-modal="true" aria-labelledby="modelSettingsTitle">
+    <div class="model-settings-heading"><div><span class="model-kicker">DEXAI CONFIGURATION</span><h2 id="modelSettingsTitle">Choose your model</h2><p>Provider and model controls stay separate from your chat composer.</p></div><button type="button" id="closeModelSettings" class="model-close" aria-label="Close model settings">×</button></div>
+    <div id="modelSettingsMount"></div>
+    <div class="model-settings-footer">A model ID works only if its provider API key, access and quota are valid.</div>
+  </div>
+</div>
 </body>
 </html>
