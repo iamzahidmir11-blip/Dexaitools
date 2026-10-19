@@ -2013,6 +2013,8 @@ footer .brand { color: var(--text); font-size: 20px; }
   async function syncThreadAction(id, patch) {
     if (!authToken || !signedInUser) return;
     try {
+      const localThread=readLocalChats().find(item=>item.id===id);
+      if(localThread) await ensureRemoteThread(localThread);
       const res = await fetch("https://dexaitools.onrender.com/api/threads/" + encodeURIComponent(id), {
         method: "PATCH",
         headers: {"Content-Type":"application/json","Authorization":"Bearer "+authToken},
