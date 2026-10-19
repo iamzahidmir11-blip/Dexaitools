@@ -1587,8 +1587,9 @@ body.dex-focus-mode footer{display:none!important}
       desktopBody.querySelectorAll("[data-use-builtin]").forEach(b=>b.addEventListener("click",()=>useDexAIPrompt(builtins[Number(b.dataset.useBuiltin)]?.prompt)));
       renderSavedPrompts();
     }else if(page==="history"){
-      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Backups stay on your device unless you choose to share them.</p><div class="desktop-row-actions"><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON)</button><button class="desktop-secondary" id="importDexAIChats">↑ Import backup</button><input type="file" id="importDexAIFile" accept=".json,application/json" hidden></div><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
+      desktopBody.innerHTML='<h4>All conversations</h4><p>Recent and archived chats on this device, with account sync after sign-in. Backups stay on your device unless you choose to share them.</p><div class="desktop-row-actions"><button class="desktop-primary" id="exportAllDexAIChats">↓ Export all chats (JSON)</button><button class="desktop-secondary" id="importDexAIChats">↑ Import backup</button><button class="desktop-danger" id="clearLocalDexAIChats">Delete local chats</button><input type="file" id="importDexAIFile" accept=".json,application/json" hidden></div><div class="desktop-list">'+(chats.length?chats.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(c=>'<div class="desktop-list-item"><span>'+safe(c.archived?"▣ ":"")+safe(c.title||"Untitled chat")+'</span><div class="desktop-row-actions"><button class="desktop-primary" data-open-chat="'+safe(c.id)+'">Open</button><button class="desktop-secondary" data-export-chat="'+safe(c.id)+'">Export .txt</button><button class="desktop-secondary" data-export-json="'+safe(c.id)+'">Backup</button></div></div>').join(""):'<div class="desktop-muted">No history saved in this browser yet. Start a chat to create your first backup.</div>')+'</div>';
       $("exportAllDexAIChats").addEventListener("click",exportAllDexAIChats);
+      $("clearLocalDexAIChats").addEventListener("click",()=>{if(!confirm("Delete all chats saved in this browser? This cannot be undone unless you exported a backup first."))return;localStorage.removeItem(CHAT_STORE_KEY);localStorage.removeItem("dexai_active_chat");activeLocalChatId=null;messages.replaceChildren();showWelcomeCard();renderLocalChatList();showDesktopPage("history");toast("Local chat history cleared.");});
       $("importDexAIChats").addEventListener("click",()=>$("importDexAIFile").click());
       $("importDexAIFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];importDexAIBackup(file);e.target.value="";});
       desktopBody.querySelectorAll("[data-export-chat]").forEach(b=>b.addEventListener("click",()=>exportDexAIChat(b.dataset.exportChat,"txt")));
@@ -1622,6 +1623,20 @@ body.dex-focus-mode footer{display:none!important}
     host.innerHTML=chats.length?chats.map(c=>'<div class="desktop-list-item"><span>'+String(c.title||"Untitled chat").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))+'</span><button class="desktop-primary" data-open-chat="'+String(c.id).replace(/[^a-zA-Z0-9_-]/g,"")+'">Open</button></div>').join(""):'<div class="desktop-muted">No matching conversations.</div>';
     host.querySelectorAll("[data-open-chat]").forEach(b=>b.addEventListener("click",()=>{desktopOverlay.classList.remove("open");openLocalChat(b.dataset.openChat)}));
   }
+  document.addEventListener("keydown",e=>{
+    const tag=(e.target&&e.target.tagName||"").toLowerCase();
+    const editing=["input","textarea","select"].includes(tag)||e.target?.isContentEditable;
+    if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==="n"){
+      e.preventDefault();startLocalChat();$("chat").scrollIntoView({behavior:"smooth",block:"start"});return;
+    }
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&tag==="textarea"&&e.target.id==="chatInput"){
+      e.preventDefault();$("sendButton").click();return;
+    }
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){
+      e.preventDefault();desktopOverlay.classList.add("open");showDesktopPage("search");setTimeout(()=>$("desktopSearchInput")?.focus(),30);return;
+    }
+    if(e.key==="Escape"&&desktopOverlay.classList.contains("open"))desktopOverlay.classList.remove("open");
+  });
   $("desktopLauncher").addEventListener("click",()=>{desktopOverlay.classList.add("open");showDesktopPage("overview")});
   $("desktopClose").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
   $("desktopUpgradeLink").addEventListener("click",()=>desktopOverlay.classList.remove("open"));
