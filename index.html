@@ -1755,6 +1755,7 @@ footer .brand { color: var(--text); font-size: 20px; }
   async function sendMessage(text) {
     const message = text.trim() || (selectedChatFiles.length ? "Please analyze the attached file(s) and summarize the important details." : "");
     if (!message || sendButton.disabled) return;
+    if (selectedChatFiles.length && composerMode !== "chat") { toast("Switch to Chat mode to analyze attached files."); return; }
     if (!authToken || !signedInUser) {
       pendingMessage = message;
       openAuth();
