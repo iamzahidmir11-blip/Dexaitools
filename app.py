@@ -7,6 +7,7 @@ from functools import wraps
 
 import jwt
 import psycopg
+import stripe
 from psycopg.rows import dict_row
 from flask import Flask, request, jsonify, g, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +17,7 @@ from google.genai import types
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 28 * 1024 * 1024
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://iamzahidmir11-blip.github.io/Dexaitools").rstrip("/")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "50"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
@@ -46,8 +48,14 @@ def init_db():
           password_hash TEXT NOT NULL,
           display_name TEXT NOT NULL DEFAULT '',
           plan TEXT NOT NULL DEFAULT 'free',
+          stripe_customer_id TEXT,
+          stripe_subscription_id TEXT,
+          subscription_status TEXT NOT NULL DEFAULT 'inactive',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )""")
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT")
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT")
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'inactive'")
         conn.execute("""
         CREATE TABLE IF NOT EXISTS conversations (
           id BIGSERIAL PRIMARY KEY,
@@ -81,6 +89,8 @@ def plan_limit(plan):
         return PLUS_DAILY_LIMIT
     if plan == "pro":
         return PRO_DAILY_LIMIT
+    if plan == "pro_plus":
+        return int(os.getenv("PRO_PLUS_DAILY_LIMIT", "300"))
     if plan == "premium":
         return int(os.getenv("PREMIUM_DAILY_LIMIT", "100"))
     return FREE_DAILY_LIMIT
@@ -263,6 +273,109 @@ def history():
         return jsonify({"messages": [dict(r) for r in reversed(rows)]})
     except Exception:
         return jsonify({"error": "History is temporarily unavailable."}), 503
+
+@app.route("/api/billing/checkout", methods=["POST", "OPTIONS"])
+def billing_checkout():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Please sign in before upgrading.", "code": "AUTH_REQUIRED"}), 401
+    data = request.get_json(silent=True) or {}
+    plan = str(data.get("plan", "")).strip().lower()
+    price_ids = {"pro": os.getenv("STRIPE_PRICE_PRO", ""), "pro_plus": os.getenv("STRIPE_PRICE_PRO_PLUS", "")}
+    price_id = price_ids.get(plan)
+    secret_key = os.getenv("STRIPE_SECRET_KEY", "")
+    if not secret_key or not price_id:
+        return jsonify({"error": "Billing is not fully configured yet. Stripe secret key and plan price IDs must be added securely in Render Environment."}), 503
+    try:
+        stripe.api_key = secret_key
+        init_db()
+        with db() as conn:
+            row = conn.execute("SELECT stripe_customer_id FROM users WHERE id=%s", (user["id"],)).fetchone()
+        params = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "success_url": FRONTEND_URL + "/?billing=success&session_id={CHECKOUT_SESSION_ID}#plans",
+            "cancel_url": FRONTEND_URL + "/?billing=cancel#plans",
+            "client_reference_id": user["id"],
+            "metadata": {"user_id": user["id"], "plan": plan, "app": "DexAI"},
+            "subscription_data": {"metadata": {"user_id": user["id"], "plan": plan, "app": "DexAI"}},
+            "allow_promotion_codes": True
+        }
+        if row and row["stripe_customer_id"]:
+            params["customer"] = row["stripe_customer_id"]
+        else:
+            params["customer_email"] = user["email"]
+        session = stripe.checkout.Session.create(**params)
+        return jsonify({"url": session.url, "session_id": session.id})
+    except Exception:
+        app.logger.exception("Stripe checkout session creation failed")
+        return jsonify({"error": "Could not start checkout. Check Stripe configuration and test-mode price IDs."}), 502
+
+
+@app.route("/api/billing/portal", methods=["POST", "OPTIONS"])
+def billing_portal():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Please sign in to manage billing.", "code": "AUTH_REQUIRED"}), 401
+    secret_key = os.getenv("STRIPE_SECRET_KEY", "")
+    if not secret_key:
+        return jsonify({"error": "Stripe billing is not configured on the server yet."}), 503
+    try:
+        init_db()
+        with db() as conn:
+            row = conn.execute("SELECT stripe_customer_id FROM users WHERE id=%s", (user["id"],)).fetchone()
+        if not row or not row["stripe_customer_id"]:
+            return jsonify({"error": "No Stripe customer is linked to this account yet."}), 404
+        stripe.api_key = secret_key
+        session = stripe.billing_portal.Session.create(customer=row["stripe_customer_id"], return_url=FRONTEND_URL + "/#plans")
+        return jsonify({"url": session.url})
+    except Exception:
+        app.logger.exception("Stripe customer portal creation failed")
+        return jsonify({"error": "Could not open billing management. Check Stripe configuration."}), 502
+
+
+@app.route("/api/billing/webhook", methods=["POST"])
+def billing_webhook():
+    secret_key = os.getenv("STRIPE_SECRET_KEY", "")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    if not secret_key or not webhook_secret:
+        return jsonify({"error": "Webhook is not configured."}), 503
+    try:
+        stripe.api_key = secret_key
+        event = stripe.Webhook.construct_event(request.get_data(cache=False), request.headers.get("Stripe-Signature", ""), webhook_secret)
+    except Exception as exc:
+        app.logger.warning("Stripe webhook signature/event rejected: %s", str(exc))
+        return jsonify({"error": "Invalid webhook signature or payload."}), 400
+    try:
+        obj = event["data"]["object"]
+        event_type = event["type"]
+        if event_type == "checkout.session.completed":
+            metadata = obj.get("metadata") or {}
+            user_id = metadata.get("user_id") or obj.get("client_reference_id")
+            plan = metadata.get("plan", "")
+            if user_id and plan in {"pro", "pro_plus"} and obj.get("mode") == "subscription" and obj.get("payment_status") in {"paid", "no_payment_required"}:
+                with db() as conn:
+                    conn.execute("UPDATE users SET plan=%s, stripe_customer_id=%s, stripe_subscription_id=%s, subscription_status='active' WHERE id=%s",
+                                 (plan, obj.get("customer"), obj.get("subscription"), user_id))
+        elif event_type in {"customer.subscription.updated", "customer.subscription.deleted"}:
+            metadata = obj.get("metadata") or {}
+            user_id = metadata.get("user_id")
+            plan = metadata.get("plan", "")
+            status = obj.get("status", "")
+            if user_id:
+                active = status in {"active", "trialing"} and plan in {"pro", "pro_plus"}
+                with db() as conn:
+                    conn.execute("UPDATE users SET plan=%s, stripe_customer_id=%s, stripe_subscription_id=%s, subscription_status=%s WHERE id=%s",
+                                 (plan if active else "free", obj.get("customer"), obj.get("id"), status or "inactive", user_id))
+        return jsonify({"received": True})
+    except Exception:
+        app.logger.exception("Stripe webhook processing failed")
+        return jsonify({"error": "Webhook processing failed."}), 500
+
 
 @app.route("/api/usage", methods=["GET", "OPTIONS"])
 def usage():
