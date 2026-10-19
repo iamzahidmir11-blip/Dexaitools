@@ -138,18 +138,21 @@ def home():
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
 @app.route("/health", methods=["GET"])
+@app.route("/api/health", methods=["GET"])
 def health():
     status = {
         "service": "online",
         "database": "not_configured",
         "auth_configured": bool(token_secret()),
         "ai_configured": bool(os.getenv("GEMINI_API_KEY")),
-        "model": MODEL
+        "model": MODEL,
+        "model_tested": False
     }
     try:
         init_db()
         status["database"] = "connected"
     except Exception:
+        app.logger.exception("Health check database failure")
         status["database"] = "unavailable"
     ready = status["database"] == "connected" and status["auth_configured"] and status["ai_configured"]
     return jsonify(status), (200 if ready else 503)
@@ -349,11 +352,20 @@ def call_ai_provider(provider, message, web_search=False):
         if not api_key:
             raise RuntimeError("Gemini API is not configured.")
         client = genai.Client(api_key=api_key)
-        config = types.GenerateContentConfig(
-            tools=[types.Tool(google_search=types.GoogleSearch())]
-        ) if web_search else None
+        config_options = {"max_output_tokens": int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "2048"))}
+        if web_search:
+            config_options["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+        config = types.GenerateContentConfig(**config_options)
         result = client.models.generate_content(model=MODEL, contents=message, config=config)
         answer = (result.text or "").strip()
+        if not answer:
+            feedback = getattr(result, "prompt_feedback", None)
+            candidates = getattr(result, "candidates", None) or []
+            finish_reasons = [str(getattr(candidate, "finish_reason", "unknown")) for candidate in candidates]
+            app.logger.error(
+                "Gemini returned empty text; model=%s prompt_feedback=%s finish_reasons=%s",
+                MODEL, str(feedback)[:500], ",".join(finish_reasons)[:300]
+            )
         if web_search:
             sources = []
             try:
@@ -372,7 +384,7 @@ def call_ai_provider(provider, message, web_search=False):
                     "- [" + title.replace("]", "") + "](" + uri + ")" for title, uri in sources[:8]
                 )
         if not answer:
-            raise RuntimeError("Gemini returned an empty answer.")
+            raise RuntimeError("Gemini returned no text. Check prompt safety feedback, finish reason, model access and output-token settings.")
         return answer
 
     if provider == "openai":
@@ -438,7 +450,35 @@ def call_ai_provider(provider, message, web_search=False):
 def providers_status():
     if request.method == "OPTIONS":
         return "", 204
-    return jsonify({"providers": configured_providers()})
+    return jsonify({"providers": configured_providers(), "default_model": MODEL})
+
+@app.route("/api/test-model", methods=["POST", "OPTIONS"])
+def test_model_connection():
+    if request.method == "OPTIONS":
+        return "", 204
+    user = current_user()
+    if not user:
+        return jsonify({"error": "Sign in before testing the AI connection.", "code": "AUTH_REQUIRED"}), 401
+    data = request.get_json(silent=True) or {}
+    requested = str(data.get("provider", "auto")).lower()
+    available = [item["id"] for item in configured_providers()]
+    if requested == "auto":
+        provider = next((p for p in ("gemini", "openai", "cloudflare") if p in available), None)
+    else:
+        provider = requested
+    if provider not in {"gemini", "openai", "cloudflare"} or provider not in available:
+        return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server."}), 503
+    started = time.monotonic()
+    try:
+        answer = call_ai_provider(provider, "Reply with exactly: DexAI model connection successful.")
+        if not answer.strip():
+            raise RuntimeError("The provider returned an empty test response.")
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        app.logger.info("AI connection test passed provider=%s elapsed_ms=%s user_id=%s", provider, elapsed_ms, user["id"])
+        return jsonify({"ok": True, "provider": provider, "model": MODEL if provider == "gemini" else None, "elapsed_ms": elapsed_ms, "message": "AI connection successful."})
+    except Exception:
+        app.logger.exception("AI connection test failed provider=%s user_id=%s", provider, user["id"])
+        return jsonify({"ok": False, "provider": provider, "error": "AI connection test failed. Check server logs, provider credentials, model access, quota and billing."}), 502
 
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 def chat():
@@ -527,6 +567,7 @@ def chat():
                     try:
                         results.append({"provider": p, "name": labels[p], "reply": call_ai_provider(p, prompt_message, web_search=web_search and p == "gemini"), "ok": True})
                     except Exception as exc:
+                        app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
@@ -536,6 +577,7 @@ def chat():
                             try:
                                 results.append({"provider": p, "name": labels[p], "reply": future.result(), "ok": True})
                             except Exception as exc:
+                                app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
                                 results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                     results.sort(key=lambda item: selected.index(item["provider"]))
                 successes = [r for r in results if r["ok"]]
