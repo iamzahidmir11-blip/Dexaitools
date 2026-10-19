@@ -16,7 +16,7 @@ from google.genai import types
 app = Flask(__name__)
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
+FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "20"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 PLUS_DAILY_LIMIT = int(os.getenv("PLUS_DAILY_LIMIT", "50"))
 PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "150"))
@@ -277,7 +277,7 @@ def usage():
                 "SELECT COUNT(*) AS n FROM usage_events WHERE client_key=%s AND created_at >= date_trunc('day', NOW())",
                 (client_key,)
             ).fetchone()["n"]
-        return jsonify({"plan": user["plan"], "daily_access": used < limit})
+        return jsonify({"plan": user["plan"], "used": used, "limit": limit, "remaining": max(0, limit - used), "daily_access": used < limit})
     except Exception:
         app.logger.exception("Usage lookup failed")
         return jsonify({"error": "Usage information is temporarily unavailable."}), 503
@@ -463,7 +463,7 @@ def test_model_connection():
     requested = str(data.get("provider", "auto")).lower()
     available = [item["id"] for item in configured_providers()]
     if requested in {"auto", "compare"}:
-        provider = next((p for p in ("gemini", "openai", "cloudflare") if p in available), None)
+        provider = next((p for p in ("cloudflare", "openai", "gemini") if p in available), None)
     else:
         provider = requested
     if provider not in {"gemini", "openai", "cloudflare"} or provider not in available:
@@ -509,7 +509,7 @@ def chat():
     elif provider == "compare":
         selected = available
     elif provider == "auto":
-        selected = [next((p for p in ("gemini", "openai", "cloudflare") if p in available), available[0])]
+        selected = [next((p for p in ("cloudflare", "openai", "gemini") if p in available), available[0])]
     elif provider in available:
         selected = [provider]
     else:
@@ -583,7 +583,29 @@ def chat():
                 successes = [r for r in results if r["ok"]]
                 if not successes:
                     safe_errors = " ".join(r["name"] + ": " + r["reply"] for r in results)
-                    return jsonify({"error": safe_errors or "All connected AI providers failed."}), 502
+                    friendly_errors = []
+                    for item in results:
+                        if item["ok"]:
+                            continue
+                        detail = str(item.get("reply", ""))
+                        if item["provider"] == "gemini" and ("429" in detail or "RESOURCE_EXHAUSTED" in detail or "quota" in detail.lower()):
+                            import re
+                            match = re.search(r"retry in ([0-9hms.]+)", detail, re.IGNORECASE)
+                            wait_text = ""
+                            if match:
+                                delay = match.group(1)
+                                hours = re.search(r"(\\d+)h", delay)
+                                minutes = re.search(r"(\\d+)m", delay)
+                                if hours and int(hours.group(1)) > 0:
+                                    wait_text = " Please try again in about " + hours.group(1) + " hour(s)."
+                                elif minutes:
+                                    wait_text = " Please try again in about " + minutes.group(1) + " minute(s)."
+                            friendly_errors.append("You're temporarily out of Gemini messages." + (wait_text or " Please try again after your quota resets."))
+                        elif item["provider"] == "cloudflare":
+                            friendly_errors.append("Cloudflare AI couldn't respond. Please check its connection and try again.")
+                        else:
+                            friendly_errors.append("AI is temporarily unavailable. Please try again later.")
+                    return jsonify({"error": " ".join(friendly_errors) or "AI is temporarily unavailable. Please try again later."}), 502
                 if len(selected) == 1:
                     answer = successes[0]["reply"]
                 else:
