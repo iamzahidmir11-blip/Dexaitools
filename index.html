@@ -1732,6 +1732,7 @@ footer .brand { color: var(--text); font-size: 20px; }
     }
     updateAccountButton();
     await refreshUsage();
+    if (signedInUser) await loadRemoteThreads();
   }
   $("authForm").addEventListener("submit", async event => {
     event.preventDefault();
@@ -1759,6 +1760,7 @@ footer .brand { color: var(--text); font-size: 20px; }
       $("authForm").reset();
       setAuthMode("login");
       await refreshUsage();
+      await loadRemoteThreads();
       if (pendingPlan) {
         const queuedPlan = pendingPlan;
         pendingPlan = "";
@@ -2031,6 +2033,37 @@ footer .brand { color: var(--text); font-size: 20px; }
       if (!res.ok) throw new Error(data.error||"Could not sync chat.");
       return data.thread?.id||chat.id;
     } catch(error) { console.warn("DexAI thread sync:",error.message); return null; }
+  }
+  async function loadRemoteThreads() {
+    if (!authToken || !signedInUser) return;
+    try {
+      const res=await fetch("https://dexaitools.onrender.com/api/threads",{headers:{"Authorization":"Bearer "+authToken}});
+      const data=await res.json();
+      if(!res.ok || !Array.isArray(data.threads)) return;
+      const local=readLocalChats();
+      for(const thread of data.threads.slice(0,30)) {
+        let chat=local.find(item=>item.id===thread.id);
+        const detailRes=await fetch("https://dexaitools.onrender.com/api/threads/"+encodeURIComponent(thread.id),{headers:{"Authorization":"Bearer "+authToken}});
+        if(!detailRes.ok) continue;
+        const detail=await detailRes.json();
+        const remoteMessages=(detail.messages||[]).map(m=>({role:m.role==="assistant"?"bot":"user",content:m.content}));
+        if(!chat) {
+          chat={id:thread.id,title:thread.title||"New chat",messages:remoteMessages,updated:Date.parse(thread.updated_at)||Date.now(),pinned:!!thread.pinned,archived:!!thread.archived,project:thread.project||""};
+          local.push(chat);
+        } else {
+          chat.title=thread.title||chat.title;
+          chat.pinned=!!thread.pinned;chat.archived=!!thread.archived;chat.project=thread.project||"";
+          if(remoteMessages.length && (!chat.messages||chat.messages.length===0)) chat.messages=remoteMessages;
+        }
+      }
+      local.sort((a,b)=>Number(Boolean(b.pinned))-Number(Boolean(a.pinned))||b.updated-a.updated);
+      writeLocalChats(local);renderLocalChatList();
+      const active=local.find(item=>item.id===activeLocalChatId);
+      if(active && (!active.messages||active.messages.length===0) && active.id) {
+        const detailRes=await fetch("https://dexaitools.onrender.com/api/threads/"+encodeURIComponent(active.id),{headers:{"Authorization":"Bearer "+authToken}});
+        if(detailRes.ok){const detail=await detailRes.json();active.messages=(detail.messages||[]).map(m=>({role:m.role==="assistant"?"bot":"user",content:m.content}));writeLocalChats(local);if(active.messages.length)openLocalChat(active.id);}
+      }
+    } catch(error) { console.warn("DexAI remote history sync:",error.message); }
   }
   function runChatAction(action, chat) {
     const chats=readLocalChats();const target=chats.find(c=>c.id===chat.id);if(!target)return;
