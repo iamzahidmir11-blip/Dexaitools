@@ -594,8 +594,8 @@ def chat():
                             wait_text = ""
                             if match:
                                 delay = match.group(1)
-                                hours = re.search(r"(\\d+)h", delay)
-                                minutes = re.search(r"(\\d+)m", delay)
+                                hours = re.search(r"(\d+)h", delay)
+                                minutes = re.search(r"(\d+)m", delay)
                                 if hours and int(hours.group(1)) > 0:
                                     wait_text = " Please try again in about " + hours.group(1) + " hour(s)."
                                 elif minutes:
