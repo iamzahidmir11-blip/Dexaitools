@@ -851,9 +851,9 @@ def chat():
 
             # Lightweight conversation memory: reuse recent turns without another AI call.
             if thread_id:
-                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id=%s ORDER BY id DESC LIMIT 8", (user["id"],thread_id)).fetchall()
+                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id=%s ORDER BY id DESC LIMIT 20", (user["id"],thread_id)).fetchall()
             else:
-                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id IS NULL ORDER BY id DESC LIMIT 8", (user["id"],)).fetchall()
+                recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id IS NULL ORDER BY id DESC LIMIT 20", (user["id"],)).fetchall()
             recent_rows = list(reversed(recent_rows))
             if recent_rows:
                 memory_context = "\n".join(
