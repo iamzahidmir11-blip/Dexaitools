@@ -905,7 +905,7 @@ def chat():
             else:
                 prompt_message = dexai_system_prompt + "\n\nUser: " + message
             attachment_fingerprint = hashlib.sha256("".join(hashlib.sha256(base64.b64decode(item["data"])).hexdigest() for item in attachments).encode()).hexdigest() if attachments else ""
-            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message + "\n" + attachment_fingerprint).encode()).hexdigest()
+            cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + prompt_message + "\n" + attachment_fingerprint).encode()).hexdigest()
             cached = conn.execute(
                 "SELECT response FROM ai_cache WHERE cache_key=%s AND expires_at > NOW()",
                 (cache_key,)
