@@ -1644,6 +1644,8 @@ body.dex-focus-mode footer{display:none!important}
 (() => {
   "use strict";
 
+  const $ = (id) => document.getElementById(id);
+
   const API_URL = "https://dexaitools.onrender.com/api/chat";
   const DRAFT_KEY = "dexai_message_draft_v1";
   const draftStatus = $("draftStatus");
@@ -1700,8 +1702,6 @@ body.dex-focus-mode footer{display:none!important}
       clearTimeout(timer);
     }
   }
-
-  const $ = (id) => document.getElementById(id);
 
   $("year").textContent = new Date().getFullYear();
 
