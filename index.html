@@ -3,190 +3,226 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
-<title>Dex AI — Hinglish Chat</title>
+<meta name="theme-color" content="#f8f7f4">
+<title>Dex AI — Your AI companion</title>
 <style>
-:root{color-scheme:light;--bg:#fff;--fg:#202123;--muted:#6b6b70;--line:#e5e5e5;--soft:#f7f7f8;--button:#202123}
+:root{color-scheme:light;--paper:#faf9f6;--sidebar:#f0eee8;--ink:#292824;--muted:#77756e;--line:#e3e0d8;--accent:#c96442;--accent-dark:#a94e31;--white:#fff;--soft:#f2f0ea;--shadow:0 10px 35px #3327190a}
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif}
-body{display:flex;flex-direction:column;min-height:100dvh}
-button,input,textarea{font:inherit}
-button{cursor:pointer}
-.top{height:58px;flex:0 0 58px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--line);background:#fff}
-.brand{font-size:19px;font-weight:700;letter-spacing:-.6px}
-.top-actions{display:flex;align-items:center;gap:8px}
-.ghost,.login{border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--fg);padding:9px 13px;font-size:14px}
-.login{background:var(--button);color:#fff;border-color:var(--button)}
-main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:900px;margin:0 auto}
-#messages{flex:1;overflow-y:auto;padding:28px 24px 20px;scroll-behavior:smooth}
-.welcome{min-height:45vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
-.welcome h1{font-size:clamp(27px,5vw,34px);line-height:1.2;margin:0 0 12px;font-weight:700;letter-spacing:-1px}
-.welcome p{font-size:15px;line-height:1.6;color:var(--muted);margin:0}
-.row{display:flex;margin:0 0 22px;gap:12px;align-items:flex-start}
-.avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;font-size:12px;font-weight:700}
-.row.user{justify-content:flex-end}
-.row.user .bubble{background:#f4f4f4;border-radius:18px;padding:12px 16px;max-width:min(78%,650px);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
-.row.assistant .bubble{min-width:0;flex:1;padding:3px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font-size:15.5px}
-.row.assistant .avatar{background:#202123;color:#fff}
-.composer-area{padding:12px 20px max(12px,env(safe-area-inset-bottom));background:linear-gradient(#ffffffef,#fff 22%);width:100%}
-.composer{display:flex;align-items:flex-end;gap:10px;width:100%;border:1px solid #d9d9df;border-radius:23px;padding:10px 12px 10px 17px;box-shadow:0 3px 15px #0000000b;background:#fff}
-#prompt{display:block;flex:1;min-width:0;resize:none;border:0;outline:0;background:transparent;color:var(--fg);font-size:16px;line-height:1.5;max-height:200px;min-height:30px;padding:5px 0}
-#prompt::placeholder{color:#85858b}
-#send{width:38px;height:38px;flex:0 0 38px;border:0;border-radius:50%;background:#202123;color:#fff;font-size:23px;display:flex;align-items:center;justify-content:center}
-#send:disabled{opacity:.4;cursor:wait}
-.hint{text-align:center;color:#8a8a90;font-size:11px;margin-top:9px}
-.status{padding:0 20px 8px;text-align:center;color:#b42318;font-size:13px;display:none}
-.modal-backdrop{position:fixed;inset:0;z-index:10;background:#0006;display:none;align-items:center;justify-content:center;padding:18px}
-.modal-backdrop.open{display:flex}
-.modal{width:min(100%,380px);border:1px solid var(--line);border-radius:18px;background:#fff;padding:24px;box-shadow:0 18px 60px #0002}
-.modal h2{font-size:23px;margin:0 0 7px}
-.modal p{font-size:13px;color:var(--muted);margin:0 0 20px;line-height:1.5}
-.field{display:block;width:100%;padding:12px 13px;border:1px solid #d9d9df;border-radius:10px;margin:0 0 10px;outline:none;background:#fff;color:#202123}
-.field:focus{border-color:#777}
-.submit{width:100%;border:0;border-radius:10px;background:#202123;color:#fff;padding:12px;font-weight:700;margin-top:4px}
-.modal-bottom{font-size:13px;text-align:center;margin-top:16px;color:var(--muted)}
-.text-button{border:0;background:none;text-decoration:underline;color:#202123;padding:0}
+html,body{margin:0;width:100%;height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--paper);color:var(--ink)}
+button,input,textarea{font:inherit}button{cursor:pointer}
+.app{height:100dvh;display:flex;overflow:hidden;background:var(--paper)}
+.sidebar{width:258px;flex:0 0 258px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 13px 14px;border-right:1px solid #e8e5de;transition:transform .22s ease}
+.brandline{display:flex;align-items:center;justify-content:space-between;padding:0 7px 26px}
+.brand{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:750;letter-spacing:-.8px}
+.brand-mark{width:28px;height:28px;border-radius:10px;background:var(--accent);color:white;display:grid;place-items:center;font-size:15px;font-weight:800}
+.icon-btn{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:10px;background:transparent;color:#625f58;font-size:19px}
+.icon-btn:hover,.side-link:hover{background:#e5e2da}
+.side-link{width:100%;display:flex;align-items:center;gap:11px;padding:10px 11px;border:0;border-radius:10px;background:transparent;color:#383630;text-align:left;font-size:13.5px;margin-bottom:4px}
+.side-link .sym{font-size:17px;width:19px;text-align:center;color:#77736a}
+.side-link.primary{background:#e6e2d9;font-weight:650}
+.side-label{font-size:11px;font-weight:700;letter-spacing:.7px;color:#8b877e;padding:26px 11px 9px;text-transform:uppercase}
+.recent-list{overflow:auto;flex:1}
+.recent-item{display:block;width:100%;border:0;background:transparent;text-align:left;padding:9px 11px;border-radius:9px;font-size:13px;color:#57544d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-item:hover{background:#e7e4dc}
+.sidebar-bottom{border-top:1px solid #dedbd3;padding-top:12px}
+.account-btn{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:transparent;padding:9px 8px;border-radius:11px;color:var(--ink)}
+.account-btn:hover{background:#e5e2da}
+.account-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#d8b6a3;color:#563a2d;font-size:13px;font-weight:750}
+.account-copy{min-width:0;flex:1}.account-name{font-size:12.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-plan{font-size:11px;color:var(--muted);margin-top:3px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.topbar{height:58px;flex:0 0 58px;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.top-left{display:flex;align-items:center;gap:10px}.mobile-brand{display:none;font-size:18px;font-weight:750;letter-spacing:-.6px}.model-name{font-size:14px;font-weight:650;color:#44423c;display:flex;align-items:center;gap:6px}.model-name span{color:#8b877e;font-size:12px;font-weight:500}
+.top-actions{display:flex;align-items:center;gap:7px}
+.top-btn{border:1px solid var(--line);border-radius:10px;background:#fffdf9;padding:8px 12px;font-size:12px;color:#555149}
+.top-btn:hover{background:#f0ede6}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:36px 24px 16px}
+.welcome{width:100%;max-width:720px;margin:auto 0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 0 36px}
+.welcome-mark{width:48px;height:48px;border-radius:17px;background:#f0d8cb;color:var(--accent-dark);display:grid;place-items:center;font-size:23px;margin-bottom:23px}
+.welcome h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(31px,4vw,43px);line-height:1.14;letter-spacing:-1.15px;font-weight:500;margin:0 0 12px}
+.welcome p{font-size:14px;line-height:1.7;color:var(--muted);margin:0 0 29px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,570px);text-align:left}
+.suggestion{min-height:79px;padding:14px 15px;border:1px solid var(--line);border-radius:14px;background:#fffdf9;color:#49463f;text-align:left;box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.suggestion:hover{border-color:#c7b9aa;transform:translateY(-1px)}
+.suggestion strong{display:block;font-size:12.5px;font-weight:650;margin-bottom:5px}
+.suggestion span{font-size:11.5px;color:#858076;line-height:1.4;display:block}
+.messages{width:100%;max-width:740px;margin:0 auto;padding:10px 0 30px}
+.message{display:flex;gap:13px;margin:0 0 27px;align-items:flex-start}
+.message.user{justify-content:flex-end}
+.message.user .bubble{max-width:min(82%,620px);background:#efede7;border-radius:18px 18px 5px 18px;padding:13px 16px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.message.assistant .bubble{flex:1;min-width:0;padding:2px 0 4px;line-height:1.8;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant-mark{width:29px;height:29px;flex:0 0 29px;border-radius:10px;background:#f0d8cb;color:var(--accent-dark);display:grid;place-items:center;font-size:13px;font-weight:800;margin-top:0}
+.composer-wrap{width:100%;max-width:780px;margin:0 auto;padding:8px 24px 20px}
+.composer{border:1px solid #dedbd3;background:#fffefa;border-radius:19px;box-shadow:0 5px 25px #2e24140c;padding:13px 13px 9px 17px;transition:border-color .15s,box-shadow .15s}
+.composer:focus-within{border-color:#c8b5a5;box-shadow:0 5px 28px #2e241412}
+#prompt{display:block;width:100%;min-height:52px;max-height:190px;resize:none;border:0;outline:0;background:transparent;color:var(--ink);font-size:14px;line-height:1.65;padding:3px 1px}
+#prompt::placeholder{color:#99958c}
+.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:5px}
+.composer-note{font-size:10.5px;color:#979289;padding-left:2px}
+.composer-tools{display:flex;align-items:center;gap:8px}
+.mode-pill{font-size:10.5px;color:#777168;background:#f3f0e9;border-radius:8px;padding:6px 9px}
+.send{width:34px;height:34px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:20px;display:grid;place-items:center;transition:background .15s}
+.send:hover{background:var(--accent-dark)}.send:disabled{opacity:.45;cursor:wait}
+.status{max-width:740px;width:calc(100% - 48px);margin:0 auto 6px;color:#a43d2c;font-size:12px;display:none}
+.disclaimer{text-align:center;font-size:10px;color:#99958c;padding:0 12px 2px}
+.backdrop{display:none;position:fixed;inset:0;background:#29241e55;z-index:20;align-items:center;justify-content:center;padding:18px}
+.backdrop.open{display:flex}
+.modal{width:min(100%,390px);background:#fffdf9;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 25px 70px #0002}
+.modal h2{font-family:Georgia,serif;font-size:27px;font-weight:500;margin:0 0 7px}
+.modal p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 19px}
+.field{display:block;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;outline:0;background:#fff;color:var(--ink);font-size:13px}
+.field:focus{border-color:#b99580}
+.submit{width:100%;padding:12px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:650;font-size:13px;margin-top:4px}
+.modal-bottom{text-align:center;font-size:12px;color:var(--muted);margin-top:16px}
+.text-button{border:0;background:none;color:var(--accent-dark);text-decoration:underline;padding:0;font-size:12px}
 .close{float:right;border:0;background:none;font-size:22px;color:#777;padding:0}
-#authError{color:#b42318;font-size:13px;line-height:1.4;margin-top:10px}
-@media(max-width:600px){
- .top{height:52px;flex-basis:52px;padding:0 13px}
- .brand{font-size:18px}
- #messages{padding:22px 14px 16px}
- .welcome{min-height:42vh;padding:12px}
- .welcome p{font-size:14px}
- .composer-area{padding:8px 9px max(9px,env(safe-area-inset-bottom))}
- .composer{gap:8px;padding:8px 9px 8px 14px;border-radius:20px}
- #prompt{font-size:16px;min-height:30px}
- .row.user .bubble{max-width:88%}
- .row.assistant .bubble{font-size:15px}
- .hint{font-size:10px}
+#error{color:#a43d2c;font-size:12px;line-height:1.5;margin-top:10px}
+.mobile-overlay{display:none}
+@media(max-width:760px){
+ .sidebar{position:fixed;z-index:30;inset:0 auto 0 0;transform:translateX(-105%);box-shadow:10px 0 35px #0000000b}
+ .sidebar.open{transform:translateX(0)}
+ .mobile-overlay.open{display:block;position:fixed;inset:0;background:#211e194a;z-index:25}
+ .topbar{padding:0 13px;height:53px;flex-basis:53px}
+ .mobile-brand{display:block}.model-name{display:none}
+ .top-actions .top-btn{padding:7px 9px}
+ .stage{padding:18px 17px 8px}
+ .welcome{padding:18px 0 24px}
+ .welcome h1{font-size:34px}
+ .welcome p{font-size:13px;margin-bottom:22px}
+ .suggestions{grid-template-columns:1fr;gap:8px}
+ .suggestion{min-height:65px;padding:12px 13px}
+ .composer-wrap{padding:7px 10px 13px}
+ .composer{border-radius:17px;padding:11px 11px 8px 14px}
+ #prompt{min-height:48px;font-size:14px}
+ .composer-note{font-size:9.5px}
+ .disclaimer{font-size:9px}
+ .messages{padding-top:7px}
+ .message{gap:9px;margin-bottom:22px}
+ .message.user .bubble{max-width:90%;font-size:13.5px}
+ .message.assistant .bubble{font-size:14px}
 }
+@media(max-height:650px){.welcome{padding-top:5px;padding-bottom:15px}.welcome-mark{margin-bottom:12px}.welcome p{margin-bottom:16px}.suggestion{min-height:62px}}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand">Dex AI</div>
-  <div class="top-actions"><button id="newChat" class="ghost" type="button">Nayi Chat</button><button id="loginBtn" class="login" type="button">Login Karo</button></div>
-</header>
-<main>
-  <section id="messages" aria-live="polite">
-    <div class="welcome" id="welcome"><h1>Batao bhai, kya help chahiye?</h1><p>Koi bhi sawaal pucho, idea discuss karo ya kisi kaam mein help lo.</p></div>
-  </section>
-  <div id="status" class="status" role="status"></div>
-  <div class="composer-area">
-    <form class="composer" id="chatForm">
-      <textarea id="prompt" rows="1" maxlength="4000" placeholder="Yahan message likho..." aria-label="Yahan message likho..."></textarea>
-      <button id="send" type="submit" aria-label="Send message">↑</button>
-    </form>
-    <div class="hint">Dex AI se galti ho sakti hai. Zaroori info ek baar check kar lena.</div>
+<div class="app">
+ <aside class="sidebar" id="sidebar">
+  <div class="brandline"><div class="brand"><span class="brand-mark">D</span> Dex AI</div><button class="icon-btn" id="closeSidebar" aria-label="Close sidebar">‹</button></div>
+  <button class="side-link primary" id="newChat"><span class="sym">＋</span> New chat</button>
+  <button class="side-link" id="focusSearch"><span class="sym">⌕</span> Search chats</button>
+  <button class="side-link" id="openLogin"><span class="sym">↗</span> Log in / Sign up</button>
+  <div class="side-label">Recent chats</div>
+  <div class="recent-list" id="recentList"><div style="padding:8px 11px;color:#918d84;font-size:12px;line-height:1.5">Your chats will show up here.</div></div>
+  <div class="sidebar-bottom"><button class="account-btn" id="accountBtn"><span class="account-avatar" id="accountAvatar">D</span><span class="account-copy"><span class="account-name" id="accountName">Guest</span><span class="account-plan" id="accountPlan">Log in to sync chats</span></span><span style="color:#8b877e">···</span></button></div>
+ </aside>
+ <div class="mobile-overlay" id="mobileOverlay"></div>
+ <section class="main">
+  <header class="topbar">
+   <div class="top-left"><button class="icon-btn" id="menuBtn" aria-label="Open menu">☰</button><span class="mobile-brand">Dex AI</span><div class="model-name">Dex AI <span>· Smart assistant</span></div></div>
+   <div class="top-actions"><button class="top-btn" id="topNew">＋ New chat</button><button class="top-btn" id="topLogin">Log in</button></div>
+  </header>
+  <main class="stage" id="stage">
+   <section class="welcome" id="welcome">
+    <div class="welcome-mark">✳</div>
+    <h1>Hey, kya karna hai<br>aaj?</h1>
+    <p>Ideas explore karo, kuch naya seekho, ya apna kaam jaldi finish karo.</p>
+    <div class="suggestions">
+     <button class="suggestion" data-prompt="Mujhe ek useful business idea do jo main phone se start kar sakun."><strong>💡 Ideas explore karo</strong><span>Kuch naya socho aur plan banao</span></button>
+     <button class="suggestion" data-prompt="Mujhe koi difficult topic simple Hinglish mein samjhao."><strong>📚 Kuch naya seekho</strong><span>Complex cheez ko easy banao</span></button>
+     <button class="suggestion" data-prompt="Mere liye ek professional website ka simple starter code banao."><strong>⌘ Coding mein help</strong><span>Code likho, samjho aur fix karo</span></button>
+     <button class="suggestion" data-prompt="Mere idea ko step-by-step action plan mein convert karo."><strong>✦ Plan banao</strong><span>Idea ko action mein badlo</span></button>
+    </div>
+   </section>
+   <section class="messages" id="messages" aria-live="polite" hidden></section>
+  </main>
+  <div class="status" id="status" role="status"></div>
+  <div class="composer-wrap">
+   <form class="composer" id="chatForm">
+    <textarea id="prompt" rows="2" maxlength="4000" placeholder="Dex AI ko message bhejo..." aria-label="Message Dex AI"></textarea>
+    <div class="composer-bottom"><span class="composer-note">Enter bhejne ke liye · Shift + Enter new line</span><div class="composer-tools"><span class="mode-pill">Auto · Free-first</span><button class="send" id="send" type="submit" aria-label="Send message">↑</button></div></div>
+   </form>
+   <div class="disclaimer">Dex AI kabhi kabhi galat jawab de sakta hai — important info verify kar lena.</div>
   </div>
-</main>
-<div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-  <form class="modal" id="authForm">
-    <button type="button" class="close" id="closeModal" aria-label="Close">×</button>
-    <h2 id="authTitle">Dex AI mein welcome!</h2>
-    <p id="authSubtitle">Chat shuru karne ke liye login karo.</p>
-    <div id="nameWrap" hidden><input class="field" id="authName" autocomplete="name" placeholder="Apna naam"></div>
-    <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address likho" required>
-    <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (kam se kam 8 characters)" minlength="8" required>
-    <button class="submit" id="authSubmit" type="submit">Login Karo</button>
-    <div class="modal-bottom"><span id="switchText">Pehli baar aaye ho?</span> <button class="text-button" type="button" id="switchAuth">Account banao</button></div>
-    <div id="authError" role="status"></div>
-  </form>
+ </section>
+</div>
+<div class="backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+ <form class="modal" id="authForm"><button type="button" class="close" id="closeModal" aria-label="Close">×</button><h2 id="authTitle">Welcome back</h2><p id="authSubtitle">Login karo aur Dex AI ke saath chat start karo.</p>
+  <div id="nameWrap" hidden><input class="field" id="authName" autocomplete="name" placeholder="Tumhara naam"></div>
+  <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address" required>
+  <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (8+ characters)" minlength="8" required>
+  <button class="submit" id="authSubmit" type="submit">Log in</button><div class="modal-bottom"><span id="switchText">Account nahi hai?</span> <button class="text-button" type="button" id="switchAuth">Create account</button></div><div id="error" role="status"></div>
+ </form>
 </div>
 <script>
 (() => {
-  const API = "https://dexaitools.onrender.com";
-  const $ = id => document.getElementById(id);
-  const messages = $("messages"), prompt = $("prompt"), send = $("send"), status = $("status");
-  let token = localStorage.getItem("dexai_token") || "";
-  let user = null, signupMode = false, sending = false;
-  const localMessages = [];
-  function showStatus(text) { status.textContent = text || ""; status.style.display = text ? "block" : "none"; }
-  function scrollBottom() { messages.scrollTop = messages.scrollHeight; }
-  function clearWelcome() { const w=$("welcome"); if(w) w.remove(); }
-  function addMessage(role, text) {
-    clearWelcome();
-    const row=document.createElement("div"); row.className="row "+(role==="user"?"user":"assistant");
-    if(role!=="user"){const avatar=document.createElement("div");avatar.className="avatar";avatar.textContent="DX";row.appendChild(avatar);}
-    const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=text;row.appendChild(bubble);
-    messages.appendChild(row);scrollBottom();return bubble;
-  }
-  function resetChat() {
-    messages.innerHTML='<div class="welcome" id="welcome"><h1>Batao bhai, kya help chahiye?</h1><p>Koi bhi sawaal pucho, idea discuss karo ya kisi kaam mein help lo.</p></div>';
-    localMessages.length=0;showStatus("");prompt.value="";resizeInput();prompt.focus();
-  }
-  function resizeInput(){prompt.style.height="auto";prompt.style.height=Math.min(prompt.scrollHeight,200)+"px";}
-  function updateAccount(){ $("loginBtn").textContent = token ? (user?.display_name || user?.email?.split("@")[0] || "Mera Account") : "Login Karo"; }
-  async function loadHistory(){
-    if(!token)return;
-    try{
-      const r=await fetch(API+"/api/history",{headers:{Authorization:"Bearer "+token}});
-      if(r.status===401){logout(false);return;}
-      const data=await r.json();if(!r.ok||!Array.isArray(data.messages))return;
-      const history=data.messages.slice(-30);
-      if(history.length){
-        clearWelcome();
-        history.forEach(m=>{const role=m.role==="user"?"user":"assistant";addMessage(role,m.content);localMessages.push({role,content:m.content});});
-      }
-    }catch(e){/* history is optional; chat can still be used */ }
-  }
-  async function verifyLogin(){
-    if(!token){updateAccount();return;}
-    try{const r=await fetch(API+"/api/auth/me",{headers:{Authorization:"Bearer "+token}});const d=await r.json();if(!r.ok){logout(false);return;}user=d.user||null;updateAccount();}
-    catch(e){updateAccount();}
-  }
-  function openAuth(mode=false){
-    signupMode=mode;$("authModal").classList.add("open");$("authError").textContent="";
-    $("authTitle").textContent=signupMode?"Apna account banao":"Dex AI mein welcome!";
-    $("authSubtitle").textContent=signupMode?"Chat shuru karne ke liye free account banao.":"Chat shuru karne ke liye login karo.";
-    $("nameWrap").hidden=!signupMode;$("authName").required=signupMode;
-    $("authPassword").autocomplete=signupMode?"new-password":"current-password";
-    $("authSubmit").textContent=signupMode?"Account banao":"Login Karo";
-    $("switchText").textContent=signupMode?"Pehle se account hai?":"Pehli baar aaye ho?";
-    $("switchAuth").textContent=signupMode?"Login Karo":"Account banao";
-    $("authError").textContent="";setTimeout(()=>$("authEmail").focus(),80);
-  }
-  function closeAuth(){$("authModal").classList.remove("open");}
-  function logout(clear=true){
-    token="";user=null;localStorage.removeItem("dexai_token");updateAccount();
-    if(clear)resetChat();
-  }
-  $("loginBtn").addEventListener("click",()=>token?logout():openAuth(false));
-  $("newChat").addEventListener("click",resetChat);
-  $("closeModal").addEventListener("click",closeAuth);
-  $("authModal").addEventListener("click",e=>{if(e.target===$("authModal"))closeAuth();});
-  $("switchAuth").addEventListener("click",()=>openAuth(!signupMode));
-  $("authForm").addEventListener("submit",async e=>{
-    e.preventDefault();$("authSubmit").disabled=true;$("authError").textContent="";
-    try{
-      const endpoint=signupMode?"/api/auth/signup":"/api/auth/login";
-      const body=signupMode?{name:$("authName").value.trim(),email:$("authEmail").value.trim(),password:$("authPassword").value}:{email:$("authEmail").value.trim(),password:$("authPassword").value};
-      const r=await fetch(API+endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-      const d=await r.json();if(!r.ok)throw new Error(d.error||"Login nahi ho paaya. Dobara try karo.");
-      token=d.token;user=d.user;localStorage.setItem("dexai_token",token);updateAccount();closeAuth();
-      if(!localMessages.length){await loadHistory();}
-    }catch(err){$("authError").textContent=err.message||"Connection mein problem hai. Dobara try karo.";}
-    finally{$("authSubmit").disabled=false;}
-  });
-  $("chatForm").addEventListener("submit",async e=>{
-    e.preventDefault();const text=prompt.value.trim();if(!text||sending)return;
-    if(!token){openAuth(false);$("authError").textContent="Chat karne se pehle login karo ya free account banao.";return;}
-    sending=true;send.disabled=true;showStatus("");addMessage("user",text);localMessages.push({role:"user",content:text});prompt.value="";resizeInput();
-    const bubble=addMessage("assistant","Soch raha hoon...");
-    try{
-      const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({message:text,provider:"auto"})});
-      const d=await r.json();
-      if(!r.ok){throw new Error(d.error||"Message send nahi ho paaya.");}
-      bubble.textContent=d.reply||"AI se koi reply nahi aaya.";localMessages.push({role:"assistant",content:bubble.textContent});
-    }catch(err){
-      bubble.textContent="";bubble.remove();showStatus(err.message||"Dex AI se connect nahi ho paaya. Dobara try karo.");
-      if(err instanceof TypeError)showStatus("Server se connect nahi ho paaya. Internet check karke dobara try karo.");
-    }finally{sending=false;send.disabled=false;prompt.focus();scrollBottom();}
-  });
-  prompt.addEventListener("input",resizeInput);
-  prompt.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("chatForm").requestSubmit();}});
-  verifyLogin().then(()=>{if(token)loadHistory();});
+ const API="https://dexaitools.onrender.com";
+ const $=id=>document.getElementById(id);
+ const sidebar=$("sidebar"),stage=$("stage"),welcome=$("welcome"),messages=$("messages"),prompt=$("prompt"),send=$("send"),status=$("status");
+ let token=localStorage.getItem("dexai_token")||"",user=null,signupMode=false,sending=false;
+ let chats=[],activeChat=null;
+ function newId(){return "chat_"+Date.now()+"_"+Math.random().toString(36).slice(2,7)}
+ function titleFor(text){text=(text||"New chat").replace(/\s+/g," ").trim();return text.length>31?text.slice(0,31)+"…":text||"New chat"}
+ function showStatus(text){status.textContent=text||"";status.style.display=text?"block":"none"}
+ function resizeInput(){prompt.style.height="auto";prompt.style.height=Math.min(prompt.scrollHeight,190)+"px"}
+ function scrollBottom(){stage.scrollTop=stage.scrollHeight}
+ function closeSidebar(){sidebar.classList.remove("open");$("mobileOverlay").classList.remove("open")}
+ function openSidebar(){sidebar.classList.add("open");$("mobileOverlay").classList.add("open")}
+ function showWelcome(){welcome.hidden=false;messages.hidden=true;messages.innerHTML=""}
+ function showMessages(){welcome.hidden=true;messages.hidden=false}
+ function addMessage(role,text){
+  showMessages();const row=document.createElement("div");row.className="message "+(role==="user"?"user":"assistant");
+  if(role!=="user"){const mark=document.createElement("div");mark.className="assistant-mark";mark.textContent="D";row.appendChild(mark)}
+  const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=text;row.appendChild(bubble);messages.appendChild(row);scrollBottom();return bubble
+ }
+ function renderChatList(){
+  const list=$("recentList");list.innerHTML="";
+  if(!chats.length){list.innerHTML='<div style="padding:8px 11px;color:#918d84;font-size:12px;line-height:1.5">Abhi koi chat nahi hai.</div>';return}
+  chats.slice().reverse().forEach(c=>{const b=document.createElement("button");b.className="recent-item";b.textContent=c.title;b.title=c.title;b.addEventListener("click",()=>openChat(c.id));list.appendChild(b)})
+ }
+ function saveActive(){if(!activeChat)return;activeChat.updated=Date.now();localStorage.setItem("dexai_chats",JSON.stringify(chats.slice(-25)));renderChatList()}
+ function startNewChat(){
+  activeChat={id:newId(),title:"New chat",messages:[],updated:Date.now()};chats.push(activeChat);showWelcome();showStatus("");prompt.value="";resizeInput();saveActive();closeSidebar();prompt.focus()
+ }
+ function openChat(id){
+  const c=chats.find(x=>x.id===id);if(!c)return;activeChat=c;messages.innerHTML="";
+  if(c.messages.length){showMessages();c.messages.forEach(m=>addMessage(m.role,m.content))}else showWelcome();
+  closeSidebar();showStatus("")
+ }
+ function loadLocalChats(){try{const d=JSON.parse(localStorage.getItem("dexai_chats")||"[]");if(Array.isArray(d))chats=d.filter(c=>c&&c.id&&Array.isArray(c.messages)).slice(-25)}catch(e){chats=[]}renderChatList()}
+ function updateAccount(){
+  const label=token?(user?.display_name||user?.name||user?.email?.split("@")[0]||"Dex AI user"):"Guest";
+  $("accountName").textContent=label;$("accountAvatar").textContent=(label[0]||"D").toUpperCase();
+  $("accountPlan").textContent=token?"Account active":"Log in to sync chats";
+  $("topLogin").textContent=token?"Log out":"Log in";
+ }
+ function openAuth(mode=false){signupMode=mode;$("authModal").classList.add("open");$("error").textContent="";$("authTitle").textContent=mode?"Create your account":"Welcome back";$("authSubtitle").textContent=mode?"Free account banao aur chat start karo.":"Login karo aur Dex AI ke saath chat start karo.";$("nameWrap").hidden=!mode;$("authName").required=mode;$("authPassword").autocomplete=mode?"new-password":"current-password";$("authSubmit").textContent=mode?"Create account":"Log in";$("switchText").textContent=mode?"Pehle se account hai?":"Account nahi hai?";$("switchAuth").textContent=mode?"Log in":"Create account";setTimeout(()=>$("authEmail").focus(),80)}
+ function closeAuth(){$("authModal").classList.remove("open")}
+ function logout(){token="";user=null;localStorage.removeItem("dexai_token");updateAccount();showStatus("Logout ho gaya. Dobara chat karne ke liye login karo.");closeSidebar()}
+ async function verifyLogin(){if(!token){updateAccount();return}try{const r=await fetch(API+"/api/auth/me",{headers:{Authorization:"Bearer "+token}});const d=await r.json();if(!r.ok){token="";localStorage.removeItem("dexai_token")}else user=d.user||null}catch(e){}updateAccount()}
+ async function loadHistory(){if(!token)return;try{const r=await fetch(API+"/api/history",{headers:{Authorization:"Bearer "+token}});if(r.status===401){token="";localStorage.removeItem("dexai_token");updateAccount();return}const d=await r.json();if(r.ok&&Array.isArray(d.messages)&&d.messages.length&&!chats.some(c=>c.messages.length)){const c={id:newId(),title:titleFor(d.messages.find(m=>m.role==="user")?.content||"Previous chat"),messages:d.messages.slice(-40).map(m=>({role:m.role==="user"?"user":"assistant",content:m.content||""})),updated:Date.now()};chats.push(c);activeChat=c;localStorage.setItem("dexai_chats",JSON.stringify(chats.slice(-25)));openChat(c.id);renderChatList()}}catch(e){}}
+ async function sendMessage(text){
+  text=(text||prompt.value).trim();if(!text||sending)return;
+  if(!token){openAuth(false);$("error").textContent="Pehle login karo ya free account banao.";return}
+  if(!activeChat){activeChat={id:newId(),title:titleFor(text),messages:[],updated:Date.now()};chats.push(activeChat)}
+  if(!activeChat.messages.length)activeChat.title=titleFor(text);
+  activeChat.messages.push({role:"user",content:text});addMessage("user",text);prompt.value="";resizeInput();showStatus("");saveActive();
+  const bubble=addMessage("assistant","Soch raha hoon…");sending=true;send.disabled=true;
+  try{const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({message:text,provider:"auto"})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Message send nahi ho saka.");bubble.textContent=d.reply||"Koi response nahi mila.";activeChat.messages.push({role:"assistant",content:bubble.textContent});saveActive()}
+  catch(e){bubble.remove();showStatus(e instanceof TypeError?"Server connect nahi hua. Internet check karke dobara try karo.":(e.message||"Kuch issue hua, dobara try karo."))}
+  finally{sending=false;send.disabled=false;scrollBottom();prompt.focus()}
+ }
+ $("newChat").addEventListener("click",startNewChat);$("topNew").addEventListener("click",startNewChat);
+ $("menuBtn").addEventListener("click",openSidebar);$("closeSidebar").addEventListener("click",closeSidebar);$("mobileOverlay").addEventListener("click",closeSidebar);
+ $("openLogin").addEventListener("click",()=>{closeSidebar();token?logout():openAuth(false)});
+ $("topLogin").addEventListener("click",()=>token?logout():openAuth(false));
+ $("accountBtn").addEventListener("click",()=>{closeSidebar();token?openAuth(false):openAuth(false)});
+ $("focusSearch").addEventListener("click",()=>{closeSidebar();const q=window.prompt("Recent chats mein search karo:");if(!q)return;const c=chats.slice().reverse().find(x=>x.title.toLowerCase().includes(q.toLowerCase())||x.messages.some(m=>m.content.toLowerCase().includes(q.toLowerCase())));if(c)openChat(c.id);else showStatus("Is naam se koi local chat nahi mili.")});
+ $("closeModal").addEventListener("click",closeAuth);$("authModal").addEventListener("click",e=>{if(e.target===$("authModal"))closeAuth()});$("switchAuth").addEventListener("click",()=>openAuth(!signupMode));
+ $("authForm").addEventListener("submit",async e=>{e.preventDefault();$("authSubmit").disabled=true;$("error").textContent="";try{const endpoint=signupMode?"/api/auth/signup":"/api/auth/login";const body=signupMode?{name:$("authName").value.trim(),email:$("authEmail").value.trim(),password:$("authPassword").value}:{email:$("authEmail").value.trim(),password:$("authPassword").value};const r=await fetch(API+endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||"Login nahi ho saka.");token=d.token;user=d.user;localStorage.setItem("dexai_token",token);updateAccount();closeAuth();showStatus("");if(!chats.length)await loadHistory()}catch(e){$("error").textContent=e.message||"Connection issue. Dobara try karo."}finally{$("authSubmit").disabled=false}});
+ $("chatForm").addEventListener("submit",e=>{e.preventDefault();sendMessage(prompt.value)});
+ prompt.addEventListener("input",resizeInput);prompt.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("chatForm").requestSubmit()}});
+ document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{prompt.value=b.dataset.prompt;resizeInput();prompt.focus()}));
+ loadLocalChats();if(chats.length){activeChat=chats[chats.length-1];if(activeChat.messages.length)openChat(activeChat.id)}
+ verifyLogin().then(()=>{if(token)loadHistory()});
 })();
 </script>
 </body>
