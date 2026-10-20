@@ -1373,6 +1373,122 @@ body[data-theme="light"] .chat-form { background: var(--panel2); border-color: v
 body[data-theme="light"] .chat-topbar { background: var(--panel); border-bottom-color: var(--border); }
 body[data-theme="light"] .chat-messages { background: var(--panel); }
 
+
+/* Dex AI — monochrome, app-first interface */
+:root { --dex-black:#080808; --dex-white:#fff; --dex-glass:rgba(255,255,255,.78); --dex-border:rgba(0,0,0,.13); }
+body { background:#fff !important; color:#080808 !important; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:16px; }
+body::before, body::after, .ambient, #intro, .hero, #mainNav, .header-actions .btn, .mobile-menu { display:none !important; }
+header.dex-app-header { height:64px; position:sticky; top:0; z-index:1000; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 22px; background:rgba(255,255,255,.82); color:#080808; border-bottom:1px solid rgba(0,0,0,.09); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); }
+.dex-header-left,.dex-header-right { display:flex; align-items:center; gap:8px; position:relative; }
+.dex-header-right { justify-content:flex-end; }
+.dex-wordmark { color:inherit; font-size:22px; font-weight:800; letter-spacing:-.9px; text-decoration:none; white-space:nowrap; }
+.dex-icon-button { display:inline-flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid transparent; border-radius:12px; background:transparent; color:inherit; font-size:23px; cursor:pointer; }
+.dex-icon-button:hover { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.08); }
+.dex-account-button { padding:9px 14px; border-radius:999px; background:#080808; color:#fff; border:1px solid #080808; font-size:13px; font-weight:700; cursor:pointer; }
+#themeLabel { display:none; }
+.dex-floating-menu { position:absolute; top:46px; left:0; z-index:1500; width:232px; padding:7px; border:1px solid rgba(0,0,0,.12); border-radius:15px; background:rgba(255,255,255,.94); color:#080808; box-shadow:0 18px 55px rgba(0,0,0,.16); backdrop-filter:blur(22px); }
+.dex-floating-menu[hidden] { display:none !important; }
+.dex-floating-menu button { display:block; width:100%; padding:11px 12px; text-align:left; border:0; border-radius:9px; background:transparent; color:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.dex-floating-menu button:hover { background:rgba(0,0,0,.06); }
+.dex-floating-menu button.danger { color:#111; }
+.dex-menu-divider { height:1px; background:rgba(0,0,0,.12); margin:6px 4px; }
+#chat { display:block !important; max-width:none; width:100%; margin:0; padding:0; }
+.chat-workspace { display:flex; flex-direction:row; height:calc(100dvh - 64px); min-height:560px; max-height:none; overflow:hidden; border:0; border-radius:0; background:#fff; box-shadow:none; }
+.chat-sidebar { order:2; width:280px; min-width:280px; padding:20px 14px 16px; background:rgba(255,255,255,.78); border-left:1px solid rgba(0,0,0,.10); border-right:0; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); color:#080808; }
+.chat-main { order:1; min-width:0; flex:1; background:#fff; }
+.chat-topbar { min-height:56px; height:56px; padding:0 26px; display:flex; align-items:center; justify-content:flex-end; border-bottom:1px solid rgba(0,0,0,.07); background:rgba(255,255,255,.76); }
+.chat-topbar > div:first-child { display:none; }
+.chat-top-actions { display:flex; align-items:center; }
+.dex-active-chat-label { max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:650; color:#444; }
+.chat-shell { height:calc(100% - 56px); display:flex; flex-direction:column; min-height:0; }
+.chat-header { display:none !important; }
+.chat-messages { flex:1; overflow-y:auto; padding:34px clamp(18px,8vw,120px) 24px; background:transparent; }
+.welcome-card { max-width:760px; margin:clamp(70px,18vh,180px) auto 40px; padding:12px 8px; border:0; border-radius:0; background:transparent; box-shadow:none; text-align:center; }
+.welcome-star { display:none !important; }
+.welcome-card h3 { color:#080808; font-size:clamp(28px,3.6vw,38px); line-height:1.2; font-weight:750; letter-spacing:-1.3px; }
+.welcome-card p { color:#555; font-size:16px; line-height:1.7; margin:14px auto 0; }
+.suggestions { display:none !important; }
+.message { max-width:min(820px,90%); padding:15px 19px; border-radius:20px; border:1px solid rgba(0,0,0,.12); font-size:16px; line-height:1.75; font-weight:500; box-shadow:none; }
+.message.user { margin-left:auto; background:#080808; color:#fff; border-color:#080808; }
+.message.bot { margin-right:auto; background:rgba(0,0,0,.025); color:#080808; }
+.message-label { font-size:11px !important; font-weight:800 !important; letter-spacing:.7px !important; }
+.chat-form-wrap { position:relative; padding:10px clamp(16px,8vw,120px) 22px; background:linear-gradient(to top,#fff 82%,rgba(255,255,255,.75)); border-top:0; }
+.composer-toolbar, .provider-row, .attachment-row, .draft-status, .chat-note:not(#usageStatus), .chat-error { display:none !important; }
+.chat-form { display:flex; align-items:flex-end; gap:10px; max-width:920px; min-height:64px; margin:0 auto; padding:9px 10px; border:1px solid rgba(0,0,0,.16); border-radius:25px; background:rgba(255,255,255,.82); box-shadow:0 8px 32px rgba(0,0,0,.07); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
+.plus-menu-wrap { position:relative; flex:0 0 auto; }
+.plus-menu-button { width:42px; height:42px; border:0; border-radius:50%; background:transparent; color:#080808; font-size:26px; cursor:pointer; }
+.plus-menu-button:hover { background:rgba(0,0,0,.06); }
+.dex-model-wrap { flex:0 0 auto; align-self:center; }
+.dex-model-selector { max-width:180px; height:42px; padding:0 12px; border:1px solid rgba(0,0,0,.12); border-radius:13px; background:rgba(255,255,255,.9); color:#080808; font-size:13px; font-weight:750; outline:none; }
+#chatInput { min-width:0; flex:1; min-height:42px; max-height:180px; padding:10px 6px; border:0 !important; outline:none !important; background:transparent !important; color:#080808 !important; font-size:16px; font-weight:500; line-height:1.55; resize:none; box-shadow:none !important; }
+#chatInput::placeholder { color:#777; font-size:16px; font-weight:500; }
+.composer-mic { display:inline-flex !important; width:40px; height:42px; flex:0 0 40px; border:0; background:transparent; color:#080808; font-size:20px; }
+.send-button { width:42px; height:42px; min-width:42px; border:1px solid #080808; border-radius:50%; background:#080808; color:#fff; font-size:23px; cursor:pointer; }
+.send-button:disabled { opacity:.45; cursor:wait; }
+#usageStatus { display:none; max-width:920px; margin:10px auto 0 !important; padding:10px 12px; border:1px solid #111; border-radius:12px; background:#fff; color:#111 !important; font-size:13px; font-weight:700; }
+#usageStatus.limit-reached { display:block !important; }
+.chat-sidebar .sidebar-label { color:#555; font-size:11px; font-weight:800; letter-spacing:1px; margin:22px 8px 9px; }
+.new-chat-button { display:none !important; }
+.chat-sidebar .sidebar-link { display:none; }
+.chat-sidebar .recent-label { margin-top:0; }
+.chat-search-wrap { margin:10px 0; }
+.chat-search { width:100%; padding:11px 12px; border:1px solid rgba(0,0,0,.13); border-radius:11px; background:rgba(255,255,255,.72); color:#080808; font-size:14px; }
+.sidebar-mini-action { width:100%; padding:8px; border:0; background:transparent; color:#333; text-align:left; font-size:12px; cursor:pointer; }
+.local-chat-list { display:flex; flex-direction:column; gap:3px; overflow:auto; }
+.local-chat-row { position:relative; display:block; }
+.local-chat-item { width:100%; padding:11px 12px; border:0; border-radius:10px; background:transparent; color:#222; font-size:14px; font-weight:550; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.local-chat-item.active { background:rgba(0,0,0,.07); color:#000; font-weight:750; }
+.chat-more-button { display:none !important; }
+.chat-actions-menu { display:none !important; }
+.sidebar-foot { margin-top:auto; padding:14px 8px; border-top:1px solid rgba(0,0,0,.1); color:#111; }
+.sidebar-foot strong { font-size:14px; font-weight:800; }
+.sidebar-foot small { color:#555; font-size:12px; }
+.sidebar-gem { display:none; }
+.chat-sidebar.collapsed { display:none; }
+body[data-theme="dark"] { background:#080808 !important; color:#fff !important; }
+body[data-theme="dark"] header.dex-app-header, body[data-theme="dark"] .chat-sidebar, body[data-theme="dark"] .chat-main, body[data-theme="dark"] .chat-topbar, body[data-theme="dark"] .chat-messages { background:rgba(8,8,8,.94) !important; color:#fff !important; }
+body[data-theme="dark"] header.dex-app-header { border-bottom-color:rgba(255,255,255,.13); }
+body[data-theme="dark"] .chat-sidebar { border-left-color:rgba(255,255,255,.13); }
+body[data-theme="dark"] .chat-topbar { border-bottom-color:rgba(255,255,255,.10); }
+body[data-theme="dark"] .dex-wordmark, body[data-theme="dark"] .dex-icon-button, body[data-theme="dark"] .chat-sidebar, body[data-theme="dark"] .sidebar-foot, body[data-theme="dark"] .local-chat-item, body[data-theme="dark"] .chat-search { color:#fff !important; }
+body[data-theme="dark"] .dex-account-button, body[data-theme="dark"] .send-button { background:#fff; color:#080808; border-color:#fff; }
+body[data-theme="dark"] .dex-floating-menu { background:rgba(18,18,18,.96); border-color:rgba(255,255,255,.17); color:#fff; }
+body[data-theme="dark"] .dex-floating-menu button:hover, body[data-theme="dark"] .dex-icon-button:hover, body[data-theme="dark"] .local-chat-item.active { background:rgba(255,255,255,.1); }
+body[data-theme="dark"] .dex-menu-divider { background:rgba(255,255,255,.15); }
+body[data-theme="dark"] .chat-form-wrap { background:linear-gradient(to top,#080808 82%,rgba(8,8,8,.75)); }
+body[data-theme="dark"] .chat-form, body[data-theme="dark"] .dex-model-selector, body[data-theme="dark"] .chat-search { background:rgba(20,20,20,.84); border-color:rgba(255,255,255,.17); color:#fff; }
+body[data-theme="dark"] #chatInput { color:#fff !important; }
+body[data-theme="dark"] #chatInput::placeholder, body[data-theme="dark"] .welcome-card p, body[data-theme="dark"] .dex-active-chat-label { color:#aaa; }
+body[data-theme="dark"] .welcome-card h3 { color:#fff; }
+body[data-theme="dark"] .message.user { background:#fff; color:#080808; border-color:#fff; }
+body[data-theme="dark"] .message.bot { background:rgba(255,255,255,.055); color:#fff; border-color:rgba(255,255,255,.15); }
+body[data-theme="dark"] #usageStatus { background:#111; color:#fff !important; border-color:#fff; }
+body[data-theme="dark"] .sidebar-foot { border-top-color:rgba(255,255,255,.13); }
+body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
+@media(max-width:760px) {
+ header.dex-app-header { height:58px; padding:0 10px; }
+ .dex-wordmark { font-size:20px; }
+ .dex-icon-button { width:36px; height:36px; }
+ .dex-account-button { padding:8px 10px; font-size:12px; }
+ .chat-workspace { height:calc(100dvh - 58px); min-height:480px; }
+ .chat-sidebar { position:absolute; z-index:800; right:0; top:58px; bottom:0; width:min(82vw,300px); min-width:0; box-shadow:-18px 0 50px rgba(0,0,0,.10); }
+ .chat-main { width:100%; }
+ .chat-topbar { height:44px; min-height:44px; padding:0 14px; }
+ .chat-shell { height:calc(100% - 44px); }
+ .chat-messages { padding:14px 12px; }
+ .welcome-card { margin:clamp(70px,17vh,150px) auto 30px; }
+ .welcome-card h3 { font-size:29px; }
+ .chat-form-wrap { padding:8px 9px 15px; }
+ .chat-form { gap:5px; padding:7px; border-radius:22px; }
+ .plus-menu-button { width:34px; }
+ .dex-model-selector { max-width:125px; padding:0 5px; font-size:11px; }
+ #chatInput { font-size:15px; padding:8px 2px; }
+ #chatInput::placeholder { font-size:14px; }
+ .composer-mic { width:30px; flex-basis:30px; }
+ .send-button { width:36px; height:36px; min-width:36px; }
+ .dex-floating-menu { width:220px; }
+}
+
 </style>
 </head>
 
@@ -1387,29 +1503,26 @@ body[data-theme="light"] .chat-messages { background: var(--panel); }
   <div class="intro-caption">Beyond Intelligence</div>
 </div>
 
-<header>
-  <a class="brand" href="#home" aria-label="DexAI home">
-    <div class="brand-icon"><span>✦</span></div>
-    DEX<em>AI</em>
-  </a>
-
-  <nav id="mainNav">
-    <a href="#home">Home</a>
-    <a href="#chat">AI Chat</a>
-    <a href="#tools">AI Tools</a>
-    <a href="#imageStudio">Image Studio</a>
-    <a href="#videoStudio">Video Lab</a>
-    <a href="#workspace">Workspace</a>
-    <a href="#connectors">Connectors</a>
-    <a href="#plans">Plans</a>
-    <a href="#about">About</a>
-  </nav>
-
-  <div class="header-actions">
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme"><span class="theme-symbol" id="themeSymbol" aria-hidden="true">◐</span><span id="themeLabel">Light mode</span></button>
-    <button class="btn" id="loginButton" type="button">Login</button>
-    <a class="btn btn-gold" href="#chat">Launch AI ↗</a>
-    <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+<header class="dex-app-header">
+  <div class="dex-header-left">
+    <button type="button" id="chatMenuButton" class="dex-icon-button" aria-label="Chat options" title="Chat options">⋮</button>
+    <div id="chatActionMenu" class="dex-floating-menu" hidden>
+      <button type="button" data-current-action="share">Share</button>
+      <button type="button" data-current-action="rename">Rename</button>
+      <button type="button" data-current-action="pin">Pin Chat</button>
+      <button type="button" data-current-action="project">Add to Project</button>
+      <button type="button" id="addHomeScreenAction">Add to Home Screen</button>
+      <button type="button" id="upgradeAction">Upgrade</button>
+      <div class="dex-menu-divider"></div>
+      <button type="button" class="danger" data-current-action="delete">Delete Chat</button>
+    </div>
+    <button type="button" id="dexNewChatButton" class="dex-icon-button" aria-label="New chat" title="New chat">✎</button>
+  </div>
+  <a class="dex-wordmark" href="#chat" aria-label="Dex AI home">Dex AI</a>
+  <div class="dex-header-right">
+    <button class="theme-toggle dex-icon-button" id="themeToggle" type="button" aria-label="Switch color theme" title="Switch theme"><span class="theme-symbol" id="themeSymbol" aria-hidden="true">◐</span><span id="themeLabel">Light mode</span></button>
+    <button type="button" id="dexSidebarToggle" class="dex-icon-button" aria-label="Toggle chat history sidebar" title="Toggle sidebar">☷</button>
+    <button class="dex-account-button" id="loginButton" type="button">Login</button>
   </div>
 </header>
 
@@ -1448,7 +1561,7 @@ body[data-theme="light"] .chat-messages { background: var(--panel); }
       <div class="chat-main">
         <div class="chat-topbar">
           <div><div class="chat-top-title">AI Chat <span class="live-pill"><i></i> Workspace</span></div><div class="chat-top-subtitle">Ideas, files and voice in one focused space.</div></div>
-          <div class="chat-top-actions"><a href="#plans" class="top-upgrade-button">✦ Upgrade</a><button type="button" id="modelSettingsButton" class="model-settings-button"><span>⚙</span> Settings <b>⌄</b></button><button type="button" id="desktopLauncher" class="desktop-launcher" aria-label="Open tools and workspace menu" title="More tools">⋯</button></div>
+          <div class="chat-top-actions"><span class="dex-active-chat-label" id="activeChatLabel">New chat</span></div>
         </div>
     <div class="chat-shell">
       <div class="chat-header">
@@ -1531,6 +1644,14 @@ body[data-theme="light"] .chat-messages { background: var(--panel); }
               <a href="#imageStudio" class="plus-menu-link"><span>▧</span><span><strong>Image Studio</strong><small>Create a new image</small></span></a>
               <a href="#videoStudio" class="plus-menu-link"><span>▶</span><span><strong>Video Lab</strong><small>Build a video prompt</small></span></a>
             </div>
+          </div>
+          <div class="dex-model-wrap">
+            <label class="sr-only" for="dexModelSelector">AI model</label>
+            <select id="dexModelSelector" class="dex-model-selector" aria-label="Choose AI model">
+              <option value="auto">✦ Dex Flash</option>
+              <option value="gemini">◈ Gemini Flash</option>
+              <option value="cloudflare">☁ Cloudflare Flash</option>
+            </select>
           </div>
           <textarea id="chatInput" placeholder="Message DexAI…" rows="1" maxlength="4000" aria-label="Your message"></textarea>
           <button class="voice-btn icon-only composer-mic" type="button" id="micButton" aria-label="Speak to type" title="Speak to type">⌁</button>
@@ -3346,6 +3467,104 @@ body[data-theme="light"] .chat-messages { background: var(--panel); }
     setToolMenuOpen(false);
     document.querySelector("#tools")?.scrollIntoView({behavior:"smooth",block:"start"});
   });
+
+
+  // Dex AI app shell interactions: menu, active-thread actions, model choice, sidebar and install.
+  const dexMenuButton = $("chatMenuButton");
+  const dexActionMenu = $("chatActionMenu");
+  const dexCurrentChat = () => readLocalChats().find(item => item.id === activeLocalChatId) || ensureLocalChat();
+  const dexCloseMenu = () => { if (dexActionMenu) dexActionMenu.hidden = true; dexMenuButton?.setAttribute("aria-expanded","false"); };
+  dexMenuButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    dexActionMenu.hidden = !dexActionMenu.hidden;
+    dexMenuButton.setAttribute("aria-expanded", String(!dexActionMenu.hidden));
+  });
+  document.addEventListener("click", event => { if (!event.target.closest("#chatMenuButton") && !event.target.closest("#chatActionMenu")) dexCloseMenu(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape") dexCloseMenu(); });
+  dexActionMenu?.querySelectorAll("[data-current-action]").forEach(button => button.addEventListener("click", () => {
+    const action = button.dataset.currentAction;
+    const chat = dexCurrentChat();
+    dexCloseMenu();
+    runChatAction(action, chat);
+    setTimeout(() => {
+      const updated = readLocalChats().find(item => item.id === activeLocalChatId);
+      if (updated) $("activeChatLabel").textContent = updated.title || "New chat";
+      renderLocalChatList();
+    }, 80);
+  }));
+  $("dexNewChatButton")?.addEventListener("click", () => {
+    dexCloseMenu();
+    startLocalChat();
+    $("activeChatLabel").textContent = "New chat";
+    input.focus();
+  });
+  $("dexSidebarToggle")?.addEventListener("click", () => {
+    const side = document.querySelector(".chat-sidebar");
+    if (window.matchMedia("(max-width: 760px)").matches) side.classList.toggle("mobile-open");
+    else document.body.classList.toggle("dex-sidebar-collapsed");
+  });
+  window.addEventListener("beforeinstallprompt", event => { window.dexInstallPrompt = event; });
+  $("addHomeScreenAction")?.addEventListener("click", async () => {
+    dexCloseMenu();
+    if (window.dexInstallPrompt) {
+      window.dexInstallPrompt.prompt();
+      await window.dexInstallPrompt.userChoice;
+      window.dexInstallPrompt = null;
+    } else if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      alert("To add Dex AI to your Home Screen, open your browser menu and choose “Add to Home screen”.");
+    } else {
+      alert("Use your browser menu and choose “Install app” or “Add to Home screen” when available.");
+    }
+  });
+  $("upgradeAction")?.addEventListener("click", () => {
+    dexCloseMenu();
+    document.querySelector("#plans")?.scrollIntoView({behavior:"smooth",block:"start"});
+    alert("Dex AI currently keeps chat on the free plan. Paid upgrade checkout is not enabled, so no payment will be requested.");
+  });
+  const dexModelSelector = $("dexModelSelector");
+  const dexModelConfig = {
+    auto: {provider:"auto", model:""},
+    gemini: {provider:"gemini", model:"gemini-3.8-flash"},
+    cloudflare: {provider:"cloudflare", model:"@cf/zai-org/glm-4.7-flash"}
+  };
+  if (dexModelSelector) {
+    const savedModel = localStorage.getItem("dexai_selected_model") || "auto";
+    dexModelSelector.value = dexModelConfig[savedModel] ? savedModel : "auto";
+    const applyDexModel = value => {
+      const config = dexModelConfig[value] || dexModelConfig.auto;
+      $("providerSelect").value = config.provider;
+      $("modelInput").value = config.model;
+      localStorage.setItem("dexai_selected_model", value);
+      dexModelSelector.setAttribute("aria-label", "Current AI model: " + dexModelSelector.options[dexModelSelector.selectedIndex].text.replace(/^[^A-Za-z]+/,""));
+    };
+    applyDexModel(dexModelSelector.value);
+    dexModelSelector.addEventListener("change", () => applyDexModel(dexModelSelector.value));
+  }
+  // Keep the chat screen quiet; reveal usage only when the backend reports the limit is exhausted.
+  const originalRefreshUsage = refreshUsage;
+  refreshUsage = async function() {
+    await originalRefreshUsage();
+    const status = $("usageStatus");
+    const remaining = Number((status.textContent.match(/(\d+) messages left today/) || [])[1]);
+    const exhausted = Number.isFinite(remaining) && remaining <= 0;
+    status.classList.toggle("limit-reached", exhausted);
+    if (exhausted) status.textContent = "You’ve reached today’s free chat limit. You can continue when the limit resets.";
+  };
+  const originalUpdateAccountButton = updateAccountButton;
+  updateAccountButton = function() {
+    originalUpdateAccountButton();
+    const user = signedInUser;
+    const account = $("loginButton");
+    if (account && user) account.title = user.name || user.email || "Your account";
+  };
+  const syncDexActiveLabel = () => {
+    const active = readLocalChats().find(item => item.id === activeLocalChatId);
+    if ($("activeChatLabel")) $("activeChatLabel").textContent = active?.title || "New chat";
+  };
+  const originalRenderLocalChatList = renderLocalChatList;
+  renderLocalChatList = function() { originalRenderLocalChatList(); syncDexActiveLabel(); };
+  // The old per-row action controls are hidden; all thread management lives in the top three-dot menu.
+  renderLocalChatList();
 
 </script>
 
