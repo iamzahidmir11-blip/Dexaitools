@@ -2840,7 +2840,8 @@ body.dex-focus-mode footer{display:none!important}
     if (!signedInUser) openAuth();
     else toast("Free plan: 50 AI messages per day.");
   });
-  $("premiumPlanButton").addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
+  const premiumPlanButton = $("premiumPlanButton");
+  if (premiumPlanButton) premiumPlanButton.addEventListener("click", () => toast("Premium billing is not connected yet. No payment has been taken."));
 
   $("toolChatButton").addEventListener("click", () => {
     $("chat").scrollIntoView({ behavior: "smooth" });
