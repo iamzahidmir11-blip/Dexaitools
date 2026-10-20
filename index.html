@@ -1502,6 +1502,9 @@ body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
 body[data-theme="dark"] .dex-profile-card #dexLogoutButton:hover { background:rgba(255,255,255,.1); }
 @media(max-width:760px) { .chat-sidebar.mobile-open { display:flex !important; } }
 
+
+@media(max-width:760px) { .chat-sidebar { display:none; } .chat-sidebar.mobile-open { display:flex !important; } }
+
 </style>
 </head>
 
@@ -3104,6 +3107,11 @@ body[data-theme="dark"] .dex-profile-card #dexLogoutButton:hover { background:rg
       refreshUsage();
     } catch (error) {
       reply.textContent = "DexAI couldn't complete this reply.";
+      if (/reached today|message allowance|daily limit/i.test(error.message || "")) {
+        const usage = $("usageStatus");
+        usage.textContent = "You’ve reached today’s free chat limit. Your messages reset daily.";
+        usage.classList.add("limit-reached");
+      }
       const friendlyError = error.message === "Failed to fetch"
         ? "Connection failed. Check your internet connection and backend status."
         : error.message + " Check the selected provider's API configuration if this continues.";
