@@ -880,23 +880,30 @@ def chat():
             else:
                 recent_rows = conn.execute("SELECT role,content FROM conversations WHERE user_id=%s AND thread_id IS NULL ORDER BY id DESC LIMIT 20", (user["id"],)).fetchall()
             recent_rows = list(reversed(recent_rows))
+            dexai_system_prompt = (
+                "You are DexAI, a capable, practical AI assistant. Be accurate, clear, and useful. "
+                "Reason carefully before answering, but do not reveal private chain-of-thought; provide concise reasoning or a brief explanation when useful. "
+                "Start with the direct answer, adapt detail to the task, and use headings, steps, tables, or code only when they improve clarity. "
+                "For coding tasks, provide complete, runnable artifacts when requested, preserve existing behavior, explain assumptions, and flag tests or setup needed. "
+                "For multi-step tasks, plan internally, handle dependencies in order, verify important details, and report what is done versus what remains. "
+                "Use conversation context only when relevant; do not invent memories, tool results, sources, or completed actions. "
+                "If information may be current or changing, use available search/tools when enabled, prefer reliable sources, and distinguish verified facts from estimates. "
+                "If a tool or integration is unavailable, say so plainly and offer the closest workable alternative. "
+                "Never claim that multiple AI models, tools, or agents collaborated unless they actually did. "
+                "Protect secrets and personal data; never ask users to paste API keys or passwords into chat. "
+                "Follow the user's language and formatting preferences. Ask a follow-up only when an essential detail is missing; otherwise make sensible assumptions and proceed."
+            )
             if recent_rows:
-                memory_context = "\n".join(
+                memory_context = "\\n".join(
                     ("User: " if row["role"] == "user" else "DexAI: ") + row["content"][:1200]
                     for row in recent_rows
                 )
                 prompt_message = (
-                    "You are DexAI, a helpful, accurate assistant. Respond quickly and directly. "
-                    "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
-                    "and ask a follow-up only if essential. Use context for continuity, but never invent facts.\n\n"
-                    "Recent conversation context:\n" + memory_context + "\n\nCurrent user message:\n" + message
+                    dexai_system_prompt + "\\n\\nRecent conversation context:\\n" + memory_context
+                    + "\\n\\nCurrent user message:\\n" + message
                 )
             else:
-                prompt_message = (
-                    "You are DexAI, a helpful, accurate assistant. Respond quickly and directly. "
-                    "Start with the answer, keep simple answers short, use headings or bullets only when useful, "
-                    "and ask a follow-up only if essential. Never invent facts.\n\nUser: " + message
-                )
+                prompt_message = dexai_system_prompt + "\\n\\nUser: " + message
             attachment_fingerprint = hashlib.sha256("".join(hashlib.sha256(base64.b64decode(item["data"])).hexdigest() for item in attachments).encode()).hexdigest() if attachments else ""
             cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message + "\n" + attachment_fingerprint).encode()).hexdigest()
             cached = conn.execute(
