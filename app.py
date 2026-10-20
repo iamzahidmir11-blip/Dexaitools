@@ -894,16 +894,16 @@ def chat():
                 "Follow the user's language and formatting preferences. Ask a follow-up only when an essential detail is missing; otherwise make sensible assumptions and proceed."
             )
             if recent_rows:
-                memory_context = "\\n".join(
+                memory_context = "\n".join(
                     ("User: " if row["role"] == "user" else "DexAI: ") + row["content"][:1200]
                     for row in recent_rows
                 )
                 prompt_message = (
-                    dexai_system_prompt + "\\n\\nRecent conversation context:\\n" + memory_context
-                    + "\\n\\nCurrent user message:\\n" + message
+                    dexai_system_prompt + "\n\nRecent conversation context:\n" + memory_context
+                    + "\n\nCurrent user message:\n" + message
                 )
             else:
-                prompt_message = dexai_system_prompt + "\\n\\nUser: " + message
+                prompt_message = dexai_system_prompt + "\n\nUser: " + message
             attachment_fingerprint = hashlib.sha256("".join(hashlib.sha256(base64.b64decode(item["data"])).hexdigest() for item in attachments).encode()).hexdigest() if attachments else ""
             cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + message + "\n" + attachment_fingerprint).encode()).hexdigest()
             cached = conn.execute(
