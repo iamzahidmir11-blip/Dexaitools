@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="hi-Latn">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Dex AI — Chat</title>
+<title>Dex AI — Hinglish Chat</title>
 <style>
 :root{color-scheme:light;--bg:#fff;--fg:#202123;--muted:#6b6b70;--line:#e5e5e5;--soft:#f7f7f8;--button:#202123}
 *{box-sizing:border-box}
@@ -66,31 +66,31 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width
 <body>
 <header class="top">
   <div class="brand">Dex AI</div>
-  <div class="top-actions"><button id="newChat" class="ghost" type="button">New chat</button><button id="loginBtn" class="login" type="button">Log in</button></div>
+  <div class="top-actions"><button id="newChat" class="ghost" type="button">Nayi Chat</button><button id="loginBtn" class="login" type="button">Login Karo</button></div>
 </header>
 <main>
   <section id="messages" aria-live="polite">
-    <div class="welcome" id="welcome"><h1>What can I help with?</h1><p>Ask a question, explore an idea, or get something done.</p></div>
+    <div class="welcome" id="welcome"><h1>Batao bhai, kya help chahiye?</h1><p>Koi bhi sawaal pucho, idea discuss karo ya kisi kaam mein help lo.</p></div>
   </section>
   <div id="status" class="status" role="status"></div>
   <div class="composer-area">
     <form class="composer" id="chatForm">
-      <textarea id="prompt" rows="1" maxlength="4000" placeholder="Message Dex AI" aria-label="Message Dex AI"></textarea>
+      <textarea id="prompt" rows="1" maxlength="4000" placeholder="Yahan message likho..." aria-label="Yahan message likho..."></textarea>
       <button id="send" type="submit" aria-label="Send message">↑</button>
     </form>
-    <div class="hint">Dex AI can make mistakes. Check important information.</div>
+    <div class="hint">Dex AI se galti ho sakti hai. Zaroori info ek baar check kar lena.</div>
   </div>
 </main>
 <div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <form class="modal" id="authForm">
     <button type="button" class="close" id="closeModal" aria-label="Close">×</button>
-    <h2 id="authTitle">Welcome to Dex AI</h2>
-    <p id="authSubtitle">Log in to start chatting.</p>
-    <div id="nameWrap" hidden><input class="field" id="authName" autocomplete="name" placeholder="Your name"></div>
-    <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address" required>
-    <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (8+ characters)" minlength="8" required>
-    <button class="submit" id="authSubmit" type="submit">Log in</button>
-    <div class="modal-bottom"><span id="switchText">New here?</span> <button class="text-button" type="button" id="switchAuth">Create an account</button></div>
+    <h2 id="authTitle">Dex AI mein welcome!</h2>
+    <p id="authSubtitle">Login Karo to start chatting.</p>
+    <div id="nameWrap" hidden><input class="field" id="authName" autocomplete="name" placeholder="Apna naam"></div>
+    <input class="field" id="authEmail" type="email" autocomplete="email" placeholder="Email address likho" required>
+    <input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Password (kam se kam 8 characters)" minlength="8" required>
+    <button class="submit" id="authSubmit" type="submit">Login Karo</button>
+    <div class="modal-bottom"><span id="switchText">Pehli baar aaye ho?</span> <button class="text-button" type="button" id="switchAuth">Create an account</button></div>
     <div id="authError" role="status"></div>
   </form>
 </div>
@@ -113,11 +113,11 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width
     messages.appendChild(row);scrollBottom();return bubble;
   }
   function resetChat() {
-    messages.innerHTML='<div class="welcome" id="welcome"><h1>What can I help with?</h1><p>Ask a question, explore an idea, or get something done.</p></div>';
+    messages.innerHTML='<div class="welcome" id="welcome"><h1>Batao bhai, kya help chahiye?</h1><p>Koi bhi sawaal pucho, idea discuss karo ya kisi kaam mein help lo.</p></div>';
     localMessages.length=0;showStatus("");prompt.value="";resizeInput();prompt.focus();
   }
   function resizeInput(){prompt.style.height="auto";prompt.style.height=Math.min(prompt.scrollHeight,200)+"px";}
-  function updateAccount(){ $("loginBtn").textContent = token ? (user?.display_name || user?.email?.split("@")[0] || "Account") : "Log in"; }
+  function updateAccount(){ $("loginBtn").textContent = token ? (user?.display_name || user?.email?.split("@")[0] || "Account") : "Login Karo"; }
   async function loadHistory(){
     if(!token)return;
     try{
@@ -138,13 +138,13 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width
   }
   function openAuth(mode=false){
     signupMode=mode;$("authModal").classList.add("open");$("authError").textContent="";
-    $("authTitle").textContent=signupMode?"Create your account":"Welcome to Dex AI";
-    $("authSubtitle").textContent=signupMode?"Create a free account to start chatting.":"Log in to start chatting.";
+    $("authTitle").textContent=signupMode?"Apna account banao":"Dex AI mein welcome!";
+    $("authSubtitle").textContent=signupMode?"Chat shuru karne ke liye free account banao.":"Login Karo to start chatting.";
     $("nameWrap").hidden=!signupMode;$("authName").required=signupMode;
     $("authPassword").autocomplete=signupMode?"new-password":"current-password";
-    $("authSubmit").textContent=signupMode?"Create account":"Log in";
-    $("switchText").textContent=signupMode?"Already have an account?":"New here?";
-    $("switchAuth").textContent=signupMode?"Log in":"Create an account";
+    $("authSubmit").textContent=signupMode?"Account banao":"Login Karo";
+    $("switchText").textContent=signupMode?"Pehle se account hai?":"Pehli baar aaye ho?";
+    $("switchAuth").textContent=signupMode?"Login Karo":"Create an account";
     $("authError").textContent="";setTimeout(()=>$("authEmail").focus(),80);
   }
   function closeAuth(){$("authModal").classList.remove("open");}
@@ -163,25 +163,25 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width
       const endpoint=signupMode?"/api/auth/signup":"/api/auth/login";
       const body=signupMode?{name:$("authName").value.trim(),email:$("authEmail").value.trim(),password:$("authPassword").value}:{email:$("authEmail").value.trim(),password:$("authPassword").value};
       const r=await fetch(API+endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-      const d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to sign in.");
+      const d=await r.json();if(!r.ok)throw new Error(d.error||"Login nahi ho paaya. Dobara try karo.");
       token=d.token;user=d.user;localStorage.setItem("dexai_token",token);updateAccount();closeAuth();
       if(!localMessages.length){await loadHistory();}
-    }catch(err){$("authError").textContent=err.message||"Connection error. Please try again.";}
+    }catch(err){$("authError").textContent=err.message||"Connection mein problem hai. Dobara try karo.";}
     finally{$("authSubmit").disabled=false;}
   });
   $("chatForm").addEventListener("submit",async e=>{
     e.preventDefault();const text=prompt.value.trim();if(!text||sending)return;
-    if(!token){openAuth(false);$("authError").textContent="Log in or create a free account before chatting.";return;}
+    if(!token){openAuth(false);$("authError").textContent="Login Karo or create a free account before chatting.";return;}
     sending=true;send.disabled=true;showStatus("");addMessage("user",text);localMessages.push({role:"user",content:text});prompt.value="";resizeInput();
-    const bubble=addMessage("assistant","Thinking…");
+    const bubble=addMessage("assistant","Soch raha hoon...");
     try{
       const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({message:text,provider:"auto"})});
       const d=await r.json();
-      if(!r.ok){throw new Error(d.error||"The message could not be sent.");}
-      bubble.textContent=d.reply||"No response was returned.";localMessages.push({role:"assistant",content:bubble.textContent});
+      if(!r.ok){throw new Error(d.error||"Message send nahi ho paaya.");}
+      bubble.textContent=d.reply||"AI se koi reply nahi aaya.";localMessages.push({role:"assistant",content:bubble.textContent});
     }catch(err){
       bubble.textContent="";bubble.remove();showStatus(err.message||"Could not connect to Dex AI. Please try again.");
-      if(err instanceof TypeError)showStatus("Could not connect to the server. Check your internet connection and try again.");
+      if(err instanceof TypeError)showStatus("Server se connect nahi ho paaya. Internet check karke dobara try karo.");
     }finally{sending=false;send.disabled=false;prompt.focus();scrollBottom();}
   });
   prompt.addEventListener("input",resizeInput);
