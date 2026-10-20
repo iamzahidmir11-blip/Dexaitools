@@ -692,9 +692,34 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             app.logger.warning("Cloudflare Workers AI returned HTTP %s", exc.code)
             raise RuntimeError("Cloudflare AI request failed. Check token permissions, model access and credits.")
         result = data.get("result") or {}
-        answer = str(result.get("response", "")).strip()
+        # Workers AI models do not all return the same response shape.
+        # Support both the classic {result: {response: ...}} format and
+        # OpenAI-compatible choices/message content returned by some models.
+        answer = str(result.get("response", "") or data.get("response", "")).strip()
         if not answer:
-            raise RuntimeError("Cloudflare AI returned an empty answer.")
+            choices = result.get("choices") or data.get("choices") or []
+            if choices:
+                choice = choices[0] or {}
+                answer = str(
+                    ((choice.get("message") or {}).get("content"))
+                    or choice.get("text")
+                    or ""
+                ).strip()
+        if not answer:
+            output = result.get("output") or data.get("output") or []
+            if isinstance(output, str):
+                answer = output.strip()
+            elif isinstance(output, list):
+                answer = "\\n".join(
+                    str(item.get("text", "") if isinstance(item, dict) else item)
+                    for item in output
+                ).strip()
+        if not answer:
+            app.logger.warning(
+                "Cloudflare AI response had no recognized text fields; top_level_keys=%s result_keys=%s",
+                sorted(data.keys()), sorted(result.keys()) if isinstance(result, dict) else []
+            )
+            raise RuntimeError("Cloudflare AI returned an empty answer. The selected model may use an unsupported response format.")
         return answer
 
     raise RuntimeError("Unknown AI provider.")
