@@ -791,7 +791,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
-    if provider not in {"auto", "compare", "gemini", "openai", "cloudflare"}:
+    if provider not in {"auto", "compare", "brain", "gemini", "openai", "cloudflare"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
     if not isinstance(attachments, list) or len(attachments) > 3:
         return jsonify({"error": "Attach up to 3 files per message."}), 400
@@ -833,6 +833,12 @@ def chat():
         if requested_model:
             return jsonify({"error": "Choose one AI provider when using a custom model ID; model names are provider-specific."}), 400
         selected = available
+    elif provider == "brain":
+        if requested_model:
+            return jsonify({"error": "Clear the custom model ID to use DexAI Brain mode."}), 400
+        selected = [p for p in ("cloudflare", "gemini") if p in available]
+        if len(selected) < 2:
+            return jsonify({"error": "DexAI Brain needs two configured free-first engines (Cloudflare Workers AI and Gemini). Configure both, or choose Auto for the fastest available engine."}), 503
     elif provider == "auto":
         # Respect a typed model ID without silently switching providers or spending on OpenAI.
         if requested_model:
@@ -998,7 +1004,27 @@ def chat():
                         else:
                             friendly_errors.append("AI is temporarily unavailable. Please try again later.")
                     return jsonify({"error": " ".join(friendly_errors) or "AI is temporarily unavailable. Please try again later."}), 502
-                if len(selected) == 1:
+                if provider == "brain" and len(successes) >= 2:
+                    # Parallel drafts first, then one synthesis pass using the first healthy free-first engine.
+                    draft_text = "\n\n".join(
+                        "## " + r["name"] + "\n" + r["reply"][:6000]
+                        for r in successes
+                    )
+                    judge = successes[0]["provider"]
+                    synthesis_prompt = (
+                        "You are DexAI's answer editor. Produce one accurate, coherent final answer to the user's request. "
+                        "Compare the candidate answers, keep useful details, correct contradictions where possible, remove repetition, "
+                        "and never claim certainty where the candidates disagree. Do not mention internal drafts unless relevant.\n\n"
+                        "Original request and relevant context:\n" + prompt_message[:10000]
+                        + "\n\nCandidate answers from separate AI engines:\n" + draft_text[:12000]
+                    )
+                    try:
+                        answer = call_ai_provider(judge, synthesis_prompt)
+                        results.append({"provider": "brain-synthesis", "name": "DexAI Brain synthesis", "reply": answer, "ok": True})
+                    except Exception:
+                        app.logger.exception("DexAI Brain synthesis failed; using first successful draft")
+                        answer = successes[0]["reply"]
+                elif len(selected) == 1:
                     answer = successes[0]["reply"]
                 else:
                     answer = "\n\n".join("## " + r["name"] + ("\n\n" + r["reply"] if r["ok"] else "\n\n*Unavailable: " + r["reply"] + "*") for r in results)
