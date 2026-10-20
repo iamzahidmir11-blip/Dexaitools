@@ -1268,6 +1268,99 @@ body[data-theme="light"] .message.user{color:#111020}
 @media(max-width:560px){.plugin-directory{padding:16px}.plugin-grid{grid-template-columns:1fr}.plugin-item p{min-height:0}.hero{padding-top:35px}.theme-toggle{padding:8px 10px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 
+
+/* DexAI app-first redesign: readable typography, focused chat, separated tools */
+:root { --app-font: 16px; --radius: 20px; }
+html { font-size: 16px; }
+body { font-size: 16px; line-height: 1.6; letter-spacing: 0; }
+button, input, textarea, select { font-size: 15px; }
+header { height: 68px; padding: 0 24px; background: rgba(12,12,13,.94); border-bottom-color: rgba(255,255,255,.10); }
+.brand { font-size: 24px; }
+nav { gap: 18px; }
+nav a { font-size: 14px; }
+.btn { font-size: 14px; padding: 10px 15px; }
+.hero { display: none !important; }
+#chat { padding: 12px 16px 28px; margin: 0 auto; max-width: 1600px; }
+.chat-workspace { min-height: calc(100vh - 92px); height: calc(100vh - 92px); max-height: 1100px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.11); box-shadow: 0 24px 90px rgba(0,0,0,.25); }
+.chat-sidebar { width: 260px; min-width: 260px; padding: 18px 14px; }
+.new-chat-button, .sidebar-link, .sidebar-mini-action { font-size: 15px; min-height: 44px; }
+.sidebar-label { font-size: 12px; letter-spacing: 1px; }
+.chat-main { min-width: 0; }
+.chat-topbar { min-height: 70px; padding: 12px 24px; }
+.chat-top-title { font-size: 19px; }
+.chat-top-subtitle, .chat-subtitle { font-size: 14px; line-height: 1.5; }
+.chat-header { padding: 18px 24px; }
+.chat-title { font-size: 20px; }
+.chat-messages { padding: 28px clamp(18px,5vw,76px); gap: 22px; }
+.welcome-card { max-width: 760px; margin: 38px auto; padding: 30px 24px; }
+.welcome-card h3 { font-size: clamp(26px,3vw,34px); line-height: 1.25; letter-spacing: -.5px; }
+.welcome-card p { max-width: 620px; margin: 12px auto 22px; font-size: 16px; line-height: 1.7; }
+.suggestions { gap: 10px; }
+.suggestion { padding: 12px 16px; min-height: 44px; font-size: 14px; line-height: 1.4; }
+.message { max-width: min(820px, 92%); font-size: 16px; line-height: 1.75; padding: 17px 20px; }
+.message-label { font-size: 12px !important; letter-spacing: .5px !important; }
+.chat-form-wrap { padding: 16px clamp(16px,4vw,60px) 20px; background: var(--panel); }
+.composer-toolbar { align-items: center; gap: 12px; margin-bottom: 12px; }
+.composer-modes { gap: 8px; }
+.composer-mode, .tool-menu-trigger, .voice-btn { min-height: 42px; padding: 9px 15px; font-size: 14px; border-radius: 12px; }
+.composer-mode span { font-size: 16px; }
+.voice-utilities { gap: 8px; }
+.provider-row { gap: 12px; padding: 10px 0; }
+.provider-row label, .provider-row select, .provider-row button, .composer-mode-hint { font-size: 14px; }
+.chat-form { min-height: 64px; border-radius: 24px; padding: 10px 12px; }
+#chatInput { min-height: 42px; max-height: 180px; padding: 10px 12px; font-size: 17px; line-height: 1.55; }
+#chatInput::placeholder { font-size: 16px; }
+.plus-menu-button, .send-button { width: 44px; height: 44px; min-width: 44px; font-size: 23px; }
+.attachment-help, .draft-status, .chat-note { font-size: 12px; line-height: 1.5; }
+.tool-menu { min-width: 260px; padding: 10px; border-radius: 16px; }
+.tool-menu-action { display:block; width:100%; padding:13px 12px; margin:3px 0; border:0; border-radius:10px; text-align:left; color:var(--text); background:transparent; font-size:14px; }
+.tool-menu-action:hover { background:rgba(216,181,106,.12); }
+#modelSettingsPanel { flex-wrap: wrap; }
+#modelSettingsPanel[hidden] { display:none !important; }
+.plugin-directory, .plugin-item, .plugin-directory-head p { font-size: 15px; line-height: 1.65; }
+.plugin-item h4, .plugin-directory-head h3 { font-size: 19px; }
+.plugin-connect { font-size: 14px; min-height: 42px; }
+section.section:not(#chat) { scroll-margin-top: 80px; }
+@media (max-width: 900px) {
+  header { padding: 0 14px; }
+  nav { display: none; }
+  .header-actions .btn:not(.btn-gold) { display: none; }
+  #chat { padding: 6px; }
+  .chat-workspace { height: calc(100dvh - 82px); min-height: 650px; border-radius: 16px; }
+  .chat-sidebar { width: 210px; min-width: 210px; }
+  .chat-messages { padding: 18px 14px; }
+  .chat-form-wrap { padding: 12px 12px 16px; }
+}
+@media (max-width: 640px) {
+  .chat-workspace { height: calc(100dvh - 78px); min-height: 600px; }
+  .chat-sidebar { width: 68px; min-width: 68px; padding: 12px 6px; overflow:hidden; }
+  .chat-sidebar .sidebar-label, .chat-sidebar .sidebar-link:not(#sidebarChatHome), .chat-sidebar .recent-label, .chat-sidebar .chat-search-wrap, .chat-sidebar #archivedChatsToggle, .chat-sidebar #localChatList, .chat-sidebar .sidebar-foot { display:none !important; }
+  .new-chat-button { font-size:0; justify-content:center; padding:8px; }
+  .new-chat-button span { font-size:22px; }
+  .sidebar-link#sidebarChatHome { font-size:0; justify-content:center; padding:10px; }
+  .sidebar-link#sidebarChatHome span { font-size:20px; }
+  .chat-topbar { padding:10px 12px; }
+  .chat-top-title { font-size:17px; }
+  .chat-top-subtitle { display:none; }
+  .chat-header { padding:12px; }
+  .chat-header .online { display:none; }
+  .chat-messages { padding:12px 8px; }
+  .welcome-card { padding:22px 14px; margin:16px auto; }
+  .welcome-card h3 { font-size:25px; }
+  .welcome-card p { font-size:15px; }
+  .suggestion { font-size:13px; padding:10px 12px; }
+  .composer-toolbar { align-items:stretch; }
+  .composer-modes { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .composer-mode { justify-content:center; padding:8px 7px; font-size:13px; }
+  .tool-menu-wrap { display:contents; }
+  .tool-menu-trigger { grid-column:1 / -1; justify-content:center; }
+  .tool-menu { position:absolute; left:8px; right:8px; bottom:100%; }
+  .voice-utilities { width:100%; display:flex; flex-wrap:wrap; }
+  .voice-btn { flex:1; justify-content:center; }
+  #chatInput { font-size:16px; }
+}
+@media (prefers-reduced-motion: reduce) { .chat-workspace *, .chat-workspace *::before, .chat-workspace *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
 </style>
 </head>
 
@@ -1376,13 +1469,16 @@ body[data-theme="light"] .message.user{color:#111020}
       <div class="chat-form-wrap">
         <div class="composer-toolbar">
           <div class="composer-modes" role="group" aria-label="Choose what DexAI should do">
-            <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true" title="Chat"><span>✦</span> Chat</button>
+            <button type="button" class="composer-mode active" data-mode="chat" aria-pressed="true" title="Normal AI chat"><span>✦</span> Chat</button>
+            <button type="button" class="composer-mode" data-mode="image" aria-pressed="false" title="Create an image"><span>▧</span> Image</button>
+            <button type="button" class="composer-mode" data-mode="video" aria-pressed="false" title="Create a video prompt"><span>▶</span> Video</button>
             <div class="tool-menu-wrap" id="toolMenuWrap">
-              <button type="button" class="tool-menu-trigger" id="toolMenuTrigger" aria-expanded="false" aria-controls="toolMenu"><span class="tool-dot"></span> More tools <span class="chevron">⌄</span></button>
-              <div class="tool-menu" id="toolMenu" role="group" aria-label="Creative tools" hidden>
-                <div class="tool-menu-caption">Create with DexAI</div>
-                <button type="button" class="composer-mode" data-mode="image" aria-pressed="false" title="Create an image"><span>▧</span> Image generation</button>
-                <button type="button" class="composer-mode" data-mode="video" aria-pressed="false" title="Create a video prompt"><span>▶</span> Video tools <span style="margin-left:auto;color:#8d8576;font-size:10px">↗</span></button>
+              <button type="button" class="tool-menu-trigger" id="toolMenuTrigger" aria-expanded="false" aria-controls="toolMenu"><span class="tool-dot"></span> More options <span class="chevron">⌄</span></button>
+              <div class="tool-menu" id="toolMenu" role="group" aria-label="More chat options" hidden>
+                <div class="tool-menu-caption">More options</div>
+                <button type="button" class="tool-menu-action" id="openModelOptions">AI engine & model settings</button>
+                <button type="button" class="tool-menu-action" id="openAppConnections">App connections & plugins</button>
+                <button type="button" class="tool-menu-action" id="openWorkspaceTools">Writing and workspace tools</button>
               </div>
             </div>
           </div>
@@ -3222,6 +3318,23 @@ body[data-theme="light"] .message.user{color:#111020}
     }
   });
 })();
+
+  // More-options menu actions: each area opens its own focused section.
+  $("openModelOptions")?.addEventListener("click", () => {
+    setToolMenuOpen(false);
+    const panel = $("modelSettingsPanel");
+    if (panel) { panel.hidden = !panel.hidden; if (!panel.hidden) panel.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  });
+  $("openAppConnections")?.addEventListener("click", () => {
+    setToolMenuOpen(false);
+    $("pluginDirectory")?.scrollIntoView({behavior:"smooth",block:"center"});
+    toast("App connections are managed in the Plugin Directory.");
+  });
+  $("openWorkspaceTools")?.addEventListener("click", () => {
+    setToolMenuOpen(false);
+    document.querySelector("#tools")?.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+
 </script>
 
 </body>
