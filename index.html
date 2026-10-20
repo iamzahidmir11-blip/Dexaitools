@@ -3608,7 +3608,7 @@ body[data-theme="dark"] .dex-profile-card #dexLogoutButton:hover { background:rg
     if ($("dexProfileName")) $("dexProfileName").textContent = user.name || user.display_name || (user.email ? user.email.split("@")[0] : "Dex User");
     if ($("dexProfileEmail")) $("dexProfileEmail").textContent = user.email || "Free account";
   }
-  $("dexLogoutButton")?.addEventListener("click", () => { if (signedInUser) { openAuth(); } else { openAuth(); } });
+  $("dexLogoutButton")?.addEventListener("click", () => { if (signedInUser) { $("authLogout")?.click(); } else { openAuth(); } });
   const dexOriginalRenderList = renderLocalChatList;
   renderLocalChatList = function() { dexOriginalRenderList(); renderDexSidebarSections(); syncDexActiveLabel(); };
   renderDexSidebarSections();
