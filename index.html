@@ -1361,6 +1361,18 @@ section.section:not(#chat) { scroll-margin-top: 80px; }
 }
 @media (prefers-reduced-motion: reduce) { .chat-workspace *, .chat-workspace *::before, .chat-workspace *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 
+
+/* Theme-safe app chrome and readable light mode */
+body[data-theme="light"] header { background: rgba(250,250,252,.94); border-bottom-color: rgba(30,35,45,.12); }
+body[data-theme="light"] .chat-workspace { border-color: rgba(30,35,45,.14); box-shadow: 0 24px 70px rgba(40,45,60,.10); }
+body[data-theme="light"] .chat-form-wrap { background: var(--panel); border-top-color: rgba(30,35,45,.10); }
+body[data-theme="light"] .composer-mode, body[data-theme="light"] .tool-menu-trigger, body[data-theme="light"] .voice-btn { color: var(--text); background: var(--panel2); border-color: var(--border); }
+body[data-theme="light"] .composer-mode.active { color: var(--text); background: rgba(100,90,150,.10); border-color: rgba(100,90,150,.4); }
+body[data-theme="light"] .tool-menu-action { color: var(--text); }
+body[data-theme="light"] .chat-form { background: var(--panel2); border-color: var(--border); }
+body[data-theme="light"] .chat-topbar { background: var(--panel); border-bottom-color: var(--border); }
+body[data-theme="light"] .chat-messages { background: var(--panel); }
+
 </style>
 </head>
 
@@ -2196,7 +2208,7 @@ section.section:not(#chat) { scroll-margin-top: 80px; }
         item.setAttribute("aria-pressed", String(active));
       });
       setToolMenuOpen(false);
-      toolMenuTrigger.innerHTML = '<span class="tool-dot"></span> ' + (composerMode === "image" ? "Image tools" : composerMode === "video" ? "Video tools" : "More tools") + ' <span class="chevron">⌄</span>';
+      toolMenuTrigger.innerHTML = '<span class="tool-dot"></span> More options <span class="chevron">⌄</span>';
       $("composerModeHint").textContent = composerModeHints[composerMode];
       $("chatInput").placeholder = composerMode === "image"
         ? "Describe the image you want to create…"
