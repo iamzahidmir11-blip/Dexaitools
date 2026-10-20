@@ -1156,6 +1156,118 @@ body.dex-focus-mode footer{display:none!important}
 .revenue-note { margin-top:18px; padding:17px 20px; border-left:2px solid var(--gold); background:rgba(216,181,106,.055); color:var(--muted); font-size:12px; line-height:1.8; }
 .revenue-note strong { color:var(--gold2); }
 @media(max-width:800px){.revenue-grid{grid-template-columns:1fr}.revenue-card{min-height:0;padding:22px}.revenue-symbol{margin-top:18px}}
+
+/* DexAI premium transparent app refresh */
+:root{
+  --bg:#080a0f;--panel:rgba(17,20,29,.82);--panel2:rgba(24,28,39,.72);
+  --gold:#9d8bff;--gold2:#d2cbff;--text:#f3f4fb;--muted:#a1a7ba;
+  --border:rgba(177,166,255,.22);--radius:20px;
+  --surface:rgba(255,255,255,.045);--surface-strong:rgba(255,255,255,.075);
+  --accent-glow:rgba(139,124,255,.16);
+}
+body{background:radial-gradient(ellipse at 15% 0%,rgba(91,80,180,.18),transparent 42%),radial-gradient(ellipse at 90% 30%,rgba(49,112,158,.11),transparent 40%),var(--bg);color:var(--text)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.14;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+.ambient{background:#8f83ff;opacity:.075}
+header{background:rgba(8,10,15,.72);border-bottom:1px solid rgba(255,255,255,.09);backdrop-filter:blur(28px) saturate(150%)}
+.brand{font-family:"DM Sans",sans-serif;font-weight:800;letter-spacing:-.7px}
+.brand-icon{border-color:rgba(178,167,255,.7);color:#d2cbff;border-radius:12px;box-shadow:0 0 28px rgba(139,124,255,.12)}
+.brand em{color:#b9afff}
+.btn,.btn-gold,.chat-shell,.chat-sidebar,.tool-card,.workspace,.connector-card,.plan-card{backdrop-filter:blur(20px)}
+.btn{border-color:var(--border);background:rgba(255,255,255,.035);border-radius:12px}
+.btn-gold{background:linear-gradient(135deg,#d5ceff,#8e82ff);color:#0c0c18;box-shadow:0 8px 30px rgba(139,124,255,.19)}
+.btn-gold:hover{background:linear-gradient(135deg,#e5e0ff,#a69cff)}
+.hero{padding-top:50px;padding-bottom:24px}
+.hero h1,.section-heading h2,.workspace h3{font-family:"DM Sans",sans-serif;font-weight:750;letter-spacing:-1.6px}
+.gold-text{background:linear-gradient(100deg,#a99dff,#d6d0ff,#8bd8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{border-color:var(--border);background:rgba(255,255,255,.035);color:#c9c1ff;letter-spacing:1.4px}
+.section{padding-top:26px}
+.section-heading .mini{color:#b7adff}
+.chat-workspace{gap:16px;align-items:stretch}
+.chat-sidebar{background:rgba(15,18,27,.68)!important;border:1px solid rgba(255,255,255,.085)!important;border-radius:22px!important;box-shadow:0 20px 70px rgba(0,0,0,.18)}
+.chat-main{min-width:0}
+.chat-topbar{background:rgba(14,17,26,.64)!important;border:1px solid rgba(255,255,255,.075)!important;border-radius:18px!important;backdrop-filter:blur(24px);margin-bottom:13px}
+.chat-top-title{font-weight:750!important;letter-spacing:-.4px}
+.chat-shell{max-width:none;border:1px solid rgba(177,166,255,.2);border-radius:24px;background:linear-gradient(145deg,rgba(23,26,39,.8),rgba(11,14,22,.78));box-shadow:0 25px 90px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.045)}
+.chat-shell:focus-within{border-color:rgba(177,166,255,.52);box-shadow:0 25px 90px rgba(0,0,0,.3),0 0 45px rgba(139,124,255,.09)}
+.chat-header{border-color:rgba(255,255,255,.07)}
+.chat-orb{border-radius:50%;border-color:rgba(177,166,255,.6);background:radial-gradient(circle at 30% 25%,#6c60b7,#202036 70%);color:#f1efff;box-shadow:0 0 28px rgba(139,124,255,.2);font-size:20px}
+.chat-messages{min-height:360px}
+.welcome-star{color:#c6beff;text-shadow:0 0 34px rgba(139,124,255,.28)}
+.welcome-card h3{font-family:"DM Sans",sans-serif;font-weight:750;letter-spacing:-.7px}
+.suggestion{border-color:rgba(255,255,255,.11);background:rgba(255,255,255,.035);color:#d8daeb;border-radius:12px}
+.suggestion:hover{border-color:rgba(177,166,255,.55);background:rgba(139,124,255,.1);color:#fff}
+.message.user{background:linear-gradient(135deg,#d5ceff,#968aff);color:#101020;border-radius:18px 18px 5px 18px}
+.message.bot{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.08);color:#eef0fa;border-radius:5px 18px 18px 18px}
+.chat-form-wrap{background:rgba(5,7,12,.23);border-color:rgba(255,255,255,.075)}
+.composer-mode,.tool-menu-trigger,.voice-btn,.attach-button{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1);color:#dfe1f0;border-radius:11px}
+.composer-mode span,.voice-btn .voice-icon{color:#b7adff}
+.composer-mode.active{background:rgba(139,124,255,.14);border-color:rgba(177,166,255,.6);color:#f2efff}
+.tool-menu{background:rgba(17,19,30,.97);border-color:rgba(177,166,255,.25);border-radius:16px}
+.chat-form{background:rgba(7,9,15,.72);border-color:rgba(177,166,255,.2);border-radius:17px}
+.chat-form:focus-within{border-color:rgba(177,166,255,.65)}
+.chat-form textarea{color:var(--text)}
+.send-button{background:linear-gradient(135deg,#d5ceff,#968aff);color:#0c0c18;border-radius:13px;font-size:23px}
+.plus-menu{background:rgba(16,19,29,.98)!important;border-color:rgba(177,166,255,.24)!important;backdrop-filter:blur(24px)}
+.tool-card,.connector-card{background:linear-gradient(145deg,rgba(25,29,43,.74),rgba(12,15,23,.78));border-color:rgba(255,255,255,.085);border-radius:20px}
+.tool-card:hover{border-color:rgba(177,166,255,.45);background:linear-gradient(145deg,rgba(34,36,57,.8),rgba(12,15,23,.8))}
+.tool-icon{border-color:rgba(177,166,255,.25);background:rgba(139,124,255,.08);color:#c7bfff;border-radius:14px}
+.workspace{background:linear-gradient(120deg,rgba(26,29,44,.8),rgba(12,15,23,.8));border-color:rgba(177,166,255,.2);border-radius:24px}
+.workspace-form textarea{background:rgba(5,7,12,.6);border-color:rgba(177,166,255,.2)}
+footer{border-color:rgba(255,255,255,.08)}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:9px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.045);color:var(--text);font-size:12px;font-weight:700;transition:.2s}
+.theme-toggle:hover{border-color:rgba(177,166,255,.65);transform:translateY(-1px)}
+.theme-toggle .theme-symbol{font-size:15px;color:var(--gold2)}
+.plugin-directory{margin-top:22px;padding:24px;border:1px solid var(--border);border-radius:24px;background:linear-gradient(145deg,rgba(25,29,43,.58),rgba(12,15,23,.62));backdrop-filter:blur(22px)}
+.plugin-directory-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.plugin-directory-head h3{margin:0 0 7px;font-size:20px;letter-spacing:-.6px}
+.plugin-directory-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.7;max-width:600px}
+.plugin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.plugin-item{padding:16px;border:1px solid rgba(255,255,255,.085);border-radius:16px;background:rgba(255,255,255,.035);min-width:0}
+.plugin-item-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.plugin-mark{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border:1px solid var(--border);border-radius:12px;background:rgba(139,124,255,.09);font-size:12px;font-weight:800;color:#d2cbff}
+.plugin-item h4{margin:0 0 4px;font-size:13px}
+.plugin-item p{min-height:36px;margin:0 0 13px;color:var(--muted);font-size:11px;line-height:1.6}
+.plugin-state{display:inline-flex;align-items:center;gap:6px;color:#d9cfff;font-size:9px;letter-spacing:.8px;text-transform:uppercase}
+.plugin-state:before{content:"";width:6px;height:6px;border-radius:50%;background:#b4a8ff}
+.plugin-connect{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(139,124,255,.08);color:var(--text);font-size:11px;font-weight:700}
+.plugin-connect:hover{background:rgba(139,124,255,.16);border-color:rgba(177,166,255,.55)}
+.plugin-connect:disabled{opacity:.7;cursor:default}
+#pluginSetupNote{margin:14px 0 0;color:var(--muted);font-size:11px;line-height:1.7}
+[data-theme="light"]{
+ --bg:#f3f5fb;--panel:rgba(255,255,255,.82);--panel2:rgba(255,255,255,.72);
+ --text:#171927;--muted:#656b7e;--border:rgba(78,72,142,.2);--surface:rgba(20,24,45,.04);--surface-strong:rgba(20,24,45,.07);--gold:#4e45a5;--gold2:#40378e;--accent-glow:rgba(139,124,255,.12);
+}
+body[data-theme="light"]{background:radial-gradient(ellipse at 15% 0%,rgba(151,139,255,.17),transparent 42%),radial-gradient(ellipse at 90% 30%,rgba(75,160,206,.1),transparent 40%),var(--bg);color:var(--text)}
+body[data-theme="light"]:before{opacity:.45;background-image:linear-gradient(rgba(50,54,82,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(50,54,82,.04) 1px,transparent 1px)}
+body[data-theme="light"] header{background:rgba(248,249,255,.78);border-color:rgba(30,33,56,.1)}
+body[data-theme="light"] .chat-sidebar,body[data-theme="light"] .chat-topbar,body[data-theme="light"] .chat-shell,body[data-theme="light"] .tool-card,body[data-theme="light"] .connector-card,body[data-theme="light"] .workspace,body[data-theme="light"] .plugin-directory{background:rgba(255,255,255,.78)!important;border-color:rgba(78,72,142,.17)!important;box-shadow:0 18px 60px rgba(47,51,92,.07)}
+body[data-theme="light"] .chat-header,body[data-theme="light"] .chat-form-wrap{border-color:rgba(40,43,69,.09)}
+body[data-theme="light"] .chat-orb{background:radial-gradient(circle at 30% 25%,#e5e1ff,#f8f7ff 70%);color:#5046a4}
+body[data-theme="light"] .chat-title,body[data-theme="light"] .chat-top-title,body[data-theme="light"] .welcome-card h3,body[data-theme="light"] .tool-card h3,body[data-theme="light"] .plugin-item h4{color:#191b2c}
+body[data-theme="light"] .chat-subtitle,body[data-theme="light"] .chat-top-subtitle,body[data-theme="light"] .welcome-card p,body[data-theme="light"] .tool-card p,body[data-theme="light"] .plugin-item p,body[data-theme="light"] .section-heading p{color:#6b7082}
+body[data-theme="light"] .message.bot{background:rgba(80,70,165,.055);border-color:rgba(78,72,142,.13);color:#24263a}
+body[data-theme="light"] .chat-form{background:rgba(255,255,255,.8);border-color:rgba(78,72,142,.18)}
+body[data-theme="light"] .chat-form textarea{color:#171927}
+body[data-theme="light"] .chat-form textarea::placeholder{color:#85899a}
+body[data-theme="light"] .composer-mode,body[data-theme="light"] .tool-menu-trigger,body[data-theme="light"] .voice-btn,body[data-theme="light"] .attach-button,body[data-theme="light"] .theme-toggle{background:rgba(255,255,255,.72);color:#30324a;border-color:rgba(78,72,142,.18)}
+body[data-theme="light"] .composer-mode.active{background:rgba(139,124,255,.13);color:#40378e}
+body[data-theme="light"] .tool-menu,body[data-theme="light"] .plus-menu{background:rgba(255,255,255,.97)!important;border-color:rgba(78,72,142,.2)!important;box-shadow:0 20px 50px rgba(35,38,65,.15)}
+body[data-theme="light"] .tool-menu .composer-mode{color:#30324a}
+body[data-theme="light"] .suggestion,body[data-theme="light"] .plugin-item{background:rgba(80,70,165,.035);border-color:rgba(78,72,142,.15);color:#34364d}
+body[data-theme="light"] .suggestion:hover{color:#27204f}
+body[data-theme="light"] .plugin-connect{color:#302a70;background:rgba(139,124,255,.08)}
+body[data-theme="light"] .workspace-form textarea{background:rgba(255,255,255,.75);color:#171927}
+body[data-theme="light"] .workspace-result{color:#303249}
+body[data-theme="light"] .brand{color:#1b1c2c}
+body[data-theme="light"] .btn{color:#282a41}
+body[data-theme="light"] .btn-gold{color:#111020}
+body[data-theme="light"] .chat-note,body[data-theme="light"] .draft-status{color:#73788a}
+body[data-theme="light"] .chat-messages{color:#202236}
+body[data-theme="light"] .message.user{color:#111020}
+@media(max-width:900px){.plugin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chat-workspace{gap:12px}}
+@media(max-width:560px){.plugin-directory{padding:16px}.plugin-grid{grid-template-columns:1fr}.plugin-item p{min-height:0}.hero{padding-top:35px}.theme-toggle{padding:8px 10px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 
@@ -1189,6 +1301,7 @@ body.dex-focus-mode footer{display:none!important}
   </nav>
 
   <div class="header-actions">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme"><span class="theme-symbol" id="themeSymbol" aria-hidden="true">◐</span><span id="themeLabel">Light mode</span></button>
     <button class="btn" id="loginButton" type="button">Login</button>
     <a class="btn btn-gold" href="#chat">Launch AI ↗</a>
     <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
@@ -1250,12 +1363,12 @@ body.dex-focus-mode footer{display:none!important}
           <h3>Ask anything. Create something.</h3>
           <p>Your everyday AI assistant for quick answers, learning, writing and content creation.</p>
           <div class="suggestions">
-            <button class="suggestion" data-prompt="Explain this topic in simple words with an everyday example: artificial intelligence.">💬 Explain a topic</button>
-            <button class="suggestion" data-prompt="Give me 10 fresh YouTube Shorts ideas for a US audience, each with a strong hook and a satisfying ending.">🎬 Shorts ideas</button>
-            <button class="suggestion" data-prompt="Write a 30-second YouTube Shorts script with a 2-second hook, scene-by-scene visuals, voiceover, captions, and a clear payoff. Ask me for the niche if needed.">✍️ Write a script</button>
-            <button class="suggestion" data-prompt="Give me 10 clickable but honest video titles and 3 thumbnail concepts for this topic: [enter topic].">🚀 Titles & thumbnails</button>
-            <button class="suggestion" data-prompt="Help me with a normal everyday question. Explain clearly, step by step, and give a practical example.">🧠 Everyday help</button>
-            <button class="suggestion" data-prompt="Turn this idea into a social media caption with a strong opening, natural wording, and relevant hashtags: [enter idea].">📱 Caption & hashtags</button>
+            <button class="suggestion" data-prompt="Explain this topic in simple words with an everyday example: artificial intelligence.">Explain a topic</button>
+            <button class="suggestion" data-prompt="Give me 10 fresh YouTube Shorts ideas for a US audience, each with a strong hook and a satisfying ending.">Shorts ideas</button>
+            <button class="suggestion" data-prompt="Write a 30-second YouTube Shorts script with a 2-second hook, scene-by-scene visuals, voiceover, captions, and a clear payoff. Ask me for the niche if needed.">Write a script</button>
+            <button class="suggestion" data-prompt="Give me 10 clickable but honest video titles and 3 thumbnail concepts for this topic: [enter topic].">Titles & thumbnails</button>
+            <button class="suggestion" data-prompt="Help me with a normal everyday question. Explain clearly, step by step, and give a practical example.">Everyday help</button>
+            <button class="suggestion" data-prompt="Turn this idea into a social media caption with a strong opening, natural wording, and relevant hashtags: [enter idea].">Caption & hashtags</button>
           </div>
         </div>
       </div>
@@ -1275,7 +1388,7 @@ body.dex-focus-mode footer{display:none!important}
           </div>
           <div class="voice-utilities" aria-label="Voice assistant options">
             <button class="voice-btn" type="button" id="liveVoiceButton" aria-pressed="false" title="Start live voice">◉ Live voice</button>
-            <button class="voice-btn" type="button" id="readAnswerButton" title="Read latest answer aloud">🔊 Read answer</button>
+            <button class="voice-btn" type="button" id="readAnswerButton" title="Read latest answer aloud">Read answer</button>
             <span class="voice-status" id="voiceStatus" role="status">Voice ready</span>
           </div>
         </div>
@@ -1312,7 +1425,7 @@ body.dex-focus-mode footer{display:none!important}
             </div>
           </div>
           <textarea id="chatInput" placeholder="Message DexAI…" rows="1" maxlength="4000" aria-label="Your message"></textarea>
-          <button class="voice-btn icon-only composer-mic" type="button" id="micButton" aria-label="Speak to type" title="Speak to type">🎙</button>
+          <button class="voice-btn icon-only composer-mic" type="button" id="micButton" aria-label="Speak to type" title="Speak to type">⌁</button>
           <button class="send-button" id="sendButton" type="submit" aria-label="Send message">↑</button>
         </form>
         <div class="draft-status" id="draftStatus" aria-live="polite">Drafts save automatically on this device.</div>
@@ -1496,6 +1609,22 @@ body.dex-focus-mode footer{display:none!important}
         <p>GitHub, Cloudflare, Render and other apps need secure OAuth/API integration before DexAI can act on them. They are not falsely marked connected.</p>
         <a class="btn" href="https://github.com/iamzahidmir11-blip/Dexaitools" target="_blank" rel="noopener noreferrer">Open DexAI project ↗</a>
       </article>
+    </div>
+
+    <div class="plugin-directory" id="pluginDirectory">
+      <div class="plugin-directory-head">
+        <div><h3>Plugin & App Connections</h3><p>Choose an app to prepare an integration. These are connection-ready UI entries; an app becomes genuinely connected only after its OAuth/API authorization and backend adapter are configured.</p></div>
+        <span class="plugin-state">Secure connection setup</span>
+      </div>
+      <div class="plugin-grid">
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">GH</span><div><h4>GitHub</h4><span class="plugin-state">Setup required</span></div></div><p>Repositories, issues and project workflows.</p><button class="plugin-connect" type="button" data-plugin="GitHub">Set up connection</button></article>
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">G</span><div><h4>Google Drive</h4><span class="plugin-state">Setup required</span></div></div><p>Search and work with files after authorization.</p><button class="plugin-connect" type="button" data-plugin="Google Drive">Set up connection</button></article>
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">SL</span><div><h4>Slack</h4><span class="plugin-state">Setup required</span></div></div><p>Find team conversations and draft updates.</p><button class="plugin-connect" type="button" data-plugin="Slack">Set up connection</button></article>
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">N</span><div><h4>Notion</h4><span class="plugin-state">Setup required</span></div></div><p>Search pages and organize workspace notes.</p><button class="plugin-connect" type="button" data-plugin="Notion">Set up connection</button></article>
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">CF</span><div><h4>Cloudflare</h4><span class="plugin-state">Setup required</span></div></div><p>Inspect supported resources through secured APIs.</p><button class="plugin-connect" type="button" data-plugin="Cloudflare">Set up connection</button></article>
+        <article class="plugin-item"><div class="plugin-item-top"><span class="plugin-mark">API</span><div><h4>Custom API</h4><span class="plugin-state">Adapter required</span></div></div><p>Add other apps through a scoped API or OAuth adapter.</p><button class="plugin-connect" type="button" data-plugin="Custom API">View setup requirements</button></article>
+      </div>
+      <p id="pluginSetupNote" aria-live="polite">No external apps are marked connected yet. This prevents the UI from claiming access that has not been authorized.</p>
     </div>
   </section>
 
@@ -3008,6 +3137,35 @@ body.dex-focus-mode footer{display:none!important}
       $("chat").classList.add("dex-menu-open");
       $("chat").scrollIntoView({behavior:"smooth",block:"start"});
       sendMessage(prompt);
+    });
+  });
+
+
+  // Theme preference: persist light/dark mode on this device.
+  const themeToggle = $("themeToggle");
+  const themeLabel = $("themeLabel");
+  const themeSymbol = $("themeSymbol");
+  function applyTheme(theme) {
+    const next = theme === "light" ? "light" : "dark";
+    document.body.dataset.theme = next;
+    document.documentElement.style.colorScheme = next;
+    if (themeLabel) themeLabel.textContent = next === "dark" ? "Light mode" : "Dark mode";
+    if (themeSymbol) themeSymbol.textContent = next === "dark" ? "☼" : "◐";
+    if (themeToggle) themeToggle.setAttribute("aria-label", next === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    try { localStorage.setItem("dexai_theme", next); } catch {}
+  }
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("dexai_theme") || "dark"; } catch {}
+  applyTheme(savedTheme);
+  themeToggle?.addEventListener("click", () => applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
+
+  // Plugin directory is honest by design: the UI never fakes a successful connection.
+  document.querySelectorAll("[data-plugin]").forEach(button => {
+    button.addEventListener("click", () => {
+      const name = button.dataset.plugin || "App";
+      const note = $("pluginSetupNote");
+      if (note) note.textContent = name + " needs a secure OAuth/API authorization flow and a server-side adapter before it can access your account. No credentials should be pasted into chat.";
+      toast(name + " connection requires backend authorization setup.");
     });
   });
 
