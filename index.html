@@ -1489,6 +1489,19 @@ body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
  .dex-floating-menu { width:220px; }
 }
 
+
+/* Sidebar collections and account row */
+.dex-saved-list,.dex-project-list { max-height:125px; overflow:auto; }
+.dex-saved-list:empty,.dex-project-list:empty { display:none; }
+.dex-profile-card { display:flex; align-items:center; gap:10px; }
+.dex-avatar { display:flex; align-items:center; justify-content:center; width:36px; height:36px; flex:0 0 36px; border-radius:50%; border:1px solid currentColor; font-size:11px; font-weight:850; letter-spacing:.4px; }
+.dex-profile-copy { min-width:0; flex:1; display:flex; flex-direction:column; }
+.dex-profile-copy strong,.dex-profile-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dex-profile-card #dexLogoutButton { width:32px; height:32px; border:0; border-radius:9px; background:transparent; color:inherit; font-size:19px; cursor:pointer; }
+.dex-profile-card #dexLogoutButton:hover { background:rgba(0,0,0,.07); }
+body[data-theme="dark"] .dex-profile-card #dexLogoutButton:hover { background:rgba(255,255,255,.1); }
+@media(max-width:760px) { .chat-sidebar.mobile-open { display:flex !important; } }
+
 </style>
 </head>
 
@@ -1548,15 +1561,15 @@ body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
     <div class="chat-workspace">
       <aside class="chat-sidebar" aria-label="Chat navigation">
         <button type="button" id="newChatButton" class="new-chat-button"><span>＋</span> New chat</button>
-        <div class="sidebar-label">YOUR WORKSPACE</div>
-        <button type="button" class="sidebar-link active" id="sidebarChatHome"><span>✦</span> AI Chat</button>
-        <a class="sidebar-link" href="#imageStudio"><span>▧</span> Image Studio</a>
-        <a class="sidebar-link" href="#videoStudio"><span>▶</span> Video Lab</a>
-        <div class="sidebar-label recent-label">RECENT CHATS</div>
-        <div class="chat-search-wrap"><input id="chatSearchInput" class="chat-search" type="search" placeholder="Find a chat…" aria-label="Find a chat"></div>
-        <button type="button" id="archivedChatsToggle" class="sidebar-mini-action">▸ Show archived chats</button>
+        <div class="sidebar-label">SAVED CHATS</div>
+        <div id="savedChatList" class="local-chat-list dex-saved-list"><div class="sidebar-empty">Pinned chats appear here.</div></div>
+        <div class="sidebar-label">ACTIVE PROJECTS</div>
+        <div id="projectList" class="local-chat-list dex-project-list"><div class="sidebar-empty">No projects yet.</div></div>
+        <div class="sidebar-label recent-label">RECENTS HISTORY</div>
+        <div class="chat-search-wrap"><input id="chatSearchInput" class="chat-search" type="search" placeholder="Search chats…" aria-label="Search chats"></div>
+        <button type="button" id="archivedChatsToggle" class="sidebar-mini-action">Show archived chats</button>
         <div id="localChatList" class="local-chat-list"><div class="sidebar-empty">Your chats will appear here.</div></div>
-        <div class="sidebar-foot"><span class="sidebar-gem">✦</span><div><strong>DexAI</strong><small>Golden intelligence</small></div></div>
+        <div class="sidebar-foot dex-profile-card"><span class="dex-avatar">DX</span><div class="dex-profile-copy"><strong id="dexProfileName">Dex User</strong><small id="dexProfileEmail">Free account</small></div><button type="button" id="dexLogoutButton" aria-label="Account and logout" title="Account / log out">↪</button></div>
       </aside>
       <div class="chat-main">
         <div class="chat-topbar">
@@ -3383,8 +3396,8 @@ body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
     if (themeToggle) themeToggle.setAttribute("aria-label", next === "dark" ? "Switch to light theme" : "Switch to dark theme");
     try { localStorage.setItem("dexai_theme", next); } catch {}
   }
-  let savedTheme = "dark";
-  try { savedTheme = localStorage.getItem("dexai_theme") || "dark"; } catch {}
+  let savedTheme = "light";
+  try { savedTheme = localStorage.getItem("dexai_theme") || "light"; } catch {}
   applyTheme(savedTheme);
   themeToggle?.addEventListener("click", () => applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
 
@@ -3565,6 +3578,32 @@ body.dex-sidebar-collapsed .chat-sidebar { display:none !important; }
   renderLocalChatList = function() { originalRenderLocalChatList(); syncDexActiveLabel(); };
   // The old per-row action controls are hidden; all thread management lives in the top three-dot menu.
   renderLocalChatList();
+
+
+  function renderDexSidebarSections() {
+    const chats = readLocalChats().filter(chat => !chat.archived);
+    const saved = $("savedChatList");
+    const projects = $("projectList");
+    if (saved) {
+      saved.replaceChildren();
+      const pinned = chats.filter(chat => chat.pinned).sort((a,b)=>b.updated-a.updated).slice(0,6);
+      if (!pinned.length) { const empty=document.createElement("div"); empty.className="sidebar-empty"; empty.textContent="Pinned chats appear here."; saved.appendChild(empty); }
+      pinned.forEach(chat => { const b=document.createElement("button"); b.type="button"; b.className="local-chat-item"+(chat.id===activeLocalChatId?" active":""); b.textContent=chat.title||"New chat"; b.title=b.textContent; b.addEventListener("click",()=>openLocalChat(chat.id)); saved.appendChild(b); });
+    }
+    if (projects) {
+      projects.replaceChildren();
+      const names=[...new Set(chats.map(chat=>(chat.project||"").trim()).filter(Boolean))].slice(0,8);
+      if (!names.length) { const empty=document.createElement("div"); empty.className="sidebar-empty"; empty.textContent="Projects appear when you add a chat to one."; projects.appendChild(empty); }
+      names.forEach(name => { const b=document.createElement("button"); b.type="button"; b.className="local-chat-item"; b.textContent="▱  "+name; b.addEventListener("click",()=>{ const target=chats.filter(chat=>(chat.project||"").trim()===name).sort((a,b)=>b.updated-a.updated)[0]; if(target)openLocalChat(target.id); }); projects.appendChild(b); });
+    }
+    const user = signedInUser || {};
+    if ($("dexProfileName")) $("dexProfileName").textContent = user.name || user.display_name || (user.email ? user.email.split("@")[0] : "Dex User");
+    if ($("dexProfileEmail")) $("dexProfileEmail").textContent = user.email || "Free account";
+  }
+  $("dexLogoutButton")?.addEventListener("click", () => { if (signedInUser) { openAuth(); } else { openAuth(); } });
+  const dexOriginalRenderList = renderLocalChatList;
+  renderLocalChatList = function() { dexOriginalRenderList(); renderDexSidebarSections(); syncDexActiveLabel(); };
+  renderDexSidebarSections();
 
 </script>
 
