@@ -585,7 +585,9 @@ def configured_providers():
     if os.getenv("GEMINI_API_KEY"):
         providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
     if os.getenv("OPENAI_API_KEY"):
-        providers.append({"id": "openai", "name": "GPT-6 Astra (OpenAI API)", "configured": True})
+        providers.append({"id": "openai", "name": "OpenAI API", "configured": True})
+    if os.getenv("CEREBRAS_API_KEY"):
+        providers.append({"id": "cerebras", "name": "Cerebras Inference", "configured": True})
     if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
@@ -673,6 +675,36 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             raise RuntimeError("OpenAI returned an empty answer.")
         return answer
 
+    if provider == "cerebras":
+        api_key = os.getenv("CEREBRAS_API_KEY")
+        if not api_key:
+            raise RuntimeError("Cerebras API is not configured.")
+        model = (model_override or os.getenv("CEREBRAS_MODEL", "zai-glm-4.7")).strip()[:200]
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": message}],
+            "stream": False,
+            "max_completion_tokens": int(os.getenv("CEREBRAS_MAX_OUTPUT_TOKENS", "4096"))
+        }
+        req = urllib.request.Request(
+            "https://api.cerebras.ai/v1/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("Cerebras API returned HTTP %s", exc.code)
+            raise RuntimeError("Cerebras request failed. Check the API key, model access, rate limits and account quota.")
+        choices = data.get("choices") or []
+        choice = choices[0] if choices else {}
+        answer = str(((choice.get("message") or {}).get("content")) or choice.get("text") or "").strip()
+        if not answer:
+            raise RuntimeError("Cerebras returned an empty answer. Check the selected model and account quota.")
+        return answer
+
     if provider == "cloudflare":
         account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
         api_token = os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")
@@ -748,6 +780,8 @@ def test_model_connection():
             lower_model = requested_model.lower()
             if lower_model.startswith("@cf/"):
                 provider = "cloudflare"
+            elif lower_model.startswith(("zai-", "llama", "qwen", "deepseek", "gpt-oss")):
+                provider = "cerebras"
             elif lower_model.startswith("gemini-"):
                 provider = "gemini"
             elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
@@ -755,12 +789,12 @@ def test_model_connection():
             else:
                 return jsonify({"ok": False, "error": "Select the provider for this custom model ID."}), 400
         else:
-            provider = next((p for p in ("cloudflare", "gemini") if p in available), None)
+            provider = next((p for p in ("cerebras", "cloudflare", "gemini") if p in available), None)
     elif requested == "compare":
-        provider = next((p for p in ("cloudflare", "gemini") if p in available), None)
+        provider = next((p for p in ("cerebras", "cloudflare", "gemini") if p in available), None)
     else:
         provider = requested
-    if provider not in {"gemini", "openai", "cloudflare"} or provider not in available:
+    if provider not in {"gemini", "openai", "cloudflare", "cerebras"} or provider not in available:
         return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server. Auto mode only tests configured free-first providers."}), 503
     started = time.monotonic()
     try:
@@ -793,7 +827,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
-    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare"}:
+    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare", "cerebras"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
     if not isinstance(attachments, list) or len(attachments) > 3:
         return jsonify({"error": "Attach up to 3 files per message."}), 400
@@ -851,6 +885,8 @@ def chat():
             lower_model = requested_model.lower()
             if lower_model.startswith("@cf/"):
                 preferred = "cloudflare"
+            elif lower_model.startswith(("zai-", "llama", "qwen", "deepseek", "gpt-oss")):
+                preferred = "cerebras"
             elif lower_model.startswith("gemini-"):
                 preferred = "gemini"
             elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
@@ -862,9 +898,9 @@ def chat():
             selected = [preferred]
         else:
             # Free-first auto mode: never silently spend on OpenAI API.
-            selected = [p for p in ("cloudflare", "gemini") if p in available]
+            selected = [p for p in ("cerebras", "cloudflare", "gemini") if p in available]
             if not selected:
-                return jsonify({"error": "No free AI provider is available right now. Configure Cloudflare Workers AI or wait for Gemini quota to reset. OpenAI API is only used when selected explicitly."}), 503
+                return jsonify({"error": "No AI provider is available right now. Configure Cerebras, Cloudflare Workers AI or Gemini in Render Environment. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
         selected = [provider]
     else:
