@@ -1058,23 +1058,50 @@ def chat():
                 labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter"}
                 results = []
                 auto_fallback = provider == "auto" and not web_search and not requested_model
-                if len(selected) == 1 or auto_fallback:
-                    for p in selected:
+                if auto_fallback and len(selected) > 1:
+                    # Race configured free-first providers. Return the first healthy answer,
+                    # rather than waiting for every slow or quota-limited provider.
+                    pool = ThreadPoolExecutor(max_workers=len(selected))
+                    futures = {pool.submit(call_ai_provider, p, prompt_message, attachments=attachments if p == "gemini" else None): p for p in selected}
+                    failures = []
+                    winner = None
+                    for future in as_completed(futures):
+                        p = futures[future]
                         try:
-                            reply = call_ai_provider(
-                                p, prompt_message,
-                                web_search=web_search and p == "gemini",
-                                model_override=(requested_model or GEMINI_QUICK_MODEL) if provider == "gemini_quick" else (requested_model if len(selected) == 1 else None),
-                                attachments=attachments if p == "gemini" else None
-                            )
-                            results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
-                            if auto_fallback:
-                                break
+                            reply = future.result()
+                            winner = {"provider": p, "name": labels[p], "reply": reply, "ok": True}
+                            break
                         except Exception as exc:
-                            app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
-                            results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
-                            if not auto_fallback:
-                                break
+                            app.logger.warning("AI provider failed provider=%s user_id=%s: %s", p, user["id"], str(exc)[:300])
+                            failures.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                    pool.shutdown(wait=False, cancel_futures=True)
+                    if winner:
+                        results = [winner]
+                        selected = [winner["provider"]]
+                    else:
+                        results = failures
+                        # OpenAI is a paid fallback, used only after configured free-first providers fail.
+                        if "openai" in available:
+                            try:
+                                reply = call_ai_provider("openai", prompt_message)
+                                results.append({"provider": "openai", "name": labels["openai"], "reply": reply, "ok": True})
+                                selected = ["openai"]
+                            except Exception as exc:
+                                app.logger.warning("AI provider failed provider=openai user_id=%s: %s", user["id"], str(exc)[:300])
+                                results.append({"provider": "openai", "name": labels["openai"], "reply": str(exc), "ok": False})
+                elif len(selected) == 1:
+                    p = selected[0]
+                    try:
+                        reply = call_ai_provider(
+                            p, prompt_message,
+                            web_search=web_search and p == "gemini",
+                            model_override=(requested_model or GEMINI_QUICK_MODEL) if provider == "gemini_quick" else requested_model,
+                            attachments=attachments if p == "gemini" else None
+                        )
+                        results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
+                    except Exception as exc:
+                        app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
+                        results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
                         futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini", attachments=attachments if p == "gemini" else None): p for p in selected}
