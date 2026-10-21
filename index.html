@@ -154,10 +154,10 @@ async function gen(c,im){
   // Authenticate before adding the assistant's typing bubble. An expired session
   // must show the sign-in screen, not look like an AI request that spins forever.
   let a=null;
-  busy=true;upd();sv();
+  busy=true;sv();
   try{
     const token=await ensureAuth();
-    a={r:'assistant',c:''};c.m.push(a);render();sv();
+    a={r:'assistant',c:''};c.m.push(a);upd();render();sv();
     const attachments=[];
     for(const file of (im||[])){
       const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read attached image.'));reader.readAsDataURL(file)});
