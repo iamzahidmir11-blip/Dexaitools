@@ -103,12 +103,57 @@ const sys=()=>`You are ${BR}, a helpful AI assistant inside a chat app. Reply in
 async function send(t){t=(t||'').trim();if(busy||(!t&&!att.length))return;let c=cur();if(!c){c={id:Date.now(),t:(t||att[0].n).slice(0,40),m:[]};st.chats.unshift(c);st.cur=c.id}
 const im=att.filter(a=>a.b).map(a=>a.b);let body=t;att.filter(a=>a.t!=null).forEach(a=>body+=`\n\n[File: ${a.n}]\n${a.t}`);
 c.m.push({r:'user',c:body||'(see attachment)',d:t,f:att.map(a=>a.n).join(', ')});att=[];inp.value='';chips();gen(c,im)}
+async function ensureAuth(){
+  const saved=localStorage.getItem('cm_auth_token');
+  if(saved){
+    try{const check=await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+saved}});if(check.ok)return saved}catch(e){}
+    localStorage.removeItem('cm_auth_token');
+  }
+  return new Promise(resolve=>{
+    let mode='login';
+    const draw=()=>sub('CumuloMind AI account',`<form id="cmAuthForm" class="note" style="max-width:420px;margin:0 auto">
+      <p class="mu">Sign in to chat with CumuloMind AI.</p>
+      <label class="rw" style="display:block"><span>Email</span><input name="email" type="email" required autocomplete="email" style="display:block;width:100%;padding:12px;border-radius:12px;background:var(--s1);color:var(--tx);border:1px solid var(--ln)"></label>
+      <label class="rw" style="display:block"><span>Password</span><input name="password" type="password" required minlength="8" autocomplete="${mode==='login'?'current-password':'new-password'}" style="display:block;width:100%;padding:12px;border-radius:12px;background:var(--s1);color:var(--tx);border:1px solid var(--ln)"></label>
+      ${mode==='signup'?'<label class="rw" style="display:block"><span>Your name</span><input name="name" autocomplete="name" style="display:block;width:100%;padding:12px;border-radius:12px;background:var(--s1);color:var(--tx);border:1px solid var(--ln)"></label>':''}
+      <p id="cmAuthError" class="mu" role="status"></p>
+      <button class="wb" type="submit">${mode==='login'?'Sign in':'Create account'}</button>
+      <button class="rw" type="button" id="cmAuthSwitch"><span>${mode==='login'?'New here? Create an account':'Already have an account? Sign in'}</span></button>
+    </form>`);
+    $('#cmAuthSwitch').onclick=()=>{mode=mode==='login'?'signup':'login';draw()};
+    $('#cmAuthForm').onsubmit=async e=>{
+      e.preventDefault();
+      const form=e.currentTarget,fd=new FormData(form),btn=form.querySelector('[type="submit"]'),err=$('#cmAuthError');
+      btn.disabled=true;btn.textContent='Connecting…';err.textContent='';
+      try{
+        const payload={email:String(fd.get('email')||'').trim(),password:String(fd.get('password')||'')};
+        if(mode==='signup')payload.name=String(fd.get('name')||'').trim();
+        const resp=await fetch(mode==='login'?'/api/auth/login':'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const data=await resp.json().catch(()=>({}));
+        if(!resp.ok)throw new Error(data.error||'Account service is unavailable.');
+        if(!data.token)throw new Error('The server did not return a sign-in token.');
+        localStorage.setItem('cm_auth_token',data.token);pg('#sub',0);resolve(data.token);
+      }catch(err2){err.textContent=err2.message||'Could not sign in. Please try again.';btn.disabled=false;btn.textContent=mode==='login'?'Sign in':'Create account'}
+    };
+  });
+}
 async function gen(c,im){const a={r:'assistant',c:''};c.m.push(a);busy=true;upd();render();sv();
-try{const S=window.claude&&await claude.use('sample');if(!S)throw{message:'The assistant is unavailable here. Open this page from claude.ai and allow access.'};
-if(im.length&&!(await S.limits()).images){im=[];toast('Images are not supported here')}
-const h=c.m.slice(0,-1).map(x=>({role:x.r,content:x.c}));h[0].content=sys()+'\n\n'+h[0].content;ctl=new AbortController();
-const r=await S(h,{cache:false,signal:ctl.signal,modelTier:think?'complex':'default',...(im.length?{images:im}:{}),onText:u=>{a.c=u.text;paint()}});a.c=r.text;st.n++}
-catch(e){if(!a.c)a.c=ctl&&ctl.signal.aborted?'(Stopped)':'⚠️ '+(e&&e.message||'Something went wrong. Try again.')}
+try{
+  const token=await ensureAuth();
+  const attachments=[];
+  for(const file of (im||[])){
+    const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read attached image.'));reader.readAsDataURL(file)});
+    attachments.push({mime_type:file.type||'image/jpeg',data:dataUrl.split(',')[1]||''});
+  }
+  ctl=new AbortController();
+  const userMessage=c.m.slice(0,-1).filter(x=>x.r==='user').at(-1);
+  const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
+  const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok){if(resp.status===401)localStorage.removeItem('cm_auth_token');throw new Error(data.error||('Request failed ('+resp.status+').'))}
+  a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
+  st.n++;
+}catch(e){if(!a.c)a.c=ctl&&ctl.signal.aborted?'(Stopped)':'⚠️ '+(e&&e.message||'Something went wrong. Try again.')}
 busy=false;ctl=null;upd();sv();render();if((st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);vm=0}
 function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[*`#]/g,''));u.lang=st.vl;speechSynthesis.speak(u)}catch(e){toast('Speech is not supported')}}
 function dict(auto){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return toast('Voice input is not supported in this browser');const r=new R(),b=$('#bMic');r.lang=st.vl;r.interimResults=true;
