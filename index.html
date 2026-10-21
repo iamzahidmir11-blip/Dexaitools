@@ -154,7 +154,7 @@ async function gen(c,im){
   // Authenticate before adding the assistant's typing bubble. An expired session
   // must show the sign-in screen, not look like an AI request that spins forever.
   let a=null;
-  busy=true;sv();
+  busy=true;sv();render();
   try{
     const token=await ensureAuth();
     a={r:'assistant',c:''};c.m.push(a);upd();render();sv();
