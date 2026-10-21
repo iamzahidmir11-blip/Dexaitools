@@ -152,7 +152,7 @@ try{
   }
   ctl=new AbortController();
   requestTimedOut=false;
-  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},55000);
+  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},115000);
   const userMessage=c.m.slice(0,-1).filter(x=>x.r==='user').at(-1);
   const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
   const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
