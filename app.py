@@ -161,7 +161,7 @@ def server_error(_error):
 
 @app.route("/", methods=["GET"])
 def home():
-    # Serve the premium DexAI frontend from the same public URL as the API.
+    # Serve the premium CumuloMind AI frontend from the same public URL as the API.
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
 @app.route("/health", methods=["GET"])
@@ -382,8 +382,8 @@ def billing_checkout():
             "success_url": FRONTEND_URL + "/?billing=success&session_id={CHECKOUT_SESSION_ID}#plans",
             "cancel_url": FRONTEND_URL + "/?billing=cancel#plans",
             "client_reference_id": user["id"],
-            "metadata": {"user_id": user["id"], "plan": plan, "app": "DexAI"},
-            "subscription_data": {"metadata": {"user_id": user["id"], "plan": plan, "app": "DexAI"}},
+            "metadata": {"user_id": user["id"], "plan": plan, "app": "CumuloMind AI"},
+            "subscription_data": {"metadata": {"user_id": user["id"], "plan": plan, "app": "CumuloMind AI"}},
             "allow_promotion_codes": True
         }
         if row and row["stripe_customer_id"]:
@@ -764,7 +764,7 @@ def test_model_connection():
         return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server. Auto mode only tests configured free-first providers."}), 503
     started = time.monotonic()
     try:
-        answer = call_ai_provider(provider, "Reply with exactly: DexAI model connection successful.", model_override=requested_model)
+        answer = call_ai_provider(provider, "Reply with exactly: CumuloMind AI model connection successful.", model_override=requested_model)
         if not answer.strip():
             raise RuntimeError("The provider returned an empty test response.")
         elapsed_ms = int((time.monotonic() - started) * 1000)
@@ -780,7 +780,7 @@ def chat():
         return "", 204
     user = current_user()
     if not user:
-        return jsonify({"error": "Please sign in or create a DexAI account before chatting.", "code": "AUTH_REQUIRED"}), 401
+        return jsonify({"error": "Please sign in or create a CumuloMind AI account before chatting.", "code": "AUTH_REQUIRED"}), 401
 
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
@@ -841,10 +841,10 @@ def chat():
         selected = available
     elif provider == "brain":
         if requested_model:
-            return jsonify({"error": "Clear the custom model ID to use DexAI Brain mode."}), 400
+            return jsonify({"error": "Clear the custom model ID to use CumuloMind AI Brain mode."}), 400
         selected = [p for p in ("cloudflare", "gemini") if p in available]
         if len(selected) < 2:
-            return jsonify({"error": "DexAI Brain needs two configured free-first engines (Cloudflare Workers AI and Gemini). Configure both, or choose Auto for the fastest available engine."}), 503
+            return jsonify({"error": "CumuloMind AI Brain needs two configured free-first engines (Cloudflare Workers AI and Gemini). Configure both, or choose Auto for the fastest available engine."}), 503
     elif provider == "auto":
         # Respect a typed model ID without silently switching providers or spending on OpenAI.
         if requested_model:
@@ -913,7 +913,7 @@ def chat():
                 scored.sort(key=lambda item: item[0], reverse=True)
                 memory_rows = [item[1] for item in scored[:3]]
 
-            dexai_system_prompt = (
+            cumulomind_system_prompt = (
                 "You are CumuloMind AI, a capable, practical AI assistant. Give thoughtful, genuinely useful answers rather than generic filler. "
                 "Understand the user's actual goal and answer it directly first. Adapt depth to the task: be concise for simple questions, but provide complete, step-by-step detail for complex tasks and coding requests. "
                 "When context is available, use it consistently; explain assumptions and ask a question only if essential information is missing. "
@@ -926,17 +926,17 @@ def chat():
             memory_context = ""
             if recent_rows:
                 memory_context = "\n".join(
-                    ("User: " if row["role"] == "user" else "DexAI: ") + row["content"][:1200]
+                    ("User: " if row["role"] == "user" else "CumuloMind AI: ") + row["content"][:1200]
                     for row in recent_rows
                 )
             if memory_rows:
                 retrieved = "\n".join(
-                    ("Earlier User: " if row["role"] == "user" else "Earlier DexAI: ") + str(row["content"])[:700]
+                    ("Earlier User: " if row["role"] == "user" else "Earlier CumuloMind AI: ") + str(row["content"])[:700]
                     for row in memory_rows
                 )
                 memory_context += ("\n\nRelevant memory from earlier chats:\n" if memory_context else "Relevant memory from earlier chats:\n") + retrieved
             prompt_message = (
-                dexai_system_prompt + ("\n\nConversation and relevant memory:\n" + memory_context if memory_context else "")
+                cumulomind_system_prompt + ("\n\nConversation and relevant memory:\n" + memory_context if memory_context else "")
                 + "\n\nCurrent user message:\n" + message
             )
             if provider == "gemini_quick":
@@ -1017,7 +1017,7 @@ def chat():
                     )
                     judge = successes[0]["provider"]
                     synthesis_prompt = (
-                        "You are DexAI's answer editor. Produce one accurate, coherent final answer to the user's request. "
+                        "You are CumuloMind AI's answer editor. Produce one accurate, coherent final answer to the user's request. "
                         "Compare the candidate answers, keep useful details, correct contradictions where possible, remove repetition, "
                         "and never claim certainty where the candidates disagree. Do not mention internal drafts unless relevant.\n\n"
                         "Original request and relevant context:\n" + prompt_message[:10000]
@@ -1025,9 +1025,9 @@ def chat():
                     )
                     try:
                         answer = call_ai_provider(judge, synthesis_prompt)
-                        results.append({"provider": "brain-synthesis", "name": "DexAI Brain synthesis", "reply": answer, "ok": True})
+                        results.append({"provider": "brain-synthesis", "name": "CumuloMind AI Brain synthesis", "reply": answer, "ok": True})
                     except Exception:
-                        app.logger.exception("DexAI Brain synthesis failed; using first successful draft")
+                        app.logger.exception("CumuloMind AI Brain synthesis failed; using first successful draft")
                         answer = successes[0]["reply"]
                 elif len(selected) == 1:
                     answer = successes[0]["reply"]
