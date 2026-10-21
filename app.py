@@ -1015,8 +1015,11 @@ def chat():
             # Free-first auto mode: try every configured free provider, including Cloudflare.
             # OpenAI remains opt-in so Auto never triggers potentially billable API usage.
             selected = [p for p in ("groq", "cerebras", "openrouter", "gemini", "cloudflare", "deepseek", "qwen", "together", "mistral") if p in available]
+            if not selected and "openai" in available:
+                # If OpenAI is the only configured engine, use it directly.
+                selected = ["openai"]
             if not selected:
-                return jsonify({"error": "No AI provider is available right now. Configure Cerebras, Cloudflare Workers AI or Gemini in Render Environment. OpenAI API is only used when selected explicitly."}), 503
+                return jsonify({"error": "No AI provider is available right now. Configure at least one valid AI provider key in Render Environment."}), 503
     elif provider in available:
         selected = [provider]
     else:
@@ -1106,7 +1109,7 @@ def chat():
                 from concurrent.futures import ThreadPoolExecutor, as_completed
                 labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter", "deepseek": "DeepSeek", "qwen": "Qwen", "together": "Together AI", "mistral": "Mistral AI"}
                 results = []
-                auto_fallback = provider == "auto" and not web_search and not requested_model
+                auto_fallback = provider == "auto" and not web_search and not requested_model and any(p != "openai" for p in selected)
                 if auto_fallback:
                     # Race configured free-first providers. Return the first healthy answer,
                     # rather than waiting for every slow or quota-limited provider.
