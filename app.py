@@ -754,21 +754,36 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         api_token = os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")
         if not account_id or not api_token:
             raise RuntimeError("Cloudflare Workers AI is not configured.")
-        model = (model_override or os.getenv("CLOUDFLARE_AI_MODEL", "@cf/meta/llama-3.1-8b-instruct")).strip()[:200]
-        url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/run/" + model
+        model = (model_override or os.getenv("CLOUDFLARE_AI_MODEL", "@cf/zai-org/glm-4.7-flash")).strip()[:200]
         payload = {"messages": [{"role": "user", "content": message}]}
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Authorization": "Bearer " + api_token, "Content-Type": "application/json"},
-            method="POST"
-        )
-        try:
+
+        def run_cloudflare_model(model_name):
+            url = "https://api.cloudflare.com/client/v4/accounts/" + account_id + "/ai/run/" + model_name
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Authorization": "Bearer " + api_token, "Content-Type": "application/json"},
+                method="POST"
+            )
             with urllib.request.urlopen(req, timeout=45) as response:
-                data = json.loads(response.read().decode("utf-8"))
+                return json.loads(response.read().decode("utf-8"))
+
+        try:
+            data = run_cloudflare_model(model)
         except urllib.error.HTTPError as exc:
-            app.logger.warning("Cloudflare Workers AI returned HTTP %s", exc.code)
-            raise RuntimeError("Cloudflare AI request failed. Check token permissions, model access and credits.")
+            # Cloudflare deprecated the old Llama 3.1 8B model on May 30, 2026.
+            # Retry once on the recommended replacement if an old environment override remains.
+            if exc.code == 410 and "llama-3.1-8b-instruct" in model:
+                fallback_model = os.getenv("CLOUDFLARE_AI_FALLBACK_MODEL", "@cf/zai-org/glm-4.7-flash").strip()[:200]
+                app.logger.warning("Cloudflare model %s returned HTTP 410; retrying with %s", model, fallback_model)
+                try:
+                    data = run_cloudflare_model(fallback_model)
+                except urllib.error.HTTPError as retry_exc:
+                    app.logger.warning("Cloudflare fallback model returned HTTP %s", retry_exc.code)
+                    raise RuntimeError("Cloudflare AI request failed on the replacement model. Check token permissions, model access and credits.")
+            else:
+                app.logger.warning("Cloudflare Workers AI returned HTTP %s", exc.code)
+                raise RuntimeError("Cloudflare AI request failed. Check token permissions, model access and credits.")
         result = data.get("result") or {}
         # Workers AI models do not all return the same response shape.
         # Support both the classic {result: {response: ...}} format and
