@@ -581,28 +581,12 @@ def generate_image():
 
 
 def configured_providers():
-    providers = []
+    # Temporary single-provider mode while diagnosing chat replies.
+    # All other provider integrations remain in the code but are not exposed
+    # to chat routing until Gemini is verified working.
     if os.getenv("GEMINI_API_KEY"):
-        providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
-    if os.getenv("OPENAI_API_KEY"):
-        providers.append({"id": "openai", "name": "OpenAI API", "configured": True})
-    if os.getenv("GROQ_API_KEY"):
-        providers.append({"id": "groq", "name": "Groq Inference", "configured": True})
-    if os.getenv("CEREBRAS_API_KEY"):
-        providers.append({"id": "cerebras", "name": "Cerebras Inference", "configured": True})
-    if os.getenv("OPENROUTER_API_KEY"):
-        providers.append({"id": "openrouter", "name": "OpenRouter", "configured": True})
-    if os.getenv("DEEPSEEK_API_KEY"):
-        providers.append({"id": "deepseek", "name": "DeepSeek", "configured": True})
-    if os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY"):
-        providers.append({"id": "qwen", "name": "Qwen / Alibaba DashScope", "configured": True})
-    if os.getenv("TOGETHER_API_KEY"):
-        providers.append({"id": "together", "name": "Together AI", "configured": True})
-    if os.getenv("MISTRAL_API_KEY"):
-        providers.append({"id": "mistral", "name": "Mistral AI", "configured": True})
-    if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
-        providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
-    return providers
+        return [{"id": "gemini", "name": "Google Gemini", "configured": True}]
+    return []
 
 def call_ai_provider(provider, message, web_search=False, model_override=None, attachments=None):
     import json
