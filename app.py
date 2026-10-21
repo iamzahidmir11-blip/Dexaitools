@@ -19,6 +19,8 @@ app.config["MAX_CONTENT_LENGTH"] = 28 * 1024 * 1024
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://iamzahidmir11-blip.github.io/Dexaitools").rstrip("/")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_QUICK_MODEL = os.getenv("GEMINI_QUICK_MODEL", "gemini-3.5-flash-lite")
+GEMINI_TIMEOUT_MS = max(10000, min(int(os.getenv("GEMINI_TIMEOUT_MS", "45000")), 120000))
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 PLUS_DAILY_LIMIT = int(os.getenv("PLUS_DAILY_LIMIT", "50"))
@@ -556,7 +558,7 @@ def generate_image():
             ).fetchone()["n"]
             if used >= limit:
                 return jsonify({"error": "You have reached today’s creative allowance for your plan. Please come back after the daily reset."}), 429
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=GEMINI_TIMEOUT_MS))
             image_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
             response = client.models.generate_content(
                 model=image_model,
@@ -962,7 +964,7 @@ def chat():
                             reply = call_ai_provider(
                                 p, prompt_message,
                                 web_search=web_search and p == "gemini",
-                                model_override=requested_model if len(selected) == 1 else None,
+                                model_override=(requested_model or GEMINI_QUICK_MODEL) if provider == "gemini_quick" else (requested_model if len(selected) == 1 else None),
                                 attachments=attachments if p == "gemini" else None
                             )
                             results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
