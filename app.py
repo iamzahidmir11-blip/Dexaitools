@@ -493,9 +493,9 @@ def plans():
         "currency": "USD",
         "billing_ready": stripe_ready,
         "plans": [
-            {"id": "free", "name": "Free", "monthly_price": 0, "daily_messages": plan_limit("free"), "features": ["Core chat", "Saved account history", "Starter tools"]},
-            {"id": "pro", "name": "Pro", "monthly_price": 12, "daily_messages": plan_limit("pro"), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_price), "features": ["Higher daily AI access", "Creative tools", "Personal workspace"]},
-            {"id": "pro_plus", "name": "Pro Plus", "monthly_price": 25, "daily_messages": plan_limit("pro_plus"), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_plus_price), "features": ["Expanded daily access", "Advanced workflows", "Power-user workspace"]}
+            {"id": "free", "name": "Free", "monthly_price": 0, "daily_messages": (plan_limit("free") or None), "features": ["Core chat", "Saved account history", "Starter tools"]},
+            {"id": "pro", "name": "Pro", "monthly_price": 12, "daily_messages": (plan_limit("pro") or None), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_price), "features": ["Higher daily AI access", "Creative tools", "Personal workspace"]},
+            {"id": "pro_plus", "name": "Pro Plus", "monthly_price": 25, "daily_messages": (plan_limit("pro_plus") or None), "checkout_ready": bool(os.getenv("STRIPE_SECRET_KEY") and pro_plus_price), "features": ["Expanded daily access", "Advanced workflows", "Power-user workspace"]}
         ]
     })
 
