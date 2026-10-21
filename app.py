@@ -1009,8 +1009,9 @@ def chat():
                 return jsonify({"error": "The provider for this model ID is not configured on the server. Check its API credentials in Render Environment."}), 503
             selected = [preferred]
         else:
-            # Free-first auto mode: never silently spend on OpenAI API.
-            selected = [p for p in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral") if p in available]
+            # Free-first auto mode: try every configured free provider, including Cloudflare.
+            # OpenAI remains opt-in so Auto never triggers potentially billable API usage.
+            selected = [p for p in ("groq", "cerebras", "openrouter", "gemini", "cloudflare", "deepseek", "qwen", "together", "mistral") if p in available]
             if not selected:
                 return jsonify({"error": "No AI provider is available right now. Configure Cerebras, Cloudflare Workers AI or Gemini in Render Environment. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
