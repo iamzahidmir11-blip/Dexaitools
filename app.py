@@ -1129,8 +1129,19 @@ def chat():
                         selected = [winner["provider"]]
                     else:
                         results = failures
-                        # All configured auto providers were already tried concurrently.
-                        # Do not repeat the same calls serially: that can exceed the web worker timeout.
+                        # Free-first providers all failed. If the request has no attachments
+                        # or web search, use explicitly configured OpenAI as the final backup.
+                        # This is intentionally last because OpenAI usage may be billable.
+                        if "openai" in available and not attachments and not web_search:
+                            try:
+                                reply = call_ai_provider("openai", prompt_message)
+                                winner = {"provider": "openai", "name": labels["openai"], "reply": reply, "ok": True}
+                                results = [winner]
+                                selected = ["openai"]
+                                app.logger.info("CHAT_DIAG auto_fallback_success provider=openai user_id=%s", user["id"])
+                            except Exception as exc:
+                                app.logger.warning("AI provider failed provider=openai user_id=%s: %s", user["id"], str(exc)[:300])
+                                results.append({"provider": "openai", "name": labels["openai"], "reply": str(exc), "ok": False})
                 elif len(selected) == 1:
                     p = selected[0]
                     try:
