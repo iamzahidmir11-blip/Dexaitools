@@ -18,8 +18,8 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 28 * 1024 * 1024
 ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://dexaitools.onrender.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://dexaitools.onrender.com").rstrip("/")
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-GEMINI_QUICK_MODEL = os.getenv("GEMINI_QUICK_MODEL", "gemini-3.5-flash-lite")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_QUICK_MODEL = os.getenv("GEMINI_QUICK_MODEL", "gemini-2.5-flash-lite")
 GEMINI_TIMEOUT_MS = max(10000, min(int(os.getenv("GEMINI_TIMEOUT_MS", "45000")), 120000))
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
@@ -592,6 +592,14 @@ def configured_providers():
         providers.append({"id": "cerebras", "name": "Cerebras Inference", "configured": True})
     if os.getenv("OPENROUTER_API_KEY"):
         providers.append({"id": "openrouter", "name": "OpenRouter", "configured": True})
+    if os.getenv("DEEPSEEK_API_KEY"):
+        providers.append({"id": "deepseek", "name": "DeepSeek", "configured": True})
+    if os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY"):
+        providers.append({"id": "qwen", "name": "Qwen / Alibaba DashScope", "configured": True})
+    if os.getenv("TOGETHER_API_KEY"):
+        providers.append({"id": "together", "name": "Together AI", "configured": True})
+    if os.getenv("MISTRAL_API_KEY"):
+        providers.append({"id": "mistral", "name": "Mistral AI", "configured": True})
     if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
@@ -815,6 +823,31 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             raise RuntimeError("Cloudflare AI returned an empty answer. The selected model may use an unsupported response format.")
         return answer
 
+    compatible = {
+        "deepseek": {"key": os.getenv("DEEPSEEK_API_KEY"), "url": "https://api.deepseek.com/chat/completions", "model": os.getenv("DEEPSEEK_MODEL", "deepseek-chat"), "label": "DeepSeek"},
+        "qwen": {"key": os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY"), "url": os.getenv("QWEN_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"), "model": os.getenv("QWEN_MODEL", "qwen-plus"), "label": "Qwen"},
+        "together": {"key": os.getenv("TOGETHER_API_KEY"), "url": "https://api.together.xyz/v1/chat/completions", "model": os.getenv("TOGETHER_MODEL", "meta-llama/Llama-3.3-70B-Instruct-Turbo"), "label": "Together AI"},
+        "mistral": {"key": os.getenv("MISTRAL_API_KEY"), "url": "https://api.mistral.ai/v1/chat/completions", "model": os.getenv("MISTRAL_MODEL", "mistral-small-latest"), "label": "Mistral AI"}
+    }
+    if provider in compatible:
+        cfg = compatible[provider]
+        if not cfg["key"]:
+            raise RuntimeError(cfg["label"] + " API is not configured.")
+        payload = {"model": (model_override or cfg["model"]).strip()[:200], "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("OTHER_AI_MAX_OUTPUT_TOKENS", "4096"))}
+        req = urllib.request.Request(cfg["url"], data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + cfg["key"], "Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=40) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("%s API returned HTTP %s", provider, exc.code)
+            raise RuntimeError(cfg["label"] + " request failed. Check API key, model access, quota and billing.")
+        choices = data.get("choices") or []
+        choice = choices[0] if choices else {}
+        answer = str(((choice.get("message") or {}).get("content")) or choice.get("text") or "").strip()
+        if not answer:
+            raise RuntimeError(cfg["label"] + " returned an empty answer.")
+        return answer
+
     raise RuntimeError("Unknown AI provider.")
 
 @app.route("/api/providers", methods=["GET", "OPTIONS"])
@@ -843,8 +876,14 @@ def test_model_connection():
                 provider = "groq"
             elif "/" in lower_model or lower_model.startswith("openrouter/"):
                 provider = "openrouter"
-            elif lower_model.startswith(("zai-", "qwen", "deepseek", "gpt-oss")):
+            elif lower_model.startswith(("zai-", "gpt-oss")):
                 provider = "cerebras"
+            elif lower_model.startswith("qwen"):
+                provider = "qwen"
+            elif lower_model.startswith("deepseek"):
+                provider = "deepseek"
+            elif lower_model.startswith("mistral-"):
+                provider = "mistral"
             elif lower_model.startswith("gemini-"):
                 provider = "gemini"
             elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
@@ -857,7 +896,7 @@ def test_model_connection():
         provider = next((p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available), None)
     else:
         provider = requested
-    if provider not in {"gemini", "openai", "cloudflare", "cerebras", "groq", "openrouter"} or provider not in available:
+    if provider not in {"gemini", "openai", "cloudflare", "cerebras", "groq", "openrouter", "deepseek", "qwen", "together", "mistral"} or provider not in available:
         return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server. Auto mode only tests configured free-first providers."}), 503
     started = time.monotonic()
     try:
@@ -890,7 +929,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
-    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare", "cerebras", "groq", "openrouter"}:
+    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare", "cerebras", "groq", "openrouter", "deepseek", "qwen", "together", "mistral"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
     if not isinstance(attachments, list) or len(attachments) > 3:
         return jsonify({"error": "Attach up to 3 files per message."}), 400
@@ -952,8 +991,14 @@ def chat():
                 preferred = "groq"
             elif "/" in lower_model or lower_model.startswith("openrouter/"):
                 preferred = "openrouter"
-            elif lower_model.startswith(("zai-", "qwen", "deepseek", "gpt-oss")):
+            elif lower_model.startswith(("zai-", "gpt-oss")):
                 preferred = "cerebras"
+            elif lower_model.startswith("qwen"):
+                preferred = "qwen"
+            elif lower_model.startswith("deepseek"):
+                preferred = "deepseek"
+            elif lower_model.startswith("mistral-"):
+                preferred = "mistral"
             elif lower_model.startswith("gemini-"):
                 preferred = "gemini"
             elif lower_model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt-")):
@@ -1055,7 +1100,7 @@ def chat():
                 results = [{"provider": provider, "name": "Cached answer", "reply": answer, "ok": True}]
             else:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
-                labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter"}
+                labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter", "deepseek": "DeepSeek", "qwen": "Qwen", "together": "Together AI", "mistral": "Mistral AI"}
                 results = []
                 auto_fallback = provider == "auto" and not web_search and not requested_model
                 if auto_fallback and len(selected) > 1:
@@ -1080,15 +1125,18 @@ def chat():
                         selected = [winner["provider"]]
                     else:
                         results = failures
-                        # OpenAI is a paid fallback, used only after configured free-first providers fail.
-                        if "openai" in available:
+                        # Last-resort fallback: try configured backup providers one by one.
+                        for backup in ("openai", "deepseek", "qwen", "together", "mistral"):
+                            if backup not in available:
+                                continue
                             try:
-                                reply = call_ai_provider("openai", prompt_message)
-                                results.append({"provider": "openai", "name": labels["openai"], "reply": reply, "ok": True})
-                                selected = ["openai"]
+                                reply = call_ai_provider(backup, prompt_message)
+                                results.append({"provider": backup, "name": labels[backup], "reply": reply, "ok": True})
+                                selected = [backup]
+                                break
                             except Exception as exc:
-                                app.logger.warning("AI provider failed provider=openai user_id=%s: %s", user["id"], str(exc)[:300])
-                                results.append({"provider": "openai", "name": labels["openai"], "reply": str(exc), "ok": False})
+                                app.logger.warning("AI fallback failed provider=%s user_id=%s: %s", backup, user["id"], str(exc)[:300])
+                                results.append({"provider": backup, "name": labels[backup], "reply": str(exc), "ok": False})
                 elif len(selected) == 1:
                     p = selected[0]
                     try:
@@ -1100,8 +1148,20 @@ def chat():
                         )
                         results.append({"provider": p, "name": labels[p], "reply": reply, "ok": True})
                     except Exception as exc:
-                        app.logger.exception("AI provider call failed provider=%s user_id=%s", p, user["id"])
+                        app.logger.warning("AI provider failed provider=%s user_id=%s: %s", p, user["id"], str(exc)[:300])
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
+                        if auto_fallback:
+                            for backup in ("openai", "deepseek", "qwen", "together", "mistral"):
+                                if backup not in available or backup == p:
+                                    continue
+                                try:
+                                    reply = call_ai_provider(backup, prompt_message)
+                                    results.append({"provider": backup, "name": labels[backup], "reply": reply, "ok": True})
+                                    selected = [backup]
+                                    break
+                                except Exception as backup_exc:
+                                    app.logger.warning("AI fallback failed provider=%s user_id=%s: %s", backup, user["id"], str(backup_exc)[:300])
+                                    results.append({"provider": backup, "name": labels[backup], "reply": str(backup_exc), "ok": False})
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
                         futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini", attachments=attachments if p == "gemini" else None): p for p in selected}
