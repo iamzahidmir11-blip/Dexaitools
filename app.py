@@ -978,7 +978,7 @@ def chat():
     elif provider == "brain":
         if requested_model:
             return jsonify({"error": "Clear the custom model ID to use CumuloMind AI Brain mode."}), 400
-        selected = [p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available]
+        selected = [p for p in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral") if p in available]
         if len(selected) < 2:
             return jsonify({"error": "CumuloMind AI Brain needs two configured free-first engines (Cloudflare Workers AI and Gemini). Configure both, or choose Auto for the fastest available engine."}), 503
     elif provider == "auto":
@@ -1010,7 +1010,7 @@ def chat():
             selected = [preferred]
         else:
             # Free-first auto mode: never silently spend on OpenAI API.
-            selected = [p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available]
+            selected = [p for p in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral") if p in available]
             if not selected:
                 return jsonify({"error": "No AI provider is available right now. Configure Cerebras, Cloudflare Workers AI or Gemini in Render Environment. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
@@ -1126,7 +1126,7 @@ def chat():
                     else:
                         results = failures
                         # Last-resort fallback: try configured backup providers one by one.
-                        for backup in ("openai", "deepseek", "qwen", "together", "mistral"):
+                        for backup in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral"):
                             if backup not in available:
                                 continue
                             try:
@@ -1151,7 +1151,7 @@ def chat():
                         app.logger.warning("AI provider failed provider=%s user_id=%s: %s", p, user["id"], str(exc)[:300])
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
                         if auto_fallback:
-                            for backup in ("openai", "deepseek", "qwen", "together", "mistral"):
+                            for backup in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral"):
                                 if backup not in available or backup == p:
                                     continue
                                 try:
