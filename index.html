@@ -120,21 +120,29 @@ async function ensureAuth(){
       <button class="wb" type="submit">${mode==='login'?'Sign in':'Create account'}</button>
       <button class="rw" type="button" id="cmAuthSwitch"><span>${mode==='login'?'New here? Create an account':'Already have an account? Sign in'}</span></button>
     </form>`);
-    $('#cmAuthSwitch').onclick=()=>{mode=mode==='login'?'signup':'login';draw()};
-    $('#cmAuthForm').onsubmit=async e=>{
-      e.preventDefault();
-      const form=e.currentTarget,fd=new FormData(form),btn=form.querySelector('[type="submit"]'),err=$('#cmAuthError');
-      btn.disabled=true;btn.textContent='Connecting…';err.textContent='';
-      try{
-        const payload={email:String(fd.get('email')||'').trim(),password:String(fd.get('password')||'')};
-        if(mode==='signup')payload.name=String(fd.get('name')||'').trim();
-        const resp=await fetch(mode==='login'?'/api/auth/login':'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-        const data=await resp.json().catch(()=>({}));
-        if(!resp.ok)throw new Error(data.error||'Account service is unavailable.');
-        if(!data.token)throw new Error('The server did not return a sign-in token.');
-        localStorage.setItem('cm_auth_token',data.token);pg('#sub',0);resolve(data.token);
-      }catch(err2){err.textContent=err2.message||'Could not sign in. Please try again.';btn.disabled=false;btn.textContent=mode==='login'?'Sign in':'Create account'}
-    };
+    const subPanel=$('#sub');
+    if(!subPanel.dataset.authHandlers){
+      subPanel.dataset.authHandlers='1';
+      subPanel.addEventListener('click',e=>{
+        if(e.target.closest('#cmAuthSwitch')){mode=mode==='login'?'signup':'login';draw()}
+      });
+      subPanel.addEventListener('submit',async e=>{
+        if(e.target.id!=='cmAuthForm')return;
+        e.preventDefault();
+        const form=e.target,fd=new FormData(form),btn=form.querySelector('[type="submit"]'),err=form.querySelector('#cmAuthError');
+        if(!btn||!err)return;
+        btn.disabled=true;btn.textContent='Connecting…';err.textContent='';
+        try{
+          const payload={email:String(fd.get('email')||'').trim(),password:String(fd.get('password')||'')};
+          if(mode==='signup')payload.name=String(fd.get('name')||'').trim();
+          const resp=await fetch(mode==='login'?'/api/auth/login':'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          const data=await resp.json().catch(()=>({}));
+          if(!resp.ok)throw new Error(data.error||'Account service is unavailable.');
+          if(!data.token)throw new Error('The server did not return a sign-in token.');
+          localStorage.setItem('cm_auth_token',data.token);pg('#sub',0);resolve(data.token);
+        }catch(err2){err.textContent=err2.message||'Could not sign in. Please try again.';btn.disabled=false;btn.textContent=mode==='login'?'Sign in':'Create account'}
+      });
+    }
   });
 }
 async function gen(c,im){const a={r:'assistant',c:''};c.m.push(a);busy=true;upd();render();sv();
