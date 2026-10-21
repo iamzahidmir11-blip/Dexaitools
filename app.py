@@ -16,8 +16,8 @@ from google.genai import types
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 28 * 1024 * 1024
-ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://iamzahidmir11-blip.github.io")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://iamzahidmir11-blip.github.io/Dexaitools").rstrip("/")
+ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://dexaitools.onrender.com")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://dexaitools.onrender.com").rstrip("/")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 GEMINI_QUICK_MODEL = os.getenv("GEMINI_QUICK_MODEL", "gemini-3.5-flash-lite")
 GEMINI_TIMEOUT_MS = max(10000, min(int(os.getenv("GEMINI_TIMEOUT_MS", "45000")), 120000))
