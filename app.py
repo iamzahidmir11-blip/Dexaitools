@@ -914,8 +914,10 @@ def test_model_connection():
 def chat():
     if request.method == "OPTIONS":
         return "", 204
+    app.logger.info("CHAT_DIAG request_received auth_header=%s content_type=%s", bool(request.headers.get("Authorization")), request.content_type)
     user = current_user()
     if not user:
+        app.logger.warning("CHAT_DIAG rejected_auth")
         return jsonify({"error": "Please sign in or create a CumuloMind AI account before chatting.", "code": "AUTH_REQUIRED"}), 401
 
     data = request.get_json(silent=True) or {}
@@ -955,6 +957,7 @@ def chat():
     available = [item["id"] for item in configured_providers()]
     if not available:
         return jsonify({"error": "No AI provider is configured on the server yet."}), 503
+    app.logger.info("CHAT_DIAG authenticated provider=%s available=%s attachments=%s web_search=%s", provider, ",".join(available), len(attachments), web_search)
     if attachments:
         if "gemini" not in available:
             return jsonify({"error": "File analysis currently needs Gemini to be configured on the server. Try again after its quota resets."}), 503
@@ -1220,6 +1223,7 @@ def chat():
             if thread_id:
                 conn.execute("UPDATE chat_threads SET updated_at=NOW(), title=CASE WHEN title='New chat' THEN LEFT(%s,120) ELSE title END WHERE id=%s AND user_id=%s", (" ".join(message.split())[:120] or "New chat", thread_id, user["id"]))
             conn.execute("DELETE FROM ai_cache WHERE expires_at <= NOW()")
+        app.logger.info("CHAT_DIAG success provider=%s reply_chars=%s", provider, len(answer))
         return jsonify({
             "reply": answer,
             "results": results,
