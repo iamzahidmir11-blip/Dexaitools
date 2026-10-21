@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://iamzahidmir11-blip.github.io/Dexaitools/sitemap.xml
+Sitemap: https://dexaitools.onrender.com/sitemap.xml
