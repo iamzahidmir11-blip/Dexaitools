@@ -106,8 +106,16 @@ c.m.push({r:'user',c:body||'(see attachment)',d:t,f:att.map(a=>a.n).join(', ')})
 async function ensureAuth(){
   const saved=localStorage.getItem('cm_auth_token');
   if(saved){
-    try{const check=await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+saved}});if(check.ok)return saved}catch(e){}
-    localStorage.removeItem('cm_auth_token');
+    const authCtl=new AbortController();
+    const authTimer=setTimeout(()=>authCtl.abort(),8000);
+    try{
+      const check=await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+saved},signal:authCtl.signal});
+      if(check.ok){clearTimeout(authTimer);return saved;}
+      localStorage.removeItem('cm_auth_token');
+    }catch(e){
+      // Don't leave the chat stuck forever if the session check hangs.
+      localStorage.removeItem('cm_auth_token');
+    }finally{clearTimeout(authTimer);}
   }
   return new Promise(resolve=>{
     let mode='login';
@@ -152,7 +160,7 @@ try{
   }
   ctl=new AbortController();
   requestTimedOut=false;
-  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},115000);
+  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},55000);
   const userMessage=c.m.slice(0,-1).filter(x=>x.r==='user').at(-1);
   const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
   const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
