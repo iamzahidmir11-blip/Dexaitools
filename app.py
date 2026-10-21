@@ -586,8 +586,12 @@ def configured_providers():
         providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
     if os.getenv("OPENAI_API_KEY"):
         providers.append({"id": "openai", "name": "OpenAI API", "configured": True})
+    if os.getenv("GROQ_API_KEY"):
+        providers.append({"id": "groq", "name": "Groq Inference", "configured": True})
     if os.getenv("CEREBRAS_API_KEY"):
         providers.append({"id": "cerebras", "name": "Cerebras Inference", "configured": True})
+    if os.getenv("OPENROUTER_API_KEY"):
+        providers.append({"id": "openrouter", "name": "OpenRouter", "configured": True})
     if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
@@ -601,7 +605,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise RuntimeError("Gemini API is not configured.")
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=GEMINI_TIMEOUT_MS))
         config_options = {"max_output_tokens": int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "2048"))}
         if web_search:
             config_options["tools"] = [types.Tool(google_search=types.GoogleSearch())]
@@ -675,6 +679,26 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             raise RuntimeError("OpenAI returned an empty answer.")
         return answer
 
+    if provider == "groq":
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise RuntimeError("Groq API is not configured.")
+        model = (model_override or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")).strip()[:200]
+        payload = {"model": model, "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("GROQ_MAX_OUTPUT_TOKENS", "4096"))}
+        req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=35) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("Groq API returned HTTP %s", exc.code)
+            raise RuntimeError("Groq request failed. Check the API key, model access, rate limits and account quota.")
+        choices = data.get("choices") or []
+        choice = choices[0] if choices else {}
+        answer = str(((choice.get("message") or {}).get("content")) or choice.get("text") or "").strip()
+        if not answer:
+            raise RuntimeError("Groq returned an empty answer. Check the selected model and account quota.")
+        return answer
+
     if provider == "cerebras":
         api_key = os.getenv("CEREBRAS_API_KEY")
         if not api_key:
@@ -703,6 +727,26 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         answer = str(((choice.get("message") or {}).get("content")) or choice.get("text") or "").strip()
         if not answer:
             raise RuntimeError("Cerebras returned an empty answer. Check the selected model and account quota.")
+        return answer
+
+    if provider == "openrouter":
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise RuntimeError("OpenRouter API is not configured.")
+        model = (model_override or os.getenv("OPENROUTER_MODEL", "openrouter/free")).strip()[:200]
+        payload = {"model": model, "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("OPENROUTER_MAX_OUTPUT_TOKENS", "4096"))}
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json", "HTTP-Referer": os.getenv("FRONTEND_URL", "https://dexaitools.onrender.com"), "X-Title": "CumuloMind AI"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=35) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            app.logger.warning("OpenRouter API returned HTTP %s", exc.code)
+            raise RuntimeError("OpenRouter request failed. Check the API key, model access, credits and rate limits.")
+        choices = data.get("choices") or []
+        choice = choices[0] if choices else {}
+        answer = str(((choice.get("message") or {}).get("content")) or choice.get("text") or "").strip()
+        if not answer:
+            raise RuntimeError("OpenRouter returned an empty answer. Check the selected model and account quota.")
         return answer
 
     if provider == "cloudflare":
@@ -780,7 +824,11 @@ def test_model_connection():
             lower_model = requested_model.lower()
             if lower_model.startswith("@cf/"):
                 provider = "cloudflare"
-            elif lower_model.startswith(("zai-", "llama", "qwen", "deepseek", "gpt-oss")):
+            elif lower_model.startswith(("llama-", "mixtral-", "gemma-", "deepseek-r1-distill-")):
+                provider = "groq"
+            elif "/" in lower_model or lower_model.startswith("openrouter/"):
+                provider = "openrouter"
+            elif lower_model.startswith(("zai-", "qwen", "deepseek", "gpt-oss")):
                 provider = "cerebras"
             elif lower_model.startswith("gemini-"):
                 provider = "gemini"
@@ -789,12 +837,12 @@ def test_model_connection():
             else:
                 return jsonify({"ok": False, "error": "Select the provider for this custom model ID."}), 400
         else:
-            provider = next((p for p in ("cerebras", "cloudflare", "gemini") if p in available), None)
+            provider = next((p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available), None)
     elif requested == "compare":
-        provider = next((p for p in ("cerebras", "cloudflare", "gemini") if p in available), None)
+        provider = next((p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available), None)
     else:
         provider = requested
-    if provider not in {"gemini", "openai", "cloudflare", "cerebras"} or provider not in available:
+    if provider not in {"gemini", "openai", "cloudflare", "cerebras", "groq", "openrouter"} or provider not in available:
         return jsonify({"ok": False, "error": "The selected AI engine is not configured on the server. Auto mode only tests configured free-first providers."}), 503
     started = time.monotonic()
     try:
@@ -827,7 +875,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
-    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare", "cerebras"}:
+    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare", "cerebras", "groq", "openrouter"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
     if not isinstance(attachments, list) or len(attachments) > 3:
         return jsonify({"error": "Attach up to 3 files per message."}), 400
@@ -876,7 +924,7 @@ def chat():
     elif provider == "brain":
         if requested_model:
             return jsonify({"error": "Clear the custom model ID to use CumuloMind AI Brain mode."}), 400
-        selected = [p for p in ("cloudflare", "gemini") if p in available]
+        selected = [p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available]
         if len(selected) < 2:
             return jsonify({"error": "CumuloMind AI Brain needs two configured free-first engines (Cloudflare Workers AI and Gemini). Configure both, or choose Auto for the fastest available engine."}), 503
     elif provider == "auto":
@@ -885,7 +933,11 @@ def chat():
             lower_model = requested_model.lower()
             if lower_model.startswith("@cf/"):
                 preferred = "cloudflare"
-            elif lower_model.startswith(("zai-", "llama", "qwen", "deepseek", "gpt-oss")):
+            elif lower_model.startswith(("llama-", "mixtral-", "gemma-", "deepseek-r1-distill-")):
+                preferred = "groq"
+            elif "/" in lower_model or lower_model.startswith("openrouter/"):
+                preferred = "openrouter"
+            elif lower_model.startswith(("zai-", "qwen", "deepseek", "gpt-oss")):
                 preferred = "cerebras"
             elif lower_model.startswith("gemini-"):
                 preferred = "gemini"
@@ -898,7 +950,7 @@ def chat():
             selected = [preferred]
         else:
             # Free-first auto mode: never silently spend on OpenAI API.
-            selected = [p for p in ("cerebras", "cloudflare", "gemini") if p in available]
+            selected = [p for p in ("groq", "cerebras", "openrouter", "cloudflare", "gemini") if p in available]
             if not selected:
                 return jsonify({"error": "No AI provider is available right now. Configure Cerebras, Cloudflare Workers AI or Gemini in Render Environment. OpenAI API is only used when selected explicitly."}), 503
     elif provider in available:
@@ -988,7 +1040,7 @@ def chat():
                 results = [{"provider": provider, "name": "Cached answer", "reply": answer, "ok": True}]
             else:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
-                labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI"}
+                labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter"}
                 results = []
                 auto_fallback = provider == "auto" and not web_search and not requested_model
                 if len(selected) == 1 or auto_fallback:
