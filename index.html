@@ -81,7 +81,7 @@ const I=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dflt=()=>({chats:[],cur:null,name:'ur dex',theme:'dark',acc:'White',ci:'',mem:'',email:'you@example.com',phone:'Not set',age:'Adult',vl:'en-IN',auto:false,n:0});
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-let st=Object.assign(dflt(),ld('dx',{})),busy=false,ctl=null,att=[],think=false,vm=0;
+let st=Object.assign(dflt(),ld('dx',{})),busy=false,ctl=null,requestTimer=null,requestTimedOut=false,att=[],think=false,vm=0;
 const sv=()=>{try{localStorage.setItem('dx',JSON.stringify(st))}catch(e){}};
 const cur=()=>st.chats.find(c=>c.id===st.cur),inp=$('#inp'),ini=()=>st.name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'U';
 const AC={White:0,Blue:'#3b82f6',Green:'#10a37f',Orange:'#f97316',Magenta:'#d946ef'};
@@ -151,6 +151,8 @@ try{
     attachments.push({mime_type:file.type||'image/jpeg',data:dataUrl.split(',')[1]||''});
   }
   ctl=new AbortController();
+  requestTimedOut=false;
+  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},55000);
   const userMessage=c.m.slice(0,-1).filter(x=>x.r==='user').at(-1);
   const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
   const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
@@ -158,8 +160,8 @@ try{
   if(!resp.ok){if(resp.status===401)localStorage.removeItem('cm_auth_token');throw new Error(data.error||('Request failed ('+resp.status+').'))}
   a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
   st.n++;
-}catch(e){if(!a.c)a.c=ctl&&ctl.signal.aborted?'(Stopped)':'⚠️ '+(e&&e.message||'Something went wrong. Try again.')}
-busy=false;ctl=null;upd();sv();render();if((st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);vm=0}
+}catch(e){if(!a.c)a.c=requestTimedOut?'⚠️ Request timed out after 55 seconds. The server or AI provider did not respond in time. Please retry; if it repeats, check Render Environment and Logs.':(ctl&&ctl.signal.aborted?'(Stopped)':'⚠️ '+(e&&e.message||'Something went wrong. Try again.'))}
+if(requestTimer){clearTimeout(requestTimer);requestTimer=null}requestTimedOut=false;busy=false;ctl=null;upd();sv();render();if((st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);vm=0}
 function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[*`#]/g,''));u.lang=st.vl;speechSynthesis.speak(u)}catch(e){toast('Speech is not supported')}}
 function dict(auto){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return toast('Voice input is not supported in this browser');const r=new R(),b=$('#bMic');r.lang=st.vl;r.interimResults=true;
 r.onresult=e=>{inp.value=[...e.results].map(x=>x[0].transcript).join('');upd()};r.onerror=e=>toast('Mic: '+e.error);r.onend=()=>{b.classList.remove('on');if(auto&&inp.value.trim()){vm=1;send(inp.value)}};try{r.start();b.classList.add('on')}catch(e){}}
