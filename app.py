@@ -583,7 +583,7 @@ def configured_providers():
     if os.getenv("GEMINI_API_KEY"):
         providers.append({"id": "gemini", "name": "Google Gemini", "configured": True})
     if os.getenv("OPENAI_API_KEY"):
-        providers.append({"id": "openai", "name": "OpenAI", "configured": True})
+        providers.append({"id": "openai", "name": "GPT-6 Astra (OpenAI API)", "configured": True})
     if (os.getenv("CLOUDFLARE_API_TOKEN") or os.getenv("WORKERS_AI_API")) and os.getenv("CLOUDFLARE_ACCOUNT_ID"):
         providers.append({"id": "cloudflare", "name": "Cloudflare Workers AI", "configured": True})
     return providers
@@ -644,7 +644,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         if not api_key:
             raise RuntimeError("OpenAI API is not configured.")
         payload = {
-            "model": (model_override or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")).strip()[:200],
+            "model": (model_override or os.getenv("OPENAI_MODEL", "gpt-6-astra")).strip()[:200],
             "input": message
         }
         req = urllib.request.Request(
@@ -791,7 +791,7 @@ def chat():
         return jsonify({"error": "Please enter a message."}), 400
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({"error": "Message is too long (maximum 4000 characters)."}), 413
-    if provider not in {"auto", "compare", "brain", "gemini", "openai", "cloudflare"}:
+    if provider not in {"auto", "compare", "brain", "gemini", "gemini_quick", "openai", "cloudflare"}:
         return jsonify({"error": "Choose a supported AI provider."}), 400
     if not isinstance(attachments, list) or len(attachments) > 3:
         return jsonify({"error": "Attach up to 3 files per message."}), 400
@@ -828,6 +828,10 @@ def chat():
             return jsonify({"error": "Web search needs the Gemini engine to be connected."}), 503
         if requested_model and not requested_model.lower().startswith("gemini-"):
             return jsonify({"error": "Web search currently uses Gemini. Choose a Gemini model or clear the custom model ID."}), 400
+        selected = ["gemini"]
+    elif provider == "gemini_quick":
+        if "gemini" not in available:
+            return jsonify({"error": "Gemini Quick Answer needs Gemini configured on the server. Add GEMINI_API_KEY in Render Environment."}), 503
         selected = ["gemini"]
     elif provider == "compare":
         if requested_model:
@@ -936,6 +940,8 @@ def chat():
                 dexai_system_prompt + ("\n\nConversation and relevant memory:\n" + memory_context if memory_context else "")
                 + "\n\nCurrent user message:\n" + message
             )
+            if provider == "gemini_quick":
+                prompt_message = "Answer the user directly and briefly in 1-5 sentences unless they ask for detail, code, or step-by-step instructions. Avoid unnecessary preamble.\n\n" + prompt_message
             attachment_fingerprint = hashlib.sha256("".join(hashlib.sha256(base64.b64decode(item["data"])).hexdigest() for item in attachments).encode()).hexdigest() if attachments else ""
             cache_key = hashlib.sha256((client_key + "\n" + provider + "\n" + str(web_search) + "\n" + str(requested_model or "") + "\n" + prompt_message + "\n" + attachment_fingerprint).encode()).hexdigest()
             cached = conn.execute(
