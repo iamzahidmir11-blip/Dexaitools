@@ -150,26 +150,39 @@ async function ensureAuth(){
     };
   });
 }
-async function gen(c,im){const a={r:'assistant',c:''};c.m.push(a);busy=true;upd();render();sv();
-try{
-  const token=await ensureAuth();
-  const attachments=[];
-  for(const file of (im||[])){
-    const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read attached image.'));reader.readAsDataURL(file)});
-    attachments.push({mime_type:file.type||'image/jpeg',data:dataUrl.split(',')[1]||''});
+async function gen(c,im){
+  // Authenticate before adding the assistant's typing bubble. An expired session
+  // must show the sign-in screen, not look like an AI request that spins forever.
+  let a=null;
+  busy=true;upd();sv();
+  try{
+    const token=await ensureAuth();
+    a={r:'assistant',c:''};c.m.push(a);render();sv();
+    const attachments=[];
+    for(const file of (im||[])){
+      const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read attached image.'));reader.readAsDataURL(file)});
+      attachments.push({mime_type:file.type||'image/jpeg',data:dataUrl.split(',')[1]||''});
+    }
+    ctl=new AbortController();
+    requestTimedOut=false;
+    requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},45000);
+    const userMessage=c.m.filter(x=>x.r==='user').at(-1);
+    const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
+    const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
+    const data=await resp.json().catch(()=>({}));
+    if(!resp.ok)throw new Error(data.error||('Chat request failed ('+resp.status+').'));
+    a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
+    st.n++;
+  }catch(e){
+    if(!a){a={r:'assistant',c:''};c.m.push(a)}
+    if(!a.c)a.c=requestTimedOut?'⚠️ The AI request timed out after 45 seconds. Check the Render logs and provider API quota.':(ctl&&ctl.signal.aborted?'Request stopped. Tap send to try again.':'⚠️ '+(e&&e.message||'Something went wrong. Please try again.'));
+  }finally{
+    if(requestTimer){clearTimeout(requestTimer);requestTimer=null}
+    requestTimedOut=false;busy=false;ctl=null;upd();sv();render();
+    if(a&&(st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);
+    vm=0;
   }
-  ctl=new AbortController();
-  requestTimedOut=false;
-  requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},55000);
-  const userMessage=c.m.slice(0,-1).filter(x=>x.r==='user').at(-1);
-  const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
-  const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
-  const data=await resp.json().catch(()=>({}));
-  if(!resp.ok){if(resp.status===401)localStorage.removeItem('cm_auth_token');throw new Error(data.error||('Request failed ('+resp.status+').'))}
-  a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
-  st.n++;
-}catch(e){if(!a.c)a.c=requestTimedOut?'⚠️ Request timed out after 55 seconds. The server or AI provider did not respond in time. Please retry; if it repeats, check Render Environment and Logs.':(ctl&&ctl.signal.aborted?'(Stopped)':'⚠️ '+(e&&e.message||'Something went wrong. Try again.'))}
-if(requestTimer){clearTimeout(requestTimer);requestTimer=null}requestTimedOut=false;busy=false;ctl=null;upd();sv();render();if((st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);vm=0}
+}
 function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[*`#]/g,''));u.lang=st.vl;speechSynthesis.speak(u)}catch(e){toast('Speech is not supported')}}
 function dict(auto){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return toast('Voice input is not supported in this browser');const r=new R(),b=$('#bMic');r.lang=st.vl;r.interimResults=true;
 r.onresult=e=>{inp.value=[...e.results].map(x=>x[0].transcript).join('');upd()};r.onerror=e=>toast('Mic: '+e.error);r.onend=()=>{b.classList.remove('on');if(auto&&inp.value.trim()){vm=1;send(inp.value)}};try{r.start();b.classList.add('on')}catch(e){}}
