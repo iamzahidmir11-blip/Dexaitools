@@ -1,0 +1,6 @@
+flask
+gunicorn
+google-genai
+psycopg
+PyJWT
+stripe
