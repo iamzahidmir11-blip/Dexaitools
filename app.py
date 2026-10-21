@@ -20,7 +20,7 @@ ORIGIN = os.getenv("FRONTEND_ORIGIN", "https://dexaitools.onrender.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://dexaitools.onrender.com").rstrip("/")
 MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 GEMINI_QUICK_MODEL = os.getenv("GEMINI_QUICK_MODEL", "gemini-2.5-flash-lite")
-GEMINI_TIMEOUT_MS = max(10000, min(int(os.getenv("GEMINI_TIMEOUT_MS", "45000")), 120000))
+GEMINI_TIMEOUT_MS = max(8000, min(int(os.getenv("GEMINI_TIMEOUT_MS", "15000")), 30000))
 FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "10"))
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 PLUS_DAILY_LIMIT = int(os.getenv("PLUS_DAILY_LIMIT", "50"))
@@ -670,7 +670,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             method="POST"
         )
         try:
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             app.logger.warning("OpenAI API returned HTTP %s", exc.code)
@@ -695,7 +695,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         payload = {"model": model, "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("GROQ_MAX_OUTPUT_TOKENS", "4096"))}
         req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=35) as response:
+            with urllib.request.urlopen(req, timeout=12) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             app.logger.warning("Groq API returned HTTP %s", exc.code)
@@ -725,7 +725,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
             method="POST"
         )
         try:
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             app.logger.warning("Cerebras API returned HTTP %s", exc.code)
@@ -745,7 +745,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         payload = {"model": model, "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("OPENROUTER_MAX_OUTPUT_TOKENS", "4096"))}
         req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + api_key, "Content-Type": "application/json", "HTTP-Referer": os.getenv("FRONTEND_URL", "https://dexaitools.onrender.com"), "X-Title": "CumuloMind AI"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=35) as response:
+            with urllib.request.urlopen(req, timeout=12) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             app.logger.warning("OpenRouter API returned HTTP %s", exc.code)
@@ -773,7 +773,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
                 headers={"Authorization": "Bearer " + api_token, "Content-Type": "application/json"},
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 return json.loads(response.read().decode("utf-8"))
 
         try:
@@ -836,7 +836,7 @@ def call_ai_provider(provider, message, web_search=False, model_override=None, a
         payload = {"model": (model_override or cfg["model"]).strip()[:200], "messages": [{"role": "user", "content": message}], "stream": False, "max_tokens": int(os.getenv("OTHER_AI_MAX_OUTPUT_TOKENS", "4096"))}
         req = urllib.request.Request(cfg["url"], data=json.dumps(payload).encode("utf-8"), headers={"Authorization": "Bearer " + cfg["key"], "Content-Type": "application/json"}, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=40) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             app.logger.warning("%s API returned HTTP %s", provider, exc.code)
@@ -1103,7 +1103,7 @@ def chat():
                 labels = {"gemini": "Google Gemini", "openai": "OpenAI", "cloudflare": "Cloudflare Workers AI", "cerebras": "Cerebras Inference", "groq": "Groq Inference", "openrouter": "OpenRouter", "deepseek": "DeepSeek", "qwen": "Qwen", "together": "Together AI", "mistral": "Mistral AI"}
                 results = []
                 auto_fallback = provider == "auto" and not web_search and not requested_model
-                if auto_fallback and len(selected) > 1:
+                if auto_fallback:
                     # Race configured free-first providers. Return the first healthy answer,
                     # rather than waiting for every slow or quota-limited provider.
                     pool = ThreadPoolExecutor(max_workers=len(selected))
@@ -1125,18 +1125,8 @@ def chat():
                         selected = [winner["provider"]]
                     else:
                         results = failures
-                        # Last-resort fallback: try configured backup providers one by one.
-                        for backup in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral"):
-                            if backup not in available:
-                                continue
-                            try:
-                                reply = call_ai_provider(backup, prompt_message)
-                                results.append({"provider": backup, "name": labels[backup], "reply": reply, "ok": True})
-                                selected = [backup]
-                                break
-                            except Exception as exc:
-                                app.logger.warning("AI fallback failed provider=%s user_id=%s: %s", backup, user["id"], str(exc)[:300])
-                                results.append({"provider": backup, "name": labels[backup], "reply": str(exc), "ok": False})
+                        # All configured auto providers were already tried concurrently.
+                        # Do not repeat the same calls serially: that can exceed the web worker timeout.
                 elif len(selected) == 1:
                     p = selected[0]
                     try:
@@ -1150,18 +1140,8 @@ def chat():
                     except Exception as exc:
                         app.logger.warning("AI provider failed provider=%s user_id=%s: %s", p, user["id"], str(exc)[:300])
                         results.append({"provider": p, "name": labels[p], "reply": str(exc), "ok": False})
-                        if auto_fallback:
-                            for backup in ("groq", "cerebras", "openrouter", "gemini", "deepseek", "qwen", "together", "mistral"):
-                                if backup not in available or backup == p:
-                                    continue
-                                try:
-                                    reply = call_ai_provider(backup, prompt_message)
-                                    results.append({"provider": backup, "name": labels[backup], "reply": reply, "ok": True})
-                                    selected = [backup]
-                                    break
-                                except Exception as backup_exc:
-                                    app.logger.warning("AI fallback failed provider=%s user_id=%s: %s", backup, user["id"], str(backup_exc)[:300])
-                                    results.append({"provider": backup, "name": labels[backup], "reply": str(backup_exc), "ok": False})
+                        # Auto mode uses the concurrent provider race above so one slow provider
+                        # cannot block the request while backups are retried serially.
                 else:
                     with ThreadPoolExecutor(max_workers=len(selected)) as pool:
                         futures = {pool.submit(call_ai_provider, p, prompt_message, web_search=web_search and p == "gemini", attachments=attachments if p == "gemini" else None): p for p in selected}
