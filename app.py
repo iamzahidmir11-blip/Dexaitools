@@ -938,22 +938,17 @@ def chat():
     if total_attachment_bytes > 18 * 1024 * 1024:
         return jsonify({"error": "Total attachments must be 18 MB or smaller per message."}), 413
 
-    available = [item["id"] for item in configured_providers()]
+    configured = [item["id"] for item in configured_providers()]
+    # CumuloMind is intentionally pinned to the verified OpenRouter route only.
+    available = ["openrouter"] if "openrouter" in configured else []
+    provider = "openrouter"
     if not available:
-        return jsonify({"error": "No AI provider is configured on the server yet."}), 503
+        return jsonify({"error": "OpenRouter is not configured on this server. Add OPENROUTER_API_KEY in the server environment."}), 503
     app.logger.info("CHAT_DIAG authenticated provider=%s available=%s attachments=%s web_search=%s", provider, ",".join(available), len(attachments), web_search)
     if attachments:
-        if "gemini" not in available:
-            return jsonify({"error": "File analysis currently needs Gemini to be configured on the server. Try again after its quota resets."}), 503
-        if requested_model and not requested_model.lower().startswith("gemini-"):
-            return jsonify({"error": "File analysis currently uses Gemini. Clear the custom model ID or choose a Gemini model."}), 400
-        selected = ["gemini"]
+        return jsonify({"error": "Image and file analysis are temporarily disabled. Text chat is using OpenRouter only."}), 415
     elif web_search:
-        if "gemini" not in available:
-            return jsonify({"error": "Web search needs the Gemini engine to be connected."}), 503
-        if requested_model and not requested_model.lower().startswith("gemini-"):
-            return jsonify({"error": "Web search currently uses Gemini. Choose a Gemini model or clear the custom model ID."}), 400
-        selected = ["gemini"]
+        return jsonify({"error": "Web search is temporarily disabled. Text chat is using OpenRouter only."}), 400
     elif provider == "gemini_quick":
         if "gemini" not in available:
             return jsonify({"error": "Gemini Quick Answer needs Gemini configured on the server. Add GEMINI_API_KEY in Render Environment."}), 503
