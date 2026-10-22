@@ -151,13 +151,12 @@ async function ensureAuth(){
   });
 }
 async function gen(c,im){
-  // Authenticate before adding the assistant's typing bubble. An expired session
-  // must show the sign-in screen, not look like an AI request that spins forever.
-  let a=null;
-  busy=true;sv();render();
+  let a={r:'assistant',c:'',loading:true};
+  c.m.push(a);
+  busy=true;sv();upd();render();
+  let token=null;
   try{
-    const token=await ensureAuth();
-    a={r:'assistant',c:''};c.m.push(a);upd();render();sv();
+    token=await ensureAuth();
     const attachments=[];
     for(const file of (im||[])){
       const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read attached image.'));reader.readAsDataURL(file)});
@@ -166,20 +165,19 @@ async function gen(c,im){
     ctl=new AbortController();
     requestTimedOut=false;
     requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},45000);
-    const userMessage=c.m.filter(x=>x.r==='user').at(-1);
-    const message=String(userMessage?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
-    const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'auto',attachments}),signal:ctl.signal});
+    const message=String(c.m.filter(x=>x.r==='user').at(-1)?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
+    const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'openrouter',attachments}),signal:ctl.signal});
     const data=await resp.json().catch(()=>({}));
     if(!resp.ok)throw new Error(data.error||('Chat request failed ('+resp.status+').'));
     a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
-    st.n++;
+    a.loading=false;st.n++;
   }catch(e){
-    if(!a){a={r:'assistant',c:''};c.m.push(a)}
-    if(!a.c)a.c=requestTimedOut?'⚠️ The AI request timed out after 45 seconds. Check the Render logs and provider API quota.':(ctl&&ctl.signal.aborted?'Request stopped. Tap send to try again.':'⚠️ '+(e&&e.message||'Something went wrong. Please try again.'));
+    a.loading=false;
+    a.c=requestTimedOut?'⚠️ AI request timed out after 45 seconds. Check provider availability and server logs.':(ctl&&ctl.signal.aborted?'Request stopped. Tap send to try again.':'⚠️ '+(e&&e.message||'Something went wrong. Please try again.'));
   }finally{
     if(requestTimer){clearTimeout(requestTimer);requestTimer=null}
     requestTimedOut=false;busy=false;ctl=null;upd();sv();render();
-    if(a&&(st.auto||vm)&&a.c[0]!=='⚠')speak(a.c);
+    if(a.c&&a.c[0]!=='⚠'&&(st.auto||vm))speak(a.c);
     vm=0;
   }
 }
