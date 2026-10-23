@@ -581,12 +581,21 @@ def generate_image():
 
 
 def configured_providers():
-    # Temporary single-provider mode while diagnosing chat replies.
-    # All other provider integrations remain in the code but are not exposed
-    # to chat routing until Gemini is verified working.
-    if os.getenv("GEMINI_API_KEY"):
-        return [{"id": "gemini", "name": "Google Gemini", "configured": True}]
-    return []
+    # Expose every implemented provider whose API key is configured.
+    providers = [
+        ("gemini", "Google Gemini", "GEMINI_API_KEY"),
+        ("openai", "OpenAI", "OPENAI_API_KEY"),
+        ("groq", "Groq", "GROQ_API_KEY"),
+        ("cerebras", "Cerebras", "CEREBRAS_API_KEY"),
+        ("openrouter", "OpenRouter", "OPENROUTER_API_KEY"),
+        ("cloudflare", "Cloudflare Workers AI", "CLOUDFLARE_API_TOKEN"),
+        ("deepseek", "DeepSeek", "DEEPSEEK_API_KEY"),
+        ("qwen", "Qwen", "DASHSCOPE_API_KEY"),
+        ("together", "Together AI", "TOGETHER_API_KEY"),
+        ("mistral", "Mistral", "MISTRAL_API_KEY"),
+    ]
+    return [{"id": pid, "name": name, "configured": True}
+            for pid, name, key in providers if os.getenv(key)]
 
 def call_ai_provider(provider, message, web_search=False, model_override=None, attachments=None):
     import json
@@ -939,16 +948,12 @@ def chat():
         return jsonify({"error": "Total attachments must be 18 MB or smaller per message."}), 413
 
     configured = [item["id"] for item in configured_providers()]
-    # CumuloMind is intentionally pinned to the verified OpenRouter route only.
-    available = ["openrouter"] if "openrouter" in configured else []
-    provider = "openrouter"
-    if not available:
-        return jsonify({"error": "OpenRouter is not configured on this server. Add OPENROUTER_API_KEY in the server environment."}), 503
+    available = configured
     app.logger.info("CHAT_DIAG authenticated provider=%s available=%s attachments=%s web_search=%s", provider, ",".join(available), len(attachments), web_search)
-    if attachments:
-        return jsonify({"error": "Image and file analysis are temporarily disabled. Text chat is using OpenRouter only."}), 415
-    elif web_search:
-        return jsonify({"error": "Web search is temporarily disabled. Text chat is using OpenRouter only."}), 400
+    if attachments and provider not in {"gemini"}:
+        return jsonify({"error": "Image/file analysis currently requires Gemini. Select Gemini and configure GEMINI_API_KEY in Render."}), 415
+    elif web_search and provider != "gemini":
+        return jsonify({"error": "Web search currently requires Gemini. Select Gemini and configure GEMINI_API_KEY in Render."}), 400
     elif provider == "gemini_quick":
         if "gemini" not in available:
             return jsonify({"error": "Gemini Quick Answer needs Gemini configured on the server. Add GEMINI_API_KEY in Render Environment."}), 503
