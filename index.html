@@ -166,7 +166,7 @@ async function gen(c,im){
     requestTimedOut=false;
     requestTimer=setTimeout(()=>{requestTimedOut=true;if(ctl)ctl.abort()},45000);
     const message=String(c.m.filter(x=>x.r==='user').at(-1)?.c||'').trim()||(attachments.length?'Please analyze the attached image.':'');
-    const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:'openrouter',attachments}),signal:ctl.signal});
+    const resp=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,provider:(localStorage.getItem('cm_ai_provider')||'auto'),attachments}),signal:ctl.signal});
     const data=await resp.json().catch(()=>({}));
     if(!resp.ok)throw new Error(data.error||('Chat request failed ('+resp.status+').'));
     a.c=String(data.reply||'').trim()||'The AI returned an empty reply.';
