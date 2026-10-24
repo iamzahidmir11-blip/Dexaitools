@@ -2,6 +2,9 @@ import os
 import time
 import hashlib
 import base64
+import re
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
@@ -145,7 +148,7 @@ def current_user():
 
 def cors(response):
     origin = request.headers.get("Origin")
-    if origin == ORIGIN:
+    if origin in {ORIGIN, "https://iamzahidmir11-blip.github.io"}:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -1232,6 +1235,109 @@ def chat():
     except Exception:
         app.logger.exception("AI request failed")
         return jsonify({"error": "AI request failed. Check database configuration and the selected provider credentials."}), 502
+
+
+def init_studio_leads():
+    with db() as conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS studio_leads (
+          id BIGSERIAL PRIMARY KEY,
+          name VARCHAR(120) NOT NULL,
+          email VARCHAR(254) NOT NULL,
+          business VARCHAR(160) NOT NULL DEFAULT '',
+          budget VARCHAR(80) NOT NULL DEFAULT '',
+          project_type VARCHAR(120) NOT NULL DEFAULT '',
+          message TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS studio_leads_created_idx ON studio_leads(created_at DESC)")
+
+def notify_studio_lead(lead):
+    host = os.getenv("SMTP_HOST", "").strip()
+    user = os.getenv("SMTP_USER", "").strip()
+    password = os.getenv("SMTP_PASSWORD", "")
+    recipient = os.getenv("LEAD_NOTIFY_EMAIL", "zahidmirstudio@gmail.com").strip()
+    if not (host and user and password and recipient):
+        return False
+    message = EmailMessage()
+    message["Subject"] = "New website enquiry — " + lead["name"]
+    message["From"] = os.getenv("SMTP_FROM", user)
+    message["To"] = recipient
+    message.set_content(
+        "New project enquiry for Zahid Mir Studio.\\n\\n"
+        f"Name: {lead['name']}\\nEmail: {lead['email']}\\n"
+        f"Business: {lead['business'] or 'Not provided'}\\n"
+        f"Budget: {lead['budget'] or 'Not provided'}\\n"
+        f"Project: {lead['project_type'] or 'Not provided'}\\n\\n"
+        f"Message:\\n{lead['message']}\\n"
+    )
+    with smtplib.SMTP(host, int(os.getenv("SMTP_PORT", "587")), timeout=10) as server:
+        server.starttls()
+        server.login(user, password)
+        server.send_message(message)
+    return True
+
+@app.route("/api/studio/leads", methods=["POST", "OPTIONS"])
+def create_studio_lead():
+    if request.method == "OPTIONS":
+        return "", 204
+    data = request.get_json(silent=True) or {}
+    # Hidden honeypot to discard basic automated spam.
+    if str(data.get("website", "")).strip():
+        return jsonify({"ok": True, "message": "Enquiry received."}), 201
+    name = " ".join(str(data.get("name", "")).strip().split())[:120]
+    email = str(data.get("email", "")).strip().lower()[:254]
+    business = " ".join(str(data.get("business", "")).strip().split())[:160]
+    budget = " ".join(str(data.get("budget", "")).strip().split())[:80]
+    project_type = " ".join(str(data.get("project_type", "")).strip().split())[:120]
+    message = str(data.get("message", "")).strip()[:5000]
+    if len(name) < 2:
+        return jsonify({"ok": False, "error": "Please enter your name."}), 400
+    if not re.fullmatch(r"[^\\s@]+@[^\\s@]+\\.[^\\s@]+", email):
+        return jsonify({"ok": False, "error": "Please enter a valid email address."}), 400
+    if len(message) < 10:
+        return jsonify({"ok": False, "error": "Please add a little more detail about the project."}), 400
+    lead = {"name": name, "email": email, "business": business, "budget": budget,
+            "project_type": project_type, "message": message}
+    try:
+        init_studio_leads()
+        with db() as conn:
+            conn.execute(
+                "INSERT INTO studio_leads (name,email,business,budget,project_type,message) VALUES (%s,%s,%s,%s,%s)",
+                (name, email, business, budget, project_type, message)
+            )
+        email_sent = False
+        try:
+            email_sent = notify_studio_lead(lead)
+        except Exception:
+            app.logger.exception("Studio enquiry saved but email notification failed")
+        return jsonify({"ok": True, "message": "Your enquiry has been saved.",
+                        "email_notification": "sent" if email_sent else "not_configured"}), 201
+    except Exception:
+        app.logger.exception("Unable to save studio enquiry")
+        return jsonify({"ok": False, "error": "We couldn't save your enquiry right now. Please try again shortly."}), 503
+
+@app.route("/api/studio/leads", methods=["GET", "OPTIONS"])
+def list_studio_leads():
+    if request.method == "OPTIONS":
+        return "", 204
+    admin_token = os.getenv("STUDIO_ADMIN_TOKEN", "")
+    if not admin_token:
+        return jsonify({"error": "Studio lead access is not configured."}), 503
+    if request.headers.get("Authorization", "") != "Bearer " + admin_token:
+        return jsonify({"error": "Unauthorized."}), 401
+    try:
+        init_studio_leads()
+        with db() as conn:
+            rows = conn.execute(
+                "SELECT id,name,email,business,budget,project_type,message,created_at "
+                "FROM studio_leads ORDER BY id DESC LIMIT 100"
+            ).fetchall()
+        return jsonify({"leads": [dict(row) for row in rows], "count": len(rows)})
+    except Exception:
+        app.logger.exception("Unable to read studio enquiries")
+        return jsonify({"error": "Could not read enquiries."}), 503
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
