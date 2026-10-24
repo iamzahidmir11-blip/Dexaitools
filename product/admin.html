@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Studio Enquiries | Zahid Mir Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#090909;--panel:#151515;--line:#333;--text:#f5f5f5;--muted:#aaa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{width:min(1100px,calc(100% - 28px));margin:0 auto;padding:32px 0 70px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--line);padding-bottom:18px}
+a{color:#fff}.eyebrow{font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}h1{font-size:clamp(30px,5vw,46px);letter-spacing:-.04em;margin:10px 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:22px 0}
+label{display:block;font-size:13px;color:#ccc;margin-bottom:7px}input,button{font:inherit;border-radius:9px;padding:12px;border:1px solid #444}input{background:#090909;color:#fff;width:100%}button{background:#fff;color:#111;font-weight:650;cursor:pointer}button:disabled{opacity:.5}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.status{color:#bbb;min-height:24px;margin-top:12px;overflow-wrap:anywhere}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}th{color:#aaa;font-weight:600;background:#111}td{max-width:300px}tr:last-child td{border-bottom:0}.empty{padding:22px;color:#aaa}.small{color:#999;font-size:12px}
+@media(max-width:560px){.row{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">Zahid Mir Studio / Private</div><h1>Project enquiries</h1></div><a href="./">View studio website ↗</a></header>
+<section class="panel">
+<p>Enter the private <code>STUDIO_ADMIN_TOKEN</code> configured in Render. It is used for this request only and is not saved in the browser.</p>
+<form id="auth">
+<div class="row"><div><label for="token">Admin access token</label><input id="token" type="password" autocomplete="off" required placeholder="Paste token from Render environment settings"></div><button id="load" type="submit">Load enquiries</button></div>
+</form><div class="status" id="status" role="status" aria-live="polite"></div>
+</section>
+<section class="panel"><div class="eyebrow">Latest 100 submissions</div><p class="small">This page does not store the token. Use it only on a trusted device and sign out by closing the page.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Name / email</th><th>Business</th><th>Budget / project</th><th>Message</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">Enter the admin token to load enquiries.</td></tr></tbody></table></div></section>
+</main>
+<script>
+const form=document.getElementById('auth'),token=document.getElementById('token'),status=document.getElementById('status'),rows=document.getElementById('rows'),button=document.getElementById('load');
+const API='https://dexaitools.onrender.com/api/studio/leads';
+function cell(row,value){const td=document.createElement('td');td.textContent=value==null?'':String(value);row.appendChild(td)}
+form.addEventListener('submit',async e=>{
+e.preventDefault();button.disabled=true;status.textContent='Loading enquiries…';
+try{
+const response=await fetch(API,{headers:{Authorization:'Bearer '+token.value.trim()}});
+const data=await response.json().catch(()=>({}));
+if(!response.ok)throw new Error(data.error||'Could not load enquiries.');
+rows.replaceChildren();
+if(!data.leads||!data.leads.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='empty';td.textContent='No enquiries saved yet.';tr.appendChild(td);rows.appendChild(tr)}
+else data.leads.forEach(lead=>{const tr=document.createElement('tr');cell(tr,lead.created_at||'');const person=document.createElement('td');const strong=document.createElement('strong');strong.textContent=lead.name||'';const br=document.createElement('br');const mail=document.createElement('a');mail.href='mailto:'+encodeURIComponent(lead.email||'');mail.textContent=lead.email||'';person.append(strong,br,mail);tr.appendChild(person);cell(tr,lead.business);cell(tr,[lead.budget,lead.project_type].filter(Boolean).join('\n'));cell(tr,lead.message);rows.appendChild(tr)});
+status.textContent='Loaded '+(data.count||0)+' enquiry record(s).';
+}catch(err){status.textContent=err.message;rows.replaceChildren();const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='empty';td.textContent='Could not load enquiries. Check the token and backend status.';tr.appendChild(td);rows.appendChild(tr)}
+finally{button.disabled=false}
+});
+</script></body></html>
