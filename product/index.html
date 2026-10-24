@@ -34,7 +34,7 @@ const reveals=document.querySelectorAll('.reveal');if('IntersectionObserver'in w
 document.querySelectorAll('[data-package]').forEach(a=>a.addEventListener('click',()=>{const sel=document.getElementById('package');for(const opt of sel.options){if(opt.text===a.dataset.package){sel.value=opt.value;break}}}));
 if(matchMedia('(hover:hover) and (pointer:fine)').matches){const scene=document.getElementById('visual'),frame=document.getElementById('frame');scene.addEventListener('pointermove',e=>{const r=scene.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;frame.style.transform='rotateY('+(-11+x*12)+'deg) rotateX('+(5-y*10)+'deg) rotateZ('+(-3+x*2)+'deg)'});scene.addEventListener('pointerleave',()=>frame.style.transform='')}
 const form=document.getElementById('lead-form'),status=document.getElementById('form-status');
-const API_BASE='https://zahid-mir-studio-api.onrender.com';
+const API_BASE='https://dexaitools.onrender.com';
 form.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!form.reportValidity()) return;
@@ -49,7 +49,7 @@ form.addEventListener('submit',async e=>{
   submit.disabled=true;submit.textContent='Sending enquiry…';
   status.classList.remove('show');status.textContent='';
   try{
-    const response=await fetch(API_BASE+'/api/leads',{
+    const response=await fetch(API_BASE+'/api/studio/leads',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)
     });
@@ -58,7 +58,7 @@ form.addEventListener('submit',async e=>{
     status.textContent='Thanks — your enquiry has been saved. We’ll review your project details soon.';
     status.classList.add('show');form.reset();
   }catch(err){
-    status.textContent='The online form could not connect to the studio server. Please email zahidmirstudio@gmail.com directly, or try again after the service is deployed.';
+    status.textContent='The online form could not connect to the studio server. Please email zahidmirstudio@gmail.com directly, or try again after the backend deployment finishes.';
     status.classList.add('show');
   }finally{
     submit.disabled=false;submit.innerHTML=original;
