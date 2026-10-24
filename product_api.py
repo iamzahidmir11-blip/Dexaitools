@@ -132,7 +132,7 @@ def create_lead():
             "project_type": project_type, "message": message}
     try:
         placeholder = "%s" if DATABASE_URL else "?"
-        with connect_db() as conn:
+        with db_session() as conn:
             conn.execute(
                 "INSERT INTO leads (name,email,business,budget,project_type,message) VALUES (" +
                 ",".join([placeholder] * 6) + ")",
@@ -157,7 +157,7 @@ def list_leads():
     if supplied != "Bearer " + ADMIN_TOKEN:
         return jsonify({"error": "Unauthorized."}), 401
     try:
-        with connect_db() as conn:
+        with db_session() as conn:
             rows = conn.execute(
                 "SELECT id,name,email,business,budget,project_type,message,created_at "
                 "FROM leads ORDER BY id DESC LIMIT 100"
