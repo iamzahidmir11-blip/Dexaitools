@@ -1294,7 +1294,7 @@ def create_studio_lead():
     message = str(data.get("message", "")).strip()[:5000]
     if len(name) < 2:
         return jsonify({"ok": False, "error": "Please enter your name."}), 400
-    if not re.fullmatch(r"[^\\s@]+@[^\\s@]+\\.[^\\s@]+", email):
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
         return jsonify({"ok": False, "error": "Please enter a valid email address."}), 400
     if len(message) < 10:
         return jsonify({"ok": False, "error": "Please add a little more detail about the project."}), 400
