@@ -1265,12 +1265,12 @@ def notify_studio_lead(lead):
     message["From"] = os.getenv("SMTP_FROM", user)
     message["To"] = recipient
     message.set_content(
-        "New project enquiry for Zahid Mir Studio.\\n\\n"
-        f"Name: {lead['name']}\\nEmail: {lead['email']}\\n"
-        f"Business: {lead['business'] or 'Not provided'}\\n"
-        f"Budget: {lead['budget'] or 'Not provided'}\\n"
-        f"Project: {lead['project_type'] or 'Not provided'}\\n\\n"
-        f"Message:\\n{lead['message']}\\n"
+        "New project enquiry for Zahid Mir Studio.\n\n"
+        f"Name: {lead['name']}\nEmail: {lead['email']}\n"
+        f"Business: {lead['business'] or 'Not provided'}\n"
+        f"Budget: {lead['budget'] or 'Not provided'}\n"
+        f"Project: {lead['project_type'] or 'Not provided'}\n\n"
+        f"Message:\n{lead['message']}\n"
     )
     with smtplib.SMTP(host, int(os.getenv("SMTP_PORT", "587")), timeout=10) as server:
         server.starttls()
