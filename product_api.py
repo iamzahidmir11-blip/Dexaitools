@@ -2,6 +2,7 @@ import os
 import re
 import smtplib
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
 from email.message import EmailMessage
 from flask import Flask, jsonify, request
@@ -25,8 +26,20 @@ def connect_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+@contextmanager
+def db_session():
+    conn = connect_db()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
 def init_db():
-    with connect_db() as conn:
+    with db_session() as conn:
         if DATABASE_URL:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS leads (
@@ -90,7 +103,7 @@ def home():
 @app.get("/health")
 def health():
     try:
-        with connect_db() as conn:
+        with db_session() as conn:
             conn.execute("SELECT 1")
         return jsonify({"status": "ok", "database": "connected"})
     except Exception:
