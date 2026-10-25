@@ -12,7 +12,7 @@
 </style>
 </head>
 <body>
-<header class="wrap top"><a class="logo" href="#">free<span>kit</span><i>®</i></a><nav class="nav"><a href="#tools">Free tools</a><a href="#alternatives">Paid alternatives</a><a href="#about">Our promise</a></nav><div class="top-note mono">Useful by design · Free to use</div></header>
+<header class="wrap top"><a class="logo" href="#">free<span>kit</span><i>®</i></a><nav class="nav"><a href="#tools">Free tools</a><a href="#alternatives">Paid alternatives</a><a href="#about">Our promise</a></nav><div class="top-note mono">Free API <span id="apiStatus" aria-live="polite">· checking</span></div></header>
 <main>
 <section class="wrap hero"><div><div class="eyebrow mono"><span class="dot"></span> A practical corner of the internet</div><h1>Get it done.<br><span>Pay nothing.</span></h1><p>Useful tools for everyday tasks — compress images, count words, clean JSON and find honest free alternatives to expensive software. No fake “free trial” tricks.</p><div class="hero-actions"><a class="btn primary" href="#tools">Use a free tool <span>↘</span></a><a class="btn" href="#alternatives">Find an alternative ↗</a></div><div class="privacy"><span>●</span> Your image stays on your device when you use our image tools.</div></div>
 <div class="hero-visual" aria-label="Visual preview of image tools"><div class="orb"></div><div class="photo main"><img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=85" alt="Starry mountain landscape"><div class="photo-label">01 / YOUR VISUALS</div></div><div class="photo small"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=700&q=85" alt="Blue ocean surface"><div class="photo-label">LOCAL TOOLS / FREE</div></div></div></section>
@@ -42,6 +42,22 @@
 </main>
 <footer class="wrap footer"><span>FREEKIT® — USEFUL TOOLS FOR EVERYONE</span><span>Browser tools · Official alternatives</span><a href="#top">Back to top ↑</a></footer>
 <script>
+const API_BASE='https://freekit-api.onrender.com';
+async function checkApiStatus(){
+  const badge=document.getElementById('apiStatus');
+  if(!badge)return;
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),12000);
+    const response=await fetch(API_BASE+'/api/health',{signal:controller.signal});
+    clearTimeout(timeout);
+    if(!response.ok)throw new Error('API unavailable');
+    const data=await response.json();
+    badge.textContent=data.ok?'· online':'· unavailable';
+    badge.title=data.note||'FreeKit API status';
+  }catch(_){badge.textContent='· waking up';badge.title='The free backend may be starting from sleep. Refresh in a moment.'}
+}
+checkApiStatus();
 const $=id=>document.getElementById(id);
 function setTool(name){['image','resize','text','json'].forEach(k=>{const el=$(k+'Tool');if(el)el.classList.toggle('hidden',k!==name)});document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));if(name==='image')$('imageMsg').textContent='';}
 document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
