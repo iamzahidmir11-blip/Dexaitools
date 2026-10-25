@@ -43,10 +43,46 @@ h1 .gradient{text-shadow:0 0 65px #c5ff7210}
 @media(max-width:600px){.hero{min-height:auto}.nav{margin-bottom:0}.section-top h2{line-height:1.02}}
 @media(prefers-reduced-motion:reduce){body:after{display:none}}
 
+
+/* Immersive desktop art direction */
+html{background:#050506}
+body{background:#050506}
+body:before{z-index:0!important;opacity:.8;background:radial-gradient(ellipse at 68% 42%,#5b43a522,transparent 34%),radial-gradient(ellipse at 18% 72%,#c8ff7610,transparent 32%),radial-gradient(ellipse at 85% 95%,#e4a77d0d,transparent 35%)}
+#scene-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.8}
+.progress,.nav,.hero,.marquee,.section,.how,.cta-band,footer,.modal,.toast{position:relative;z-index:1}
+.nav{backdrop-filter:blur(18px);background:linear-gradient(180deg,#080809d9,#0808094d);border-bottom-color:#ffffff12}
+.hero{width:min(1440px,calc(100% - 96px));min-height:calc(100vh - 82px);padding:7vh 0 6vh;align-items:center;gap:4vw;position:relative}
+.hero:before{content:"";position:absolute;inset:5% -4vw 2%;border:1px solid #ffffff0a;border-radius:40px;pointer-events:none;background:radial-gradient(ellipse at 72% 45%,#a9a0ff0a,transparent 44%)}
+.hero-copy{position:relative;z-index:2;max-width:690px}
+.hero h1{font-size:clamp(64px,8.1vw,128px);line-height:.88;letter-spacing:-.095em;max-width:800px;margin:28px 0}
+.hero h1 span{display:block}
+.hero h1 .gradient{background:linear-gradient(105deg,#f7f5ef 5%,#b9b5ff 42%,#d6ff72 78%,#f5f5f2);background-size:220% auto;animation:chromeFlow 9s linear infinite;-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-copy>p{font-size:18px;line-height:1.8;max-width:490px;color:#b4b4b8}
+.eyebrow{border-color:#ffffff20;background:#ffffff08;backdrop-filter:blur(12px)}
+.hero-art{min-height:600px;max-height:78vh;overflow:visible;perspective:1500px}
+.orb{width:min(36vw,490px);height:min(36vw,490px);background:radial-gradient(circle at 35% 27%,#e8e4ff 0,#aaa3ff 7%,#6557a9 18%,#201c36 42%,#080809 68%);box-shadow:inset -38px -35px 65px #000c, inset 16px 12px 35px #ffffff55,0 0 100px #7161d52b;animation:planetFloat 11s ease-in-out infinite;filter:saturate(.8)}
+.orb:after{content:"";position:absolute;inset:-8%;border:1px solid #d9d5ff26;border-radius:50%;transform:rotateX(68deg) rotateZ(-25deg);box-shadow:0 0 40px #b5adff0c}
+.orbit{border-color:#c7c0ff30;transform:rotate(-21deg) scaleY(.42);animation:orbitSpin 24s linear infinite}
+.mock-window{background:#0a0a0ce8;border-color:#ffffff29;box-shadow:0 45px 140px #000c,0 0 0 1px #c4bcff0b;backdrop-filter:blur(20px)}
+.float-chip{backdrop-filter:blur(22px);background:#101012bd;border-color:#ffffff26}
+.art-caption{color:#d1d0dc;letter-spacing:.18em}
+.marquee{background:#0b0b0dd9;backdrop-filter:blur(16px);border-color:#ffffff12}
+.section{width:min(1320px,calc(100% - 96px));padding-top:140px}
+.section-top h2{font-size:clamp(48px,6vw,88px);letter-spacing:-.075em;line-height:.94}
+.design-card{background:linear-gradient(145deg,#17171bd9,#0c0c0edb);border-color:#ffffff19;box-shadow:0 20px 70px #0002}
+.design-card:hover{border-color:#d6ff7266;box-shadow:0 35px 100px #0008,0 0 40px #d6ff720a}
+@keyframes chromeFlow{to{background-position:220% center}}
+@keyframes planetFloat{0%,100%{transform:translate(-50%,-50%) rotate(-7deg) scale(1)}50%{transform:translate(-50%,-53%) rotate(5deg) scale(1.035)}}
+@keyframes orbitSpin{to{rotate:360deg}}
+@media(min-width:901px){.hero-art{min-width:47%;}.mock-window{transform:rotateY(-12deg) rotateX(5deg) translateZ(35px)}}
+@media(max-width:900px){.hero{width:calc(100% - 40px);min-height:auto;padding:70px 0 40px}.hero h1{font-size:clamp(58px,11vw,94px)}.hero-art{min-height:460px}.section{width:calc(100% - 40px)}}
+@media(max-width:600px){.hero{padding-top:54px}.hero-art{min-height:350px}.hero h1{font-size:58px}.section{padding-top:88px}}
+@media(prefers-reduced-motion:reduce){#scene-canvas{display:none}.hero h1 .gradient{animation:none}.orb,.orbit{animation:none}}
+
 </style>
 </head>
 <body>
-<div class="progress" id="progress"></div>
+<canvas id="scene-canvas" aria-hidden="true"></canvas><div class="progress" id="progress"></div>
 <header class="shell nav"><a class="brand" href="#"><span class="brandmark">F.</span> freeform<sup>®</sup></a><nav class="navlinks"><a href="#collection">Collection</a><a href="#how">How it works</a><a class="nav-cta" href="#collection">Explore designs ↗</a></nav></header>
 <main>
 <section class="shell hero">
@@ -99,6 +135,10 @@ if(matchMedia("(pointer:fine)").matches&&!matchMedia("(prefers-reduced-motion: r
   card.addEventListener("pointermove",e=>{const r=card.getBoundingClientRect();card.style.setProperty("--mx",(e.clientX-r.left)+"px");card.style.setProperty("--my",(e.clientY-r.top)+"px")});
  });
 }
+
+
+/* Lightweight generative backdrop: layered particles, orbital filaments and pointer parallax */
+(()=>{const canvas=document.getElementById('scene-canvas');if(!canvas||matchMedia('(prefers-reduced-motion: reduce)').matches)return;const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;let w=0,h=0,dpr=1,t=0,px=.5,py=.5,pts=[];const resize=()=>{dpr=Math.min(devicePixelRatio||1,1.7);w=innerWidth;h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);const n=Math.min(125,Math.floor(w*h/12500));pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,z:.25+Math.random()*.75,r:.4+Math.random()*1.4,p:Math.random()*Math.PI*2}))};addEventListener('resize',resize,{passive:true});addEventListener('pointermove',e=>{px=e.clientX/w;py=e.clientY/h},{passive:true});resize();function frame(){t+=.003;ctx.clearRect(0,0,w,h);const cx=w*(.63+(px-.5)*.035),cy=h*(.48+(py-.5)*.04);let g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(w,h)*.58);g.addColorStop(0,'rgba(117,103,194,.09)');g.addColorStop(.45,'rgba(93,79,151,.035)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.save();ctx.translate((px-.5)*18,(py-.5)*12);for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(w*.69,h*.48,Math.min(w,h)*(.2+i*.045),Math.min(w,h)*(.07+i*.014),-.34+t*.08+i*.03,0,Math.PI*2);ctx.strokeStyle='rgba(196,187,255,'+(0.035-i*.004)+')';ctx.lineWidth=1;ctx.stroke()}for(const p of pts){const x=(p.x+Math.sin(t+p.p)*12+(px-.5)*25*p.z+w)%w,y=(p.y-t*12*p.z+h)%h;ctx.beginPath();ctx.arc(x,y,p.r*p.z,0,Math.PI*2);ctx.fillStyle=p.p%2>.9?'rgba(214,255,114,.58)':'rgba(218,214,255,'+(.16+p.z*.35)+')';ctx.fill()}ctx.restore();requestAnimationFrame(frame)}requestAnimationFrame(frame)})();
 
 </script>
 </body></html>
