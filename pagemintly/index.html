@@ -27,7 +27,7 @@ body{overflow-x:hidden}
 .preview{position:relative}
 .preview:after{content:"";position:absolute;inset:-60% auto -60% -70%;width:35%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff8a,transparent);animation:shineSweep 7s 1.2s infinite;pointer-events:none}
 .sectionhead h2{text-wrap:balance}
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.2,1)}
+.reveal{opacity:1;transform:none}.js-motion .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.75,.2,1)}
 .reveal.is-visible{opacity:1;transform:translateY(0)}
 .step,.feature,.template-card{transition:transform .35s cubic-bezier(.2,.75,.2,1),box-shadow .35s,border-color .35s}
 .step:hover,.feature:hover{transform:translateY(-5px)}
@@ -63,6 +63,7 @@ body{overflow-x:hidden}
 
 /* Scroll-linked motion, progressive enhancement only */
 (function(){
+ document.documentElement.classList.add('js-motion');
  const progress=document.getElementById('scrollProgress');
  let ticking=false;
  function updateProgress(){
