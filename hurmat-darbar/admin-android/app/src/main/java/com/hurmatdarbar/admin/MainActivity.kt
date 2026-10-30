@@ -174,10 +174,26 @@ class MainActivity : Activity() {
       val category=item.optJSONObject("menu_categories")?.optString("name")?:"Uncategorised"
       card.addView(label(item.optString("name"),17f))
       card.addView(label("$category • ${if(item.optBoolean("is_veg")) "Veg" else "Non-veg"} • ${if(item.optBoolean("needs_verification")) "Needs verification" else "Verified"}",12f))
+      val nameInput = field("Item name (2–120 characters)").apply { setText(item.optString("name")) }
+      val descriptionInput = field("Description (max 500 characters)").apply { setText(item.optString("description")) }
+      card.addView(nameInput, params())
+      card.addView(descriptionInput, params())
+      card.addView(button("Save item details") {
+       val name = nameInput.text.toString().trim()
+       val description = descriptionInput.text.toString()
+       if (name.length !in 2..120 || description.length > 500) status.text = "Check item name and description length."
+       else updateEntity("update_menu_item", JSONObject().put("item_id",item.optString("id")).put("name",name).put("description",description)) { loadMenu() }
+      })
+      card.addView(button(if(item.optBoolean("active")) "Deactivate item" else "Activate item") {
+       updateEntity("update_menu_item",JSONObject().put("item_id",item.optString("id")).put("active",!item.optBoolean("active"))) { loadMenu() }
+      })
       val variants=item.optJSONArray("menu_variants")?:JSONArray()
       for(j in 0 until variants.length()) {
        val v=variants.optJSONObject(j)?:continue
        card.addView(label("${v.optString("label")} — ${if(v.isNull("price")) "Price not set" else "₹"+v.optInt("price")} — ${if(v.optBoolean("active")) "Active" else "Inactive"}",12f))
+       card.addView(button(if(v.optBoolean("active")) "Deactivate variant" else "Activate variant") {
+        updateEntity("update_menu_variant",JSONObject().put("variant_id",v.optString("id")).put("active",!v.optBoolean("active"))) { loadMenu() }
+       })
        val priceInput = field("Price in INR").apply {
         inputType = 2
         if (!v.isNull("price")) setText(v.optInt("price").toString())
