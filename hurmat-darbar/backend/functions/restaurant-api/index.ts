@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
         if (![...roles].some((r) => ["owner", "manager"].includes(r))) return reply({ error: "forbidden" }, 403);
         if (view === "menu") {
           const { data, error } = await supabase.from("menu_items")
-            .select("id, name, description, is_veg, active, available, needs_verification, menu_categories(name), menu_variants(id, label, price, active)")
+            .select("id, name, description, is_veg, active, available, track_stock, stock_qty, needs_verification, menu_categories(name), menu_variants(id, label, price, active)")
             .order("name", { ascending: true }).limit(300);
           if (error) return reply({ error: "menu_unavailable" }, 500);
           return reply({ items: data ?? [] });
