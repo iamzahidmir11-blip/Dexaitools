@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "hurmat-darbar/customer-next/**"
+      - "hurmat-darbar/admin-android/**"
+      - "hurmat-darbar/delivery-android/**"
       - ".github/workflows/hurmat-darbar-customer-next.yml"
   pull_request:
     paths:
@@ -34,3 +36,36 @@ jobs:
         run: npx tsc --noEmit
       - name: Production build
         run: npm run build
+
+  android-build:
+    name: Build ${{ matrix.app_name }} APK
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app_name: Admin
+            project_dir: hurmat-darbar/admin-android
+          - app_name: Rider
+            project_dir: hurmat-darbar/delivery-android
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Assemble debug APK
+        working-directory: ${{ matrix.project_dir }}
+        run: gradle --no-daemon assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hurmat-darbar-${{ matrix.app_name }}-debug
+          path: ${{ matrix.project_dir }}/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
