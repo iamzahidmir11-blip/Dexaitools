@@ -59,6 +59,9 @@ Deno.serve(async (req: Request) => {
     const roles = new Set((roleRows ?? []).map((row: { role: string }) => row.role));
 
     if (req.method === "GET") {
+      if (![...roles].some((r) => ["owner", "manager", "kitchen", "delivery_manager"].includes(r))) {
+        return reply({ error: "forbidden" }, 403);
+      }
       const { data, error } = await supabase
         .from("orders")
         .select("id, order_no, customer_name, customer_phone, address_text, notes, payment_method, payment_status, status, subtotal, delivery_fee, total, rider_id, created_at, updated_at, order_items(id, item_name, variant_label, unit_price, qty, line_total)")
