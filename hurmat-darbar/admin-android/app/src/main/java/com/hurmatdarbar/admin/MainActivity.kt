@@ -19,6 +19,7 @@ class MainActivity : Activity() {
  private var accessToken: String? = null
  private lateinit var root: LinearLayout
  private lateinit var status: TextView
+ private var ridersCache = JSONArray()
  private val ink = Color.rgb(35,32,25)
  private val gold = Color.rgb(171,126,62)
  private val paper = Color.rgb(247,244,237)
@@ -86,6 +87,7 @@ class MainActivity : Activity() {
    try {
     val response=request("$base/functions/v1/restaurant-api","GET",null,accessToken)
     val orders=response.optJSONArray("orders")?:JSONArray()
+    ridersCache = try { requestView("riders").optJSONArray("riders") ?: JSONArray() } catch (_:Exception) { JSONArray() }
     runOnUiThread { renderOrders(orders) }
    } catch(ex:Exception) { runOnUiThread { status.text=safeMessage(ex) } }
   }
@@ -124,6 +126,26 @@ class MainActivity : Activity() {
     },LinearLayout.LayoutParams(0,-2,1f))
    }
    card.addView(controls)
+   if (order.optString("status") in listOf("confirmed","preparing","ready_for_pickup","picked_up","out_for_delivery")) {
+    val riderNames = ArrayList<String>()
+    val riderIds = ArrayList<String>()
+    for (k in 0 until ridersCache.length()) {
+     val rider = ridersCache.optJSONObject(k) ?: continue
+     riderNames.add("${rider.optString("name")} — ${if(rider.optBoolean("is_online")) "Online" else "Offline"}")
+     riderIds.add(rider.optString("user_id"))
+    }
+    if (riderNames.isNotEmpty()) {
+     val picker = Spinner(this)
+     picker.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, riderNames)
+     card.addView(picker)
+     card.addView(button("Assign selected rider") {
+      val selected = picker.selectedItemPosition
+      if (selected in riderIds.indices) {
+       updateEntity("assign_rider", JSONObject().put("order_id",order.optString("id")).put("rider_id",riderIds[selected])) { refreshOrders() }
+      }
+     })
+    } else card.addView(label("No rider account registered yet.",12f))
+   }
    root.addView(card,LinearLayout.LayoutParams(-1,-2).apply { topMargin=10 })
   }
  }
