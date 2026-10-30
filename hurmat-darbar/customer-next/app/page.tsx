@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import MenuClient from './menu-client';
+import AuthForm from './auth-form';
 
 type Category = { id: string; name: string; sort_order: number };
 type MenuItem = { id: string; category_id: string; name: string; description: string | null; is_veg: boolean | null; image_url: string | null; available: boolean; needs_verification: boolean };
@@ -24,6 +25,7 @@ export default async function Home() {
   return <main>
     <header className="topbar"><a className="brand" href="#home">HD<span>HURMAT DARBAR</span></a><nav><a href="#menu">Menu</a><a href="#story">Our story</a><a href="#visit">Visit</a></nav><a className="call" href="tel:+919797151590">Call to order ↗</a></header>
     <section className="hero" id="home"><p className="eyebrow">URI · JAMMU & KASHMIR</p><h1>Good food.<br/><em>Warm moments.</em></h1><p className="intro">A place to gather, share and enjoy. Discover the menu at Hurmat Darbar.</p><a className="primary" href="#menu">Explore the menu <span>↓</span></a><div className="hero-note">OPPOSITE TEHSIL, URI <span>OPEN DAILY · 9 AM – 11 PM</span></div></section>
+    <AuthForm />
     <section className="menu-section" id="menu"><div className="section-head"><div><p className="eyebrow">MADE TO BE SHARED</p><h2>Our menu</h2></div><p>Choose an option to add it to your bag.</p></div>
       {!configured ? <p className="notice">Menu connection is not configured yet. Add the Supabase environment variables to load the live menu.</p> : categories.length === 0 ? <p className="notice">Menu is temporarily unavailable. Please call the restaurant.</p> : <MenuClient categories={categories} items={items} variants={variants}/>}
     </section>
