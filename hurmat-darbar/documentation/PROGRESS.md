@@ -93,3 +93,14 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - Live restaurant settings rechecked: restaurant coordinates are NULL, `location_verified=false`, delivery radius 5,000m, delivery fee ₹30, COD disabled, UPI disabled, restaurant marked open. Therefore customer delivery checkout must remain disabled.
 - No database schema/data writes were made in this phase.
 - Build and end-to-end SMS verification still pending; no production deployment claimed.
+
+
+## Admin Android API contract phase — 2026-10-30
+- [x] Inspected the existing native Admin Kotlin activity, Android manifest and Gradle configuration.
+- [x] Added `documentation/ADMIN_ANDROID_API_CONTRACT.md` to separate backend-documented actions from extra endpoint names referenced by the Android UI.
+- [x] Recorded the confirmed API contract for order listing, order creation, rider assignment, order status updates and rider location.
+- [x] Flagged menu, rider-list and reservation view/action names as unverified because they are absent from the backend README contract.
+- [x] Documented role/RLS, stock-restoration, session-expiry, privacy and Android build release gates.
+- [ ] Inspect deployed Edge Function source and live function behavior before enabling unverified Admin actions.
+- [ ] Add/verify server-side menu, inventory, reservation, staff, cash and reporting endpoints.
+- [ ] Run Admin Android Gradle build and real-device role tests; not run in this remote GitHub session.
