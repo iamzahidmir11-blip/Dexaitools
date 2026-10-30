@@ -179,6 +179,12 @@ Deno.serve(async (req: Request) => {
           "picked_up", "out_for_delivery", "delivered", "cancelled", "rejected", "delivery_failed",
         ]);
         if (!allowed.has(body.status)) return reply({ error: "invalid_status" }, 400);
+        // Block Rider API delivery completion until customer OTP is implemented.
+        // The database RPC must independently enforce the same requirement.
+        if (body.status === "delivered" && roles.has("rider") &&
+            ![...roles].some((r) => ["owner", "manager"].includes(r))) {
+          return reply({ error: "delivery_otp_required", message: "Customer OTP verification is not yet enabled." }, 409);
+        }
         const reason = typeof body.reason === "string" ? body.reason.slice(0, 300) : null;
         const { error } = await supabase.rpc("update_order_status", {
           p_order: body.order_id,
