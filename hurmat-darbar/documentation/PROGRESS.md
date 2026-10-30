@@ -82,3 +82,14 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - Checkout remains intentionally disabled: live `create_order` requires a verified delivery location, valid coordinates, supported payment method, and authenticated user context. Current restaurant settings and customer auth flow must be confirmed before enabling it.
 - No production database writes or stock changes were made.
 - Build/typecheck still awaits GitHub Actions result; no local build was run in this remote repository session.
+
+
+## Customer authentication phase — 2026-10-30
+- Added Supabase SSR browser and server clients using cookie-based sessions.
+- Added Next.js root proxy to refresh sessions and validate JWT claims with `getClaims()`.
+- Added customer phone OTP request/verification UI and signed-in state.
+- No service-role key or server secret added to the customer app.
+- OTP delivery is not yet verified: owner must configure an SMS provider, templates, rate limits and consent settings in Supabase Auth.
+- Live restaurant settings rechecked: restaurant coordinates are NULL, `location_verified=false`, delivery radius 5,000m, delivery fee ₹30, COD disabled, UPI disabled, restaurant marked open. Therefore customer delivery checkout must remain disabled.
+- No database schema/data writes were made in this phase.
+- Build and end-to-end SMS verification still pending; no production deployment claimed.
