@@ -130,3 +130,12 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Implement audited menu update and reservation workflow after rules and migration plan are approved.
 - [ ] Add automated authorization, nonexistent-row, duplicate and concurrency tests.
 - [ ] No production DDL/data writes or Edge Function deployment performed.
+
+
+## API affected-row verification fix — 2026-10-30
+- [x] Updated repository Edge Function source so menu item, menu variant and reservation status updates request the updated row ID.
+- [x] Return HTTP 404 when the target row is missing or not visible under caller RLS, rather than incorrectly returning ok:true.
+- [x] Keep caller JWT/RLS context; no service-role key introduced.
+- [ ] Add audit event writes through a reviewed, role-checked database function.
+- [ ] Add Deno/API tests and run CI.
+- [ ] Deploy updated Edge Function only after source review and explicit release approval; live deployed v4 remains unchanged.
