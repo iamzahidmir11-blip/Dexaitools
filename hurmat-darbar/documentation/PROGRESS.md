@@ -148,3 +148,12 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [x] Push and pull-request path filters now include both Android project directories.
 - [ ] Wait for GitHub Actions to run; neither APK build is marked passed until the workflow reports success.
 - [ ] Device-level auth/role tests, location permission tests and delivery workflow tests remain pending.
+
+
+## Admin Android menu controls — 2026-10-30
+- [x] Added editable menu item name and description fields using the verified `update_menu_item` API fields and server-side length bounds.
+- [x] Added menu item activate/deactivate control using the verified `active` field.
+- [x] Added menu variant activate/deactivate control using the verified `active` field.
+- [x] Kept existing availability and variant price controls; no stock/inventory field was invented because the verified menu API/schema contract does not expose a stock mutation here.
+- [ ] Run Admin Android Gradle build and test each action against a non-production test account before release.
+- [ ] Add safe inventory ledger endpoints only after live schema and RPC caller review.
