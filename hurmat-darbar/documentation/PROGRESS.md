@@ -171,3 +171,14 @@ Do not mark a task complete until the code/configuration exists and the relevant
 ## Inventory menu-read wiring fix — 2026-10-30
 - [x] Updated repository `GET ?view=menu` selection to include verified `track_stock` and `stock_qty` fields so the Admin Android inventory editor can display saved values.
 - [ ] Deploy the matching Edge Function source and verify read/write round-trip using a dedicated non-production test item/account before enabling in production.
+
+
+## Rider foreground GPS sharing — 2026-10-30
+- [x] Added Android fine/coarse location permission declarations to the separate Rider app.
+- [x] Added explicit per-active-delivery Share live location / Stop controls for `picked_up` and `out_for_delivery` states.
+- [x] Added runtime permission request and foreground-only GPS/network location updates (10-second / 10-metre thresholds) to the existing authenticated `post_location` API route.
+- [x] Location updates include order ID, latitude, longitude and accuracy; failures are surfaced in the Rider UI.
+- [x] Sharing stops when the app leaves the foreground or the activity is destroyed; no background tracking service was added.
+- [ ] Build the Rider APK and test permission denial/grant, GPS disabled, network fallback, API authorization, and location visibility with a test rider/order.
+- [ ] Confirm Android device battery behavior and location update rate before operational use.
+- [ ] Delivery OTP and rider delivery history remain pending.
