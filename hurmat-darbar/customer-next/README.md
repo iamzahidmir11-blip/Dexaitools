@@ -19,3 +19,12 @@ Never add a Supabase service-role/secret key to this app. Menu visibility is sti
 - Verify all menu names, prices, descriptions, and photos with the owner's original menu source.
 - Implement and test one-order/multi-line checkout, idempotency, address validation, tracking, and reservation submission.
 - Confirm delivery coordinates/radius and payment policy before enabling delivery or online payment.
+
+
+## Customer authentication foundation
+- Supabase SSR browser/server clients use `@supabase/ssr` with cookie-based sessions.
+- Root `proxy.ts` refreshes and validates session claims using `getClaims()`.
+- Customer phone OTP UI uses Supabase `signInWithOtp({ phone })` and `verifyOtp({ type: 'sms' })`.
+- OTP will work only after the project owner configures and tests an SMS provider, templates, rate limits, and consent/compliance settings.
+- Authentication does not place an order. Checkout stays disabled until delivery configuration is verified and the order flow is tested.
+- No service-role key is used in the website.
