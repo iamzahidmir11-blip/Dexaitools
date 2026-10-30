@@ -1,0 +1,19 @@
+{
+  "name": "Hurmat Darbar",
+  "short_name": "Hurmat Darbar",
+  "description": "Restaurant menu and ordering for Hurmat Darbar, Uri.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf9f4",
+  "theme_color": "#171610",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
