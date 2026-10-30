@@ -1,6 +1,0 @@
-flask
-gunicorn
-google-genai
-psycopg[binary]
-PyJWT
-stripe
