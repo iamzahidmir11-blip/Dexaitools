@@ -136,7 +136,7 @@ class MainActivity : Activity() {
  override fun onPause() { stopLocationUpdatesOnly(); super.onPause() }
  private fun stopLocationUpdatesOnly() {
   try { if(locationListener!=null) locationManager?.removeUpdates(locationListener!!) } catch(_:Exception) {}
-  locationListener=null; locationManager=null
+  locationListener=null; locationManager=null; sharingOrderId=null
  }
  override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray) {
   super.onRequestPermissionsResult(requestCode,permissions,grantResults)
