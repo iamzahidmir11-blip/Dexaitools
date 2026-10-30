@@ -32,6 +32,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+          # Do not request the removed legacy "tools" package.
+        with:
+          packages: platform-tools
+
+      - name: Install Android 35 platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
