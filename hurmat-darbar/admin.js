@@ -1,80 +1,53 @@
 const $=id=>document.getElementById(id);
-const data={
-orders:[
-{id:"HD-1048",name:"Ayaan Khan",type:"Delivery",status:"Pending",amount:1010,pay:"UPI pending",items:"Wazwan Platter ×1, Kahwa ×2"},
-{id:"HD-1047",name:"Sara Ahmad",type:"Pickup",status:"Preparing",amount:560,pay:"Cash on delivery",items:"Chicken Biryani ×2"},
-{id:"HD-1046",name:"Ibrahim Mir",type:"Delivery",status:"Ready",amount:400,pay:"UPI demo paid",items:"Seekh Kebab ×1, Roti ×4"},
-{id:"HD-1045",name:"Zoya",type:"Delivery",status:"Delivered",amount:290,pay:"Cash",items:"Paneer Special ×1"}],
-menu:[{name:"Wazwan Platter",category:"Wazwan",price:850,availability:"Available"},{name:"Chicken Biryani",category:"Rice",price:280,availability:"Available"},{name:"Seekh Kebab",category:"Starters",price:320,availability:"Available"},{name:"Kahwa",category:"Beverages",price:80,availability:"Available"},{name:"Paneer Special",category:"Main Course",price:290,availability:"Unavailable"}],
-inventory:[{name:"Chicken",stock:8,unit:"kg",min:5},{name:"Rice",stock:24,unit:"kg",min:10},{name:"Paneer",stock:2,unit:"kg",min:4},{name:"Cooking oil",stock:3,unit:"L",min:5},{name:"Kashmiri spices",stock:7,unit:"kg",min:3}],
-riders:[{name:"Danish",phone:"Demo contact",zone:"Uri Market",status:"Available",deliveries:12},{name:"Sameer",phone:"Demo contact",zone:"Tehsil Road",status:"On delivery",deliveries:8},{name:"Adil",phone:"Demo contact",zone:"Uri",status:"Offline",deliveries:5}],
-reservations:[{guest:"Areeba",date:"Today · 7:30 PM",guests:4,status:"Confirmed"},{guest:"Musaib",date:"Today · 8:00 PM",guests:2,status:"Pending"},{guest:"Hina",date:"Tomorrow · 1:00 PM",guests:6,status:"Confirmed"}],
-customers:[{name:"Ayaan Khan",orders:6,spent:4250,last:"Today"},{name:"Sara Ahmad",orders:3,spent:1890,last:"Today"},{name:"Ibrahim Mir",orders:9,spent:6120,last:"Yesterday"}],
-staff:[{name:"Demo Owner",role:"Owner",access:"Full access"},{name:"Demo Manager",role:"Manager",access:"Operations"},{name:"Demo Cashier",role:"Cashier",access:"Billing only"},{name:"Demo Kitchen",role:"Kitchen",access:"Order preparation"}],
-payments:[{ref:"PAY-2081",order:"HD-1048",method:"UPI",amount:1010,status:"Pending"},{ref:"PAY-2080",order:"HD-1047",method:"Cash",amount:560,status:"Due on delivery"},{ref:"PAY-2079",order:"HD-1046",method:"UPI",amount:400,status:"Demo paid"}],
-support:[{id:"T-021",from:"Ayaan Khan",topic:"Order timing",status:"Open"},{id:"T-020",from:"Sara Ahmad",topic:"Menu question",status:"In review"}]};
-const pages={
-overview:["Overview dashboard.","Restaurant operations at a glance."],
-orders:["Order management.","Review orders and simulate status changes."],
-menu:["Menu & categories.","Preview menu items, prices and availability."],
-inventory:["Inventory control.","Monitor stock levels and low-stock alerts."],
-riders:["Delivery riders.","View rider availability and demo assignments."],
-reservations:["Reservations.","Review table bookings and guest counts."],
-customers:["Customers.","Sample customer history and order activity."],
-staff:["Staff & roles.","Preview staff roles and access boundaries."],
-payments:["Payments & settlements.","Sample payment ledger; no money is moved."],
-support:["Customer support.","Sample tickets and response workflow."],
-reports:["Reports & analytics.","Illustrative figures generated from sample records."],
-settings:["Restaurant settings.","Preview operating details and configuration categories."]};
-let current="overview";
-const money=n=>"₹"+Number(n).toLocaleString("en-IN");
-function table(headers,rows){return '<div class="table-wrap"><table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join("")+'</tr></thead><tbody>'+rows+'</tbody></table></div>'}
-function action(label,attrs=""){return '<button class="small-action" '+attrs+'>'+label+'</button>'}
-function render(){
-const p=pages[current];$("page-title").innerHTML=p[0].replace(" dashboard."," <i>dashboard.</i>");$("page-desc").textContent=p[1];
-document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===current));
-let out="";
-if(current==="overview"){
-out='<div class="stats"><article class="glass"><small>TODAY\'S SAMPLE ORDERS</small><strong>'+data.orders.length+'</strong><span>Fictional records</span></article><article class="glass"><small>SAMPLE REVENUE</small><strong>'+money(data.orders.reduce((a,x)=>a+x.amount,0))+'</strong><span>Not actual earnings</span></article><article class="glass"><small>LOW STOCK ALERTS</small><strong>'+data.inventory.filter(x=>x.stock<=x.min).length+'</strong><span>Items at/below threshold</span></article><article class="glass"><small>ACTIVE RIDERS</small><strong>'+data.riders.filter(x=>x.status!=="Offline").length+'</strong><span>Demo availability</span></article></div><div class="section-head"><h2>Recent orders</h2>'+action("View all",'data-go="orders"')+'</div>'+table(["Order","Customer","Type","Status","Total"],data.orders.slice(0,4).map(o=>'<tr><td>'+o.id+'</td><td>'+o.name+'</td><td>'+o.type+'</td><td><span class="pill">'+o.status+'</span></td><td>'+money(o.amount)+'</td></tr>').join(""))+'<div class="quick-grid">'+["menu","inventory","riders","reservations"].map(k=>'<button class="quick glass" data-go="'+k+'">'+pages[k][0]+' <span>Open →</span></button>').join("")+'</div>';
-}else if(current==="orders"){
-out='<div class="section-head"><h2>All sample orders</h2><input id="filter" placeholder="Search order or customer"></div><div id="table-slot">'+ordersTable()+'</div>';
-}else if(current==="menu"){
-out='<div class="section-head"><h2>Menu catalogue</h2>'+action("+ Add sample item",'data-add="menu"')+'</div>'+table(["Item","Category","Price","Availability","Action"],data.menu.map((x,i)=>'<tr><td>'+x.name+'</td><td>'+x.category+'</td><td>'+money(x.price)+'</td><td><span class="pill">'+x.availability+'</span></td><td>'+action("Toggle",'data-toggle="menu" data-index="'+i+'"')+'</td></tr>').join(""));
-}else if(current==="inventory"){
-out='<div class="alert">Low stock: '+data.inventory.filter(x=>x.stock<=x.min).map(x=>x.name).join(", ")+'</div>'+table(["Ingredient","Stock","Unit","Minimum","Status","Action"],data.inventory.map((x,i)=>'<tr><td>'+x.name+'</td><td>'+x.stock+'</td><td>'+x.unit+'</td><td>'+x.min+'</td><td><span class="pill">'+(x.stock<=x.min?"Low stock":"Healthy")+'</span></td><td>'+action("+1",'data-stock="'+i+'"')+'</td></tr>').join(""));
-}else if(current==="riders"){
-out='<div class="section-head"><h2>Rider roster</h2>'+action("Add demo rider",'data-add="riders"')+'</div>'+table(["Rider","Contact","Zone","Status","Completed","Action"],data.riders.map((x,i)=>'<tr><td>'+x.name+'</td><td>'+x.phone+'</td><td>'+x.zone+'</td><td><span class="pill">'+x.status+'</span></td><td>'+x.deliveries+'</td><td>'+action("Change status",'data-rider="'+i+'"')+'</td></tr>').join(""));
-}else if(current==="reservations"){
-out='<div class="section-head"><h2>Booking calendar</h2>'+action("Add booking",'data-add="reservations"')+'</div>'+table(["Guest","Date & time","Guests","Status","Action"],data.reservations.map((x,i)=>'<tr><td>'+x.guest+'</td><td>'+x.date+'</td><td>'+x.guests+'</td><td><span class="pill">'+x.status+'</span></td><td>'+action("Update",'data-res="'+i+'"')+'</td></tr>').join(""));
-}else if(current==="customers"){
-out=table(["Customer","Orders","Sample spend","Last activity"],data.customers.map(x=>'<tr><td>'+x.name+'</td><td>'+x.orders+'</td><td>'+money(x.spent)+'</td><td>'+x.last+'</td></tr>').join(""));
-}else if(current==="staff"){
-out='<div class="alert">Role permissions are illustrative only. No real staff accounts exist in demo mode.</div>'+table(["Staff profile","Role","Access preview"],data.staff.map(x=>'<tr><td>'+x.name+'</td><td>'+x.role+'</td><td>'+x.access+'</td></tr>').join(""));
-}else if(current==="payments"){
-out='<div class="alert">Payment records are fictional. No payment gateway is connected and no transaction can be initiated.</div>'+table(["Reference","Order","Method","Amount","Status"],data.payments.map(x=>'<tr><td>'+x.ref+'</td><td>'+x.order+'</td><td>'+x.method+'</td><td>'+money(x.amount)+'</td><td><span class="pill">'+x.status+'</span></td></tr>').join(""));
-}else if(current==="support"){
-out='<div class="section-head"><h2>Support inbox</h2>'+action("Create sample ticket",'data-add="support"')+'</div>'+table(["Ticket","Customer","Topic","Status","Action"],data.support.map((x,i)=>'<tr><td>'+x.id+'</td><td>'+x.from+'</td><td>'+x.topic+'</td><td><span class="pill">'+x.status+'</span></td><td>'+action("Resolve",'data-ticket="'+i+'"')+'</td></tr>').join(""));
-}else if(current==="reports"){
-out='<div class="stats"><article class="glass"><small>ORDERS</small><strong>'+data.orders.length+'</strong></article><article class="glass"><small>GROSS SAMPLE VALUE</small><strong>'+money(data.orders.reduce((a,x)=>a+x.amount,0))+'</strong></article><article class="glass"><small>AVG. ORDER VALUE</small><strong>'+money(Math.round(data.orders.reduce((a,x)=>a+x.amount,0)/data.orders.length))+'</strong></article></div><div class="glass report"><h2>Order status breakdown</h2>'+Object.entries(data.orders.reduce((a,x)=>(a[x.status]=(a[x.status]||0)+1,a),{})).map(([k,v])=>'<p>'+k+' <b>'+v+'</b></p>').join("")+'</div>';
-}else{
-out='<div class="settings-grid">'+[["Restaurant profile","Name, address, phone and opening hours"],["Order preferences","Pickup, delivery and preparation estimates"],["Delivery zones","Service areas and delivery fee examples"],["Notifications","New order and reservation alert preferences"],["Tax & invoices","Illustrative tax and receipt settings"],["Security & access","Production login and Owner approval — not active"]].map(x=>'<article class="glass setting"><b>'+x[0]+'</b><p>'+x[1]+'</p>'+action("Preview",'data-setting="'+x[0]+'"')+'</article>').join("")+'</div>';
-}
-$("page-content").innerHTML=out;
-}
-function ordersTable(list=data.orders){return table(["Order","Customer","Type","Items","Status","Total","Action"],list.map((o)=>'<tr><td>'+o.id+'</td><td>'+o.name+'</td><td>'+o.type+'</td><td>'+o.items+'</td><td><span class="pill">'+o.status+'</span></td><td>'+money(o.amount)+'</td><td>'+action("Next status",'data-order="'+o.id+'"')+'</td></tr>').join(""))}
-function reset(){location.reload()}
-$("nav").addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b){current=b.dataset.page;render()}});
-$("page-content").addEventListener("click",e=>{
-const b=e.target.closest("button");if(!b)return;
-if(b.dataset.go){current=b.dataset.go;render();return}
-if(b.dataset.order){const o=data.orders.find(x=>x.id===b.dataset.order);const steps=["Pending","Confirmed","Preparing","Ready","Picked up","Delivered"];o.status=steps[(steps.indexOf(o.status)+1)%steps.length];render();return}
-if(b.dataset.toggle==="menu"){const x=data.menu[+b.dataset.index];x.availability=x.availability==="Available"?"Unavailable":"Available";render();return}
-if(b.dataset.stock!==undefined){data.inventory[+b.dataset.stock].stock++;render();return}
-if(b.dataset.rider!==undefined){const x=data.riders[+b.dataset.rider];x.status=x.status==="Available"?"On delivery":x.status==="On delivery"?"Offline":"Available";render();return}
-if(b.dataset.res!==undefined){const x=data.reservations[+b.dataset.res];x.status=x.status==="Pending"?"Confirmed":"Pending";render();return}
-if(b.dataset.ticket!==undefined){data.support[+b.dataset.ticket].status="Resolved";render();return}
-if(b.dataset.add){const kind=b.dataset.add;if(kind==="menu")data.menu.push({name:"New demo dish",category:"Specials",price:250,availability:"Available"});if(kind==="riders")data.riders.push({name:"New demo rider",phone:"Demo contact",zone:"Uri",status:"Available",deliveries:0});if(kind==="reservations")data.reservations.push({guest:"Demo guest",date:"Tomorrow · 6:00 PM",guests:2,status:"Pending"});if(kind==="support")data.support.push({id:"T-0"+(22+data.support.length),from:"Demo guest",topic:"New enquiry",status:"Open"});render();return}
-if(b.dataset.setting)alert(b.dataset.setting+" is a preview-only setting.");
-});
-$("page-content").addEventListener("input",e=>{if(e.target.id==="filter"){const q=e.target.value.toLowerCase();const slot=$("table-slot");if(slot)slot.innerHTML=ordersTable(data.orders.filter(o=>(o.id+" "+o.name+" "+o.status).toLowerCase().includes(q)))}});
-$("reset").addEventListener("click",reset);render();
+const seed={
+orders:[{id:"HD-1048",customer:"Ayaan Khan",type:"Delivery",status:"Pending",amount:1010,items:"Wazwan Platter ×1, Kahwa ×2",payment:"UPI pending"},{id:"HD-1047",customer:"Sara Ahmad",type:"Pickup",status:"Preparing",amount:560,items:"Chicken Biryani ×2",payment:"Cash on delivery"},{id:"HD-1046",customer:"Ibrahim Mir",type:"Delivery",status:"Ready",amount:400,items:"Seekh Kebab ×1, Roti ×4",payment:"UPI demo paid"},{id:"HD-1045",customer:"Zoya",type:"Delivery",status:"Delivered",amount:290,items:"Paneer Special ×1",payment:"Cash"}],
+menu:[{name:"Wazwan Platter",category:"Wazwan",price:850,availability:"Available"},{name:"Chicken Biryani",category:"Rice",price:280,availability:"Available"},{name:"Seekh Kebab",category:"Starters",price:320,availability:"Available"},{name:"Kahwa",category:"Beverages",price:80,availability:"Available"}],
+inventory:[{name:"Chicken",stock:8,unit:"kg",minimum:5},{name:"Rice",stock:24,unit:"kg",minimum:10},{name:"Paneer",stock:2,unit:"kg",minimum:4}],
+riders:[{name:"Danish",phone:"Demo contact",zone:"Uri Market",status:"Available"},{name:"Sameer",phone:"Demo contact",zone:"Tehsil Road",status:"On delivery"}],
+reservations:[{guest:"Areeba",date:"Today 7:30 PM",guests:4,status:"Confirmed"},{guest:"Musaib",date:"Today 8:00 PM",guests:2,status:"Pending"}],
+customers:[{name:"Ayaan Khan",phone:"Demo contact",orders:6,spent:4250},{name:"Sara Ahmad",phone:"Demo contact",orders:3,spent:1890}],
+staff:[{name:"Demo Manager",role:"Manager",status:"Active"},{name:"Demo Cashier",role:"Cashier",status:"Active"}],
+payments:[{reference:"PAY-2081",order:"HD-1048",method:"UPI",amount:1010,status:"Pending"},{reference:"PAY-2080",order:"HD-1047",method:"Cash",amount:560,status:"Due"}],
+support:[{ticket:"T-021",customer:"Ayaan Khan",subject:"Order timing",status:"Open"},{ticket:"T-020",customer:"Sara Ahmad",subject:"Menu question",status:"In review"}],
+settings:[{name:"Restaurant name",value:"Hurmat Darbar"},{name:"Phone",value:"+91 97971 51590"},{name:"Address",value:"Opposite Tehsil, Uri, Baramulla"},{name:"Opening hours",value:"9:00 AM – 11:00 PM"},{name:"Delivery radius",value:"Demo: 5 km"}],
+profile:[{name:"Demo Administrator",email:"admin@demo.local",role:"Owner preview",phone:"Not connected"}],
+activity:[{action:"Demo workspace initialized",when:"Just now"}]};
+let db=load(),page="overview",editState=null;
+function load(){try{return JSON.parse(localStorage.getItem("hd-admin-demo"))||structuredClone(seed)}catch{return structuredClone(seed)}}
+function save(action="Changes saved in this browser"){localStorage.setItem("hd-admin-demo",JSON.stringify(db));db.activity.unshift({action,when:new Date().toLocaleString()});localStorage.setItem("hd-admin-demo",JSON.stringify(db));toast(action)}
+function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
+const money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
+const config={
+orders:{title:"Orders",desc:"Track and update customer orders.",fields:{customer:"Customer",type:"Order type",status:"Status",amount:"Total amount",items:"Items",payment:"Payment"},options:{type:["Delivery","Pickup"],status:["Pending","Confirmed","Preparing","Ready","Picked up","Delivered","Cancelled"]}},
+menu:{title:"Menu & Categories",desc:"Create dishes, edit prices and control availability.",fields:{name:"Item name",category:"Category",price:"Price (₹)",availability:"Availability"},options:{availability:["Available","Unavailable"]}},
+inventory:{title:"Inventory",desc:"Maintain ingredient quantities and low-stock thresholds.",fields:{name:"Ingredient",stock:"Current stock",unit:"Unit",minimum:"Minimum stock"}},
+riders:{title:"Delivery Riders",desc:"Manage rider profiles and availability.",fields:{name:"Rider name",phone:"Contact label",zone:"Delivery zone",status:"Status"},options:{status:["Available","On delivery","Offline"]}},
+reservations:{title:"Reservations",desc:"Manage table bookings and guest details.",fields:{guest:"Guest name",date:"Date and time",guests:"Number of guests",status:"Booking status"},options:{status:["Pending","Confirmed","Seated","Completed","Cancelled"]}},
+customers:{title:"Customers",desc:"View and maintain sample customer records.",fields:{name:"Customer name",phone:"Contact label",orders:"Orders count",spent:"Sample spend (₹)"}},
+staff:{title:"Staff & Roles",desc:"Preview team records and role assignments.",fields:{name:"Staff name",role:"Role",status:"Status"},options:{role:["Owner","Manager","Cashier","Kitchen","Rider"],status:["Active","Inactive"]}},
+payments:{title:"Payments",desc:"Review demo payment records. No money moves.",fields:{reference:"Reference",order:"Order ID",method:"Method",amount:"Amount (₹)",status:"Status"},options:{method:["UPI","Cash","Card"],status:["Pending","Paid (demo)","Refunded (demo)","Due"]}},
+support:{title:"Support Inbox",desc:"Manage customer enquiries and ticket status.",fields:{ticket:"Ticket ID",customer:"Customer",subject:"Subject",status:"Status"},options:{status:["Open","In review","Resolved","Closed"]}},
+settings:{title:"Restaurant Settings",desc:"Edit the demo restaurant profile and operating preferences.",fields:{name:"Setting",value:"Value"}},
+profile:{title:"My Profile",desc:"Demo administrator profile. Authentication is intentionally disabled.",fields:{name:"Display name",email:"Demo email",role:"Role label",phone:"Contact label"}},
+activity:{title:"Activity Log",desc:"Recent changes made inside this browser preview.",fields:{action:"Activity",when:"Time"}}
+};
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function go(p){page=p;render()}
+function nav(){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page))}
+function tablePage(key){let c=config[key],rows=db[key]||[],fields=Object.keys(c.fields);let headers=fields.map(f=>c.fields[f]).concat(key==="orders"?["Actions"]:["Actions"]);let body=rows.map((r,i)=>'<tr>'+fields.map(f=>'<td>'+esc(f==="amount"||f==="spent"?money(r[f]):r[f])+'</td>').join("")+'<td><div class="row-actions"><button data-edit="'+key+'" data-i="'+i+'">Edit</button><button data-delete="'+key+'" data-i="'+i+'" class="danger-link">Delete</button>'+ (key==="orders"?'<button data-next="'+i+'">Next status</button>':"")+'</div></td></tr>').join("");return '<div class="panel"><div class="panel-head"><div><h2>'+c.title+'</h2><p>'+c.desc+'</p></div><button class="primary compact" data-add="'+key+'">＋ Add new</button></div><div class="search-row"><input id="search" placeholder="Search '+c.title.toLowerCase()+'..."><span>'+rows.length+' records</span></div><div id="table-host">'+makeTable(headers,body)+'</div></div>'}
+function makeTable(h,b){return '<div class="table-wrap"><table><thead><tr>'+h.map(x=>'<th>'+esc(x)+'</th>').join("")+'</tr></thead><tbody>'+(b||'<tr><td colspan="10" class="empty">No records yet. Add your first demo record.</td></tr>')+'</tbody></table></div>'}
+function overview(){let total=db.orders.reduce((a,x)=>a+Number(x.amount||0),0),pending=db.orders.filter(x=>["Pending","Confirmed"].includes(x.status)).length,low=db.inventory.filter(x=>Number(x.stock)<=Number(x.minimum)).length;return '<div class="metric-grid"><article class="metric"><span>ORDERS</span><b>'+db.orders.length+'</b><small>'+pending+' awaiting action</small></article><article class="metric"><span>DEMO SALES VALUE</span><b>'+money(total)+'</b><small>Not real revenue</small></article><article class="metric"><span>LOW STOCK</span><b>'+low+'</b><small>Inventory alerts</small></article><article class="metric"><span>AVAILABLE RIDERS</span><b>'+db.riders.filter(x=>x.status==="Available").length+'</b><small>Sample roster</small></article></div><div class="panel"><div class="panel-head"><div><h2>Recent orders</h2><p>Latest sample activity</p></div><button class="text-btn" data-go="orders">View all →</button></div>'+makeTable(["Order","Customer","Type","Status","Total"],db.orders.slice(0,5).map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.type)+'</td><td><span class="status">'+esc(x.status)+'</span></td><td>'+money(x.amount)+'</td></tr>').join(""))+'</div><div class="shortcut-grid">'+["menu","inventory","riders","reservations","staff","reports"].map(k=>'<button class="shortcut" data-go="'+k+'"><b>'+config[k]?.title||k+'</b><span>Open section →</span></button>').join("")+'</div>'}
+function render(){nav();let c=config[page]||config.overview;$("crumb-current").textContent=c.title;$("page-title").textContent=page==="overview"?"Overview":c.title;$("page-desc").textContent=page==="overview"?"Your restaurant at a glance.":c.desc||"";$("page-content").innerHTML=page==="overview"?overview():page==="reports"?reports():page==="activity"?tablePage("activity"):tablePage(page);if(page==="profile")$("page-content").insertAdjacentHTML("afterbegin",'<div class="info-banner">This is a local demo profile. Sign-in and account security will be connected in production mode.</div>');}
+function reports(){let total=db.orders.reduce((a,x)=>a+Number(x.amount||0),0);return '<div class="metric-grid"><article class="metric"><span>TOTAL ORDERS</span><b>'+db.orders.length+'</b></article><article class="metric"><span>GROSS DEMO VALUE</span><b>'+money(total)+'</b></article><article class="metric"><span>AVERAGE ORDER</span><b>'+money(db.orders.length?Math.round(total/db.orders.length):0)+'</b></article><article class="metric"><span>COMPLETED</span><b>'+db.orders.filter(x=>x.status==="Delivered").length+'</b></article></div><div class="panel"><h2>Order status summary</h2>'+makeTable(["Status","Count"],[...new Set(db.orders.map(x=>x.status))].map(s=>'<tr><td>'+esc(s)+'</td><td>'+db.orders.filter(x=>x.status===s).length+'</td></tr>').join(""))+'</div><div class="panel"><button class="primary compact" data-export="csv">Export orders CSV</button> <button class="ghost" data-export="json">Backup demo data</button></div>'}
+function openForm(key,index=null){let c=config[key],record=index===null?{}:{...db[key][index]};editState={key,index};$("modal-title").textContent=(index===null?"Add ":"Edit ")+c.title;$("form-fields").innerHTML=Object.entries(c.fields).map(([f,label])=>{let value=record[f]??"";let opts=c.options?.[f];return '<label>'+esc(label)+(opts?'<select name="'+f+'">'+opts.map(o=>'<option '+(o===value?"selected":"")+'>'+esc(o)+'</option>').join("")+'</select>':'<input name="'+f+'" value="'+esc(value)+'" '+(["price","amount","stock","minimum","guests","orders","spent"].includes(f)?'type="number" step="any"':'type="text"')+' required>')+'</label>'}).join("");$("modal").hidden=false}
+function closeForm(){$("modal").hidden=true;editState=null}
+$("record-form").addEventListener("submit",e=>{e.preventDefault();let obj=Object.fromEntries(new FormData(e.currentTarget).entries());for(let k of Object.keys(obj))if(["price","amount","stock","minimum","guests","orders","spent"].includes(k))obj[k]=Number(obj[k]);let {key,index}=editState;if(index===null)db[key].unshift(obj);else db[key][index]=obj;closeForm();save((index===null?"Added ":"Updated ")+config[key].title+" record");render()});
+$("modal-close").onclick=closeForm;$("modal-cancel").onclick=closeForm;$("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeForm()});
+$("nav").addEventListener("click",e=>{let b=e.target.closest("[data-page]");if(b)go(b.dataset.page);let g=e.target.closest("[data-group]");if(g){let el=document.querySelector('[data-items="'+g.dataset.group+'"]');el.hidden=!el.hidden;g.classList.toggle("collapsed",el.hidden)}});
+$("page-content").addEventListener("click",e=>{let b=e.target.closest("button");if(!b)return;if(b.dataset.go){go(b.dataset.go);return}if(b.dataset.add){openForm(b.dataset.add);return}if(b.dataset.edit){openForm(b.dataset.edit,+b.dataset.i);return}if(b.dataset.delete){let k=b.dataset.delete,i=+b.dataset.i;if(confirm("Delete this demo record?")){db[k].splice(i,1);save("Deleted "+config[k].title+" record");render()}return}if(b.dataset.next!==undefined){let o=db.orders[+b.dataset.next],steps=["Pending","Confirmed","Preparing","Ready","Picked up","Delivered","Cancelled"];o.status=steps[(steps.indexOf(o.status)+1)%steps.length];save("Updated order "+o.id);render();return}if(b.dataset.export){download(b.dataset.export);return}});
+$("page-content").addEventListener("input",e=>{if(e.target.id==="search"){let q=e.target.value.toLowerCase(),rows=[...$("table-host").querySelectorAll("tbody tr")];rows.forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(q))}});
+function download(type){let content=type==="json"?JSON.stringify(db,null,2):["id,customer,type,status,amount,items",...db.orders.map(o=>[o.id,o.customer,o.type,o.status,o.amount,'"'+o.items+'"'].join(","))].join("\n");let blob=new Blob([content],{type:type==="json"?"application/json":"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hurmat-darbar-demo."+(type==="json"?"json":"csv");a.click();URL.revokeObjectURL(a.href);toast("Demo backup exported")}
+$("top-more").onclick=$("side-more").onclick=()=>{$("more-menu").hidden=!$("more-menu").hidden};
+$("more-menu").addEventListener("click",e=>{let b=e.target.closest("[data-menu]");if(!b)return;$("more-menu").hidden=true;let v=b.dataset.menu;if(v==="profile"||v==="settings"||v==="activity")go(v);if(v==="export")download("json");if(v==="reset"&&confirm("Restore all sample data?")){db=structuredClone(seed);save("Demo data reset");go("overview")}});
+document.addEventListener("click",e=>{if(!e.target.closest(".top-actions"))$("more-menu").hidden=true});
+render();
