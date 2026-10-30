@@ -178,6 +178,16 @@ class MainActivity : Activity() {
       for(j in 0 until variants.length()) {
        val v=variants.optJSONObject(j)?:continue
        card.addView(label("${v.optString("label")} — ${if(v.isNull("price")) "Price not set" else "₹"+v.optInt("price")} — ${if(v.optBoolean("active")) "Active" else "Inactive"}",12f))
+       val priceInput = field("Price in INR").apply {
+        inputType = 2
+        if (!v.isNull("price")) setText(v.optInt("price").toString())
+       }
+       card.addView(priceInput, params())
+       card.addView(button("Save variant price") {
+        val price = priceInput.text.toString().toIntOrNull()
+        if (price == null || price <= 0) status.text = "Enter a valid price."
+        else updateEntity("update_menu_variant", JSONObject().put("variant_id",v.optString("id")).put("price",price)) { loadMenu() }
+       })
       }
       card.addView(button(if(item.optBoolean("available")) "Mark unavailable" else "Mark available") {
        updateEntity("update_menu_item",JSONObject().put("item_id",item.optString("id")).put("available",!item.optBoolean("available"))) { loadMenu() }
