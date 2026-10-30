@@ -193,3 +193,11 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Add server-side OTP storage and atomic verify/consume workflow; enforce OTP inside the database delivery transition so a modified APK cannot bypass it.
 - [ ] Add negative tests for expired, wrong, replayed, cross-order and cross-rider codes.
 - [ ] No production schema changes, SMS sends, or live order changes were made in this audit.
+
+
+## Rider delivery-completion safety gate — 2026-10-30
+- [x] Removed the Rider app's direct `delivered` status button while customer OTP verification is not implemented.
+- [x] Rider can still move orders through `picked_up` and `out_for_delivery`; the app now explains why final completion is unavailable.
+- [ ] Implement server-side OTP verification and enforce it inside the database status-transition RPC before restoring delivery completion.
+- [ ] This is a client-side safeguard only; the live database RPC still permits an assigned rider to set `delivered` without OTP, so it is not a complete security fix.
+- [ ] Build and test Rider APK; not yet verified.
