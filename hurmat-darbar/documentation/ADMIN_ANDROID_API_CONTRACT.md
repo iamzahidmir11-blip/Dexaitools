@@ -1,51 +1,57 @@
-# Admin Android — API integration contract
+# Admin Android — verified API contract and security review
 
 Last reviewed: 2026-10-30
 
-This contract is based on the repository's documented deployed `restaurant-api` contract and the current Admin Android source. It is a gap-control document, not a claim that end-to-end tests have passed.
+Live Supabase project inspection found the `restaurant-api` Edge Function ACTIVE at version 4 with platform JWT verification enabled. Its deployed source was retrieved and reviewed. The function creates a Supabase client using the caller's bearer token and publishable/anon key, calls `auth.getUser(token)`, reads active `user_roles`, and performs data queries with the caller's JWT context so RLS applies.
 
-## Confirmed API actions in backend documentation
+## Confirmed routes in deployed function v4
 
-All requests require a valid Supabase user access token. The Edge Function uses a JWT-scoped client and the publishable/anon key; never add a service-role key to this app.
+All requests require a valid Supabase user access token. The Edge Function uses a JWT-scoped client and publishable/anon key; never add a service-role key to this app.
 
-| Operation | Documented route/action | Required verification |
+| Operation | Route/action | Server role gate |
 |---|---|---|
-| List orders | `GET /functions/v1/restaurant-api` | Confirm response fields, pagination and RLS for owner/manager/staff |
-| Create order | `POST { action: "create_order", order: {...} }` | Not an Admin UI requirement yet; verify server-side totals and stock behavior |
-| Assign rider | `POST { action: "assign_rider", order_id, rider_id }` | Verify eligible roles, rider ownership and allowed order states |
-| Change order status | `POST { action: "update_order_status", order_id, status, reason? }` | Verify transition matrix, cancellation reason and exactly-once stock restoration |
-| Rider location | `POST { action: "post_location", order_id, lat, lng, accuracy? }` | Rider-only; Admin app must not impersonate this action |
+| List orders | `GET /functions/v1/restaurant-api` | owner, manager, kitchen, delivery_manager, rider |
+| List menu | `GET ?view=menu` | owner, manager |
+| List reservations | `GET ?view=reservations` | owner, manager |
+| List riders | `GET ?view=riders` | owner, manager, delivery_manager |
+| Update menu item | `POST { action: "update_menu_item", item_id, ...patch }` | owner, manager |
+| Update menu variant | `POST { action: "update_menu_variant", variant_id, ...patch }` | owner, manager |
+| Update reservation status | `POST { action: "update_reservation_status", reservation_id, status }` | owner, manager |
+| Assign rider | `POST { action: "assign_rider", order_id, rider_id }` | owner, manager, delivery_manager |
+| Change order status | `POST { action: "update_order_status", order_id, status, reason? }` | owner, manager, kitchen, rider; database RPC performs further checks |
 
-## Admin app actions that are NOT documented as supported
+Other deployed actions:
+- `create_order` calls the `create_order` database RPC.
+- `post_location` is rider-only and calls `rider_post_location`.
+- `set_rider_availability` is rider-only and updates the rider's own online state.
 
-The current Kotlin source references the following extra view/action names. They must not be treated as production-ready until the Edge Function implementation and database permissions are inspected and tested:
+## Current Admin app alignment
 
-- GET query views: `menu`, `riders`, `reservations`
-- POST actions: `update_menu_variant`, `update_menu_item`, `update_reservation_status`
+The current Kotlin activity calls the documented order, menu, rider and reservation views/actions. Its status controls and rider assignment use the documented action names. This is source-level alignment only; no Android build or device-level API test has been run in this session.
 
-Do not add optimistic success messages for these operations. Do not silently fall back to direct table writes from the APK. Add them only behind the authenticated shared API after server-side role checks, input validation, audit logging and RLS behavior are verified.
+## Security observations requiring follow-up
 
-## Admin feature gates
-
-1. **Orders:** show only fields actually returned by the API; handle empty, loading, expired-session and permission-denied states.
-2. **Status workflow:** use only server-accepted transitions. A successful HTTP response is not a substitute for checking the returned order state.
-3. **Rider assignment:** only offer riders returned by a verified owner/manager-scoped endpoint. Do not assume every rider row is assignable or online.
-4. **Menu/inventory:** read and mutate through documented API endpoints only. Price and availability changes require audit records and server-side validation. Stock must not be edited by changing menu variant prices.
-5. **Reservations:** status changes require a defined state machine and conflict/cancellation rules.
-6. **Staff and reports:** require dedicated scoped endpoints; never expose broad profile, role, cash or audit tables to the client.
-7. **Authentication:** use Supabase Auth access tokens; enforce role authorization on the server for every request. Hiding a button in Android is not authorization.
+1. **Reservation status transitions:** the deployed handler accepts `confirmed`, `rejected`, `cancelled`, and `pending` for any reservation UUID, then performs a direct table update. The handler does not itself enforce a transition matrix, conflict checks, or audit logging. Before treating reservation management as production-ready, enforce these rules transactionally in a database function or a tightly scoped server workflow.
+2. **Menu edits:** the handler validates field types and bounds and relies on caller-context RLS for the table update. Verify affected-row counts and ensure menu changes are audited. Do not assume an `ok: true` response proves a row changed: the handler currently does not select/return the updated row.
+3. **Order status:** the handler validates the status vocabulary and role gate, then delegates to `update_order_status`. The database RPC must remain the authoritative transition/assignment/stock guard. Test all role/status combinations and cancellation stock restoration before release.
+4. **Rider assignment:** the handler validates UUIDs and delegates to `assign_rider`; verify the RPC checks approved/active rider, valid order state, and assignment audit trail.
+5. **Rider data:** the `riders` view returns names, phone numbers, online state and last-seen timestamps to owner/manager/delivery_manager. Keep this view limited to those roles and avoid unnecessary display/logging of phone numbers.
+6. **Error detail:** some RPC failures include the database error message in a `code` response field. Review whether those messages disclose internal schema details; prefer stable public error codes in production.
+7. **CORS:** the function currently uses wildcard origin. This is not an authorization control; JWT and role checks remain mandatory. Consider a narrower browser-origin allowlist if browser clients are added.
 
 ## Required tests before release
 
-- Owner, manager, order-staff and unauthorized customer accounts each tested.
+- Owner, manager, kitchen, delivery-manager, rider and unauthorized customer accounts each tested.
 - RLS prevents one restaurant's staff from reading another restaurant's records.
 - Invalid and out-of-order status transitions are rejected.
 - Cancellation/rejection restores tracked stock exactly once.
 - Rider assignment rejects inactive/unapproved riders and invalid order states.
+- Menu and reservation updates reject unauthorized roles and invalid input.
+- Reservation double-booking and status transition behavior is tested transactionally.
 - Expired token returns an authentication error and the app returns to sign-in.
 - API errors are user-safe; no access token, phone/address data or secret is written to logs.
 - Independent debug and release APK builds pass on Android Studio/Gradle.
 
 ## Current status
 
-The Admin app is an early native Kotlin shell. Repository code exists for sign-in, order listing, status actions, rider assignment, menu and reservations screens. However, the extra menu/rider/reservation endpoints above are not in the backend's documented API contract, and no Android build or device test has been recorded in this session. Treat these capabilities as unverified until the Edge Function source and live role-scoped behavior are inspected.
+The deployed API supports more of the current Admin UI than the previous repository README described. Menu, rider and reservation list/action routes are present in live function version 4. However, the security observations above and all end-to-end tests remain open. No production function or database changes were made in this review.
