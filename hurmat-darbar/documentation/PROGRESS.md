@@ -17,6 +17,19 @@ Last updated: 2026-10-30
 - [x] Architecture and safety constraints documented.
 - [ ] Local Antigravity/Android Studio workspace reconciliation — blocked because local PC files are not accessible in this session.
 
+## Phase 2 — Live database reconciliation (audit only so far)
+- [x] Live Supabase public tables and column metadata inspected.
+- [x] RLS policy inventory inspected.
+- [x] Key SECURITY DEFINER RPC definitions inspected.
+- [x] Supabase security advisors run; warnings recorded in DATABASE_AUDIT.md.
+- [x] Multi-line create_order behavior confirmed: one RPC creates one order plus multiple order_items and decrements tracked stock.
+- [x] Cancellation/rejection stock restoration behavior identified for idempotency testing.
+- [x] Live schema differs from the old repository draft; no draft migration applied.
+- [ ] Function EXECUTE grants and callers mapped across all three clients/backend.
+- [ ] Inventory movement ledger design and safe migration.
+- [ ] Reservation conflict constraints and abuse controls review.
+- [ ] Safe additive migrations generated and tested.
+
 ## Existing implementation gaps (verified from repository review)
 - [ ] Customer site is not yet the required Next.js application.
 - [ ] Customer order/checkout flow is not fully persisted through the secure backend.
@@ -29,7 +42,6 @@ Last updated: 2026-10-30
 - [ ] GST/tax and other owner decisions remain pending.
 
 ## Phases
-- [ ] Phase 2 — Database schema reconciliation and safe migrations.
 - [ ] Phase 3 — Backend auth, RBAC, and transactional workflows.
 - [ ] Phase 4 — Customer Next.js website and reviewed menu import.
 - [ ] Phase 5 — Admin Android completion.
