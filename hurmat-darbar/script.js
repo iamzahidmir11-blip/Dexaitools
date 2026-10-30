@@ -1,101 +1,20 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = "https://rvrboufrnkzuptfjopwd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_n1PWbHcomKpd63FPDdWSEw_iSo6UTi0";
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-document.getElementById("year").textContent = new Date().getFullYear();
-const menuButton = document.querySelector(".hamb");
-menuButton.addEventListener("click", () => document.querySelector(".top").classList.toggle("nav-open"));
-document.querySelectorAll(".top nav a").forEach((a) => a.addEventListener("click", () => document.querySelector(".top").classList.remove("nav-open")));
-
-const categoryRoot = document.getElementById("menu-categories");
-const menuGrid = document.getElementById("menu-grid");
-const menuStatus = document.getElementById("menu-status");
-let selectedCategory = "all";
-let menuItems = [];
-
-function addText(parent, tag, className, value) {
-  const el = document.createElement(tag);
-  if (className) el.className = className;
-  el.textContent = value ?? "";
-  parent.appendChild(el);
-  return el;
-}
-
-function renderCategories(categories) {
-  categoryRoot.replaceChildren();
-  const all = document.createElement("button");
-  all.className = "chip active";
-  all.dataset.cat = "all";
-  all.textContent = "All categories";
-  categoryRoot.appendChild(all);
-  categories.forEach((category) => {
-    const button = document.createElement("button");
-    button.className = "chip";
-    button.dataset.cat = category.id;
-    button.textContent = category.name;
-    categoryRoot.appendChild(button);
-  });
-  categoryRoot.addEventListener("click", (event) => {
-    const button = event.target.closest("button[data-cat]");
-    if (!button) return;
-    selectedCategory = button.dataset.cat;
-    categoryRoot.querySelectorAll(".chip").forEach((chip) => chip.classList.toggle("active", chip === button));
-    renderMenu();
-  });
-}
-
-function renderMenu() {
-  menuGrid.replaceChildren();
-  const visible = menuItems.filter((item) => selectedCategory === "all" || item.category_id === selectedCategory);
-  if (!visible.length) {
-    addText(menuGrid, "div", "menu-empty", "No menu items are currently listed in this category.");
-    return;
-  }
-  visible.forEach((item) => {
-    const card = document.createElement("article");
-    card.className = "menu-card";
-    const info = document.createElement("div");
-    const tag = item.is_veg === true ? "VEG" : item.is_veg === false ? "NON-VEG" : "";
-    if (tag) addText(info, "span", "food-tag" + (tag === "NON-VEG" ? " nonveg" : ""), tag);
-    addText(info, "h3", "", item.name);
-    if (item.description) addText(info, "p", "", item.description);
-    const prices = document.createElement("div");
-    prices.className = "price-list";
-    item.menu_variants.forEach((variant) => {
-      const price = document.createElement("div");
-      price.className = "price";
-      price.textContent = variant.price == null ? "Price on request" : "₹" + variant.price;
-      addText(price, "span", "variant", variant.label);
-      prices.appendChild(price);
-    });
-    card.append(info, prices);
-    menuGrid.appendChild(card);
-  });
-}
-
-async function loadMenu() {
-  menuStatus.textContent = "Loading the restaurant menu…";
-  const [{ data: categories, error: categoryError }, { data: items, error: itemError }] = await Promise.all([
-    supabase.from("menu_categories").select("id,name,sort_order").eq("active", true).order("sort_order"),
-    supabase.from("menu_items").select("id,category_id,name,description,is_veg,sort_order,menu_variants(id,label,price,sort_order)").eq("active", true).eq("available", true).eq("needs_verification", false).order("sort_order")
-  ]);
-  if (categoryError || itemError) {
-    menuStatus.textContent = "The menu is temporarily unavailable. Please call the restaurant for current items and prices.";
-    return;
-  }
-  const safeCategories = categories ?? [];
-  menuItems = (items ?? []).map((item) => ({
-    ...item,
-    menu_variants: (item.menu_variants ?? []).filter((variant) => variant.price !== null)
-      .sort((a, b) => a.sort_order - b.sort_order)
-  })).filter((item) => item.menu_variants.length > 0);
-  renderCategories(safeCategories);
-  menuStatus.textContent = menuItems.length
-    ? "Menu loaded from Hurmat Darbar's live database."
-    : "Menu items are being verified. Please call the restaurant.";
-  renderMenu();
-}
-
-loadMenu();
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+const db=createClient("https://rvrboufrnkzuptfjopwd.supabase.co","sb_publishable_n1PWbHcomKpd63FPDdWSEw_iSo6UTi0");
+document.getElementById("year").textContent=new Date().getFullYear();
+document.querySelector(".hamb").onclick=()=>document.querySelector(".top").classList.toggle("nav-open");
+const cats=document.getElementById("menu-categories"),grid=document.getElementById("menu-grid"),status=document.getElementById("menu-status"),panel=document.getElementById("cart-panel"),scrim=document.getElementById("cart-scrim");
+let items=[],cat="all",query="",cart=JSON.parse(localStorage.getItem("hd-cart")||"[]");
+const pics=["https://images.unsplash.com/photo-1563245372-f21724e3856d?w=900&q=80","https://images.unsplash.com/photo-1544025162-d76694265947?w=900&q=80","https://images.unsplash.com/photo-1512058564366-18510be2db19?w=900&q=80","https://images.unsplash.com/photo-1579751626657-72bc17010498?w=900&q=80","https://images.unsplash.com/photo-1513558161293-c325ec6e5d4e?w=900&q=80","https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=900&q=80"];
+const money=n=>"₹"+Number(n).toLocaleString("en-IN");
+function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
+function toggleCart(on){panel.classList.toggle("open",on);scrim.classList.toggle("open",on)}
+document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getElementById("close-cart").onclick=()=>toggleCart(false);scrim.onclick=()=>toggleCart(false);
+function renderCats(data){cats.replaceChildren();[ {id:"all",name:"All categories"},...data].forEach((x,i)=>{const b=el("button","chip"+(i===0?" active":""),x.name);b.dataset.cat=x.id;cats.append(b)});cats.onclick=e=>{const b=e.target.closest("[data-cat]");if(!b)return;cat=b.dataset.cat;cats.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()}}
+function render(){grid.replaceChildren();const list=items.filter(x=>(cat==="all"||x.category_id===cat)&&(!query||(x.name+" "+(x.description||"")+" "+x.category_name).toLowerCase().includes(query)));if(!list.length){grid.append(el("p","menu-empty","No matching items found."));return}list.forEach((x,i)=>{const card=el("article","menu-card"),photo=el("div","food-photo");photo.style.backgroundImage="url('"+pics[i%pics.length]+"')";const body=el("div","food-body"),title=el("h3","",x.name);body.append(title);if(x.description)body.append(el("p","",x.description));const foot=el("div","food-bottom"),price=el("div","price-stack",money(Math.min(...x.menu_variants.map(v=>+v.price))));price.append(el("small","",x.menu_variants.length>1?"From · "+x.menu_variants.length+" sizes":x.menu_variants[0].label));const add=el("button","add-btn","Add +");add.onclick=()=>addItem(x,x.menu_variants[0]);foot.append(price,add);body.append(foot);card.append(photo,body);grid.append(card)})}
+function addItem(item,v){const key=item.id+v.id,old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,name:item.name,label:v.label,price:+v.price,qty:1});save();toggleCart(true)}
+function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart()}
+function renderCart(){const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;cart.forEach(x=>{subtotal+=x.price*x.qty;count+=x.qty;const row=el("div","cart-line"),info=el("div","",x.name),small=el("small","",x.label+" · "+money(x.price));info.append(small);const controls=el("div","qty-control"),minus=el("button","","−"),qty=el("span","",x.qty),plus=el("button","","+");minus.onclick=()=>qtyChange(x.key,-1);plus.onclick=()=>qtyChange(x.key,1);controls.append(minus,qty,plus);row.append(info,controls);root.append(row)});if(!cart.length)root.append(el("p","menu-empty","Your bag is empty."));document.getElementById("cart-count").textContent=count;document.getElementById("cart-subtotal").textContent=money(subtotal);document.getElementById("cart-total").textContent=money(subtotal+(cart.length?30:0))}
+function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty+=d;if(x.qty<1)cart=cart.filter(x=>x.key!==key);save()}
+document.getElementById("checkout").onclick=()=>{if(!cart.length)return alert("Your bag is empty.");const name=document.getElementById("customer-name").value.trim(),address=document.getElementById("customer-address").value.trim();if(!name||!address)return alert("Name aur delivery address enter karo.");const sub=cart.reduce((a,x)=>a+x.price*x.qty,0),lines=cart.map(x=>x.name+" / "+x.label+" x"+x.qty+" = "+money(x.price*x.qty)).join("\n");const msg="Order request — Hurmat Darbar\n"+lines+"\nSubtotal: "+money(sub)+"\nDelivery estimate: ₹30 (confirm)\nEstimated total: "+money(sub+30)+"\nName: "+name+"\nAddress: "+address+"\nPlease confirm availability and delivery.";window.open("https://wa.me/919797151590?text="+encodeURIComponent(msg),"_blank")};
+async function load(){status.textContent="Loading menu and prices…";const [a,b]=await Promise.all([db.from("menu_categories").select("id,name,sort_order").eq("active",true).order("sort_order"),db.from("menu_items").select("id,category_id,name,description,is_veg,sort_order,menu_categories(name),menu_variants(id,label,price,sort_order)").eq("active",true).order("sort_order")]);if(a.error||b.error){status.textContent="Menu unavailable. Please call +91 97971 51590.";return}items=(b.data||[]).map(x=>({...x,category_name:x.menu_categories?.name||"",menu_variants:(x.menu_variants||[]).filter(v=>v.price!==null).sort((p,q)=>p.sort_order-q.sort_order)})).filter(x=>x.menu_variants.length);renderCats(a.data||[]);status.textContent=items.length+" menu items loaded · live restaurant prices";const search=el("input","menu-search");search.placeholder="Search dishes, drinks and more…";search.oninput=()=>{query=search.value.toLowerCase().trim();render()};const tools=el("div","menu-tools");tools.append(search);cats.after(tools);render()}
+renderCart();load();
