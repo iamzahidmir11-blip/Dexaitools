@@ -35,3 +35,5 @@ h1,h2,.intro h2,.section-head h2,.visit h2{font-family:'DM Serif Display',serif;
 .cart-panel{border-radius:16px 0 0 16px}
 .checkout-btn{border-radius:7px}
 @media(max-width:600px){.food-photo{height:205px}.food-body{padding:17px}.menu-grid{gap:14px}}
+
+.food-photo{position:relative;overflow:hidden}.food-photo-img{display:block;width:100%;height:100%;object-fit:cover}.food-photo.photo-unavailable{display:grid;place-items:center;color:#77786e;font-size:11px;background:linear-gradient(135deg,#e8e2d6,#f5f2eb)}
