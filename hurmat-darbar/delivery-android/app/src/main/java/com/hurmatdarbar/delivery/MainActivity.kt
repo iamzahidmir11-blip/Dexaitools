@@ -23,6 +23,7 @@ class MainActivity : Activity() {
  private val worker=Executors.newSingleThreadExecutor()
  private var token:String?=null
  private var online=false
+ private var orderFilter="active"
  private var sharingOrderId:String?=null
  private var locationManager:LocationManager?=null
  private var locationListener:LocationListener?=null
@@ -59,15 +60,24 @@ class MainActivity : Activity() {
  private fun orders() {
   setup("My Deliveries")
   root.addView(button(if(online) "Go Offline" else "Go Online"){availability(!online)})
+  root.addView(button("Active deliveries"){orderFilter="active";orders()})
+  root.addView(button("Delivery history"){orderFilter="history";orders()})
+  root.addView(button("All assigned orders"){orderFilter="all";orders()})
   root.addView(button("Refresh"){orders()})
   root.addView(button("Sign Out"){token=null;online=false;login()})
   status.text="Loading assigned orders…"
   worker.execute { try {
    val rows=request(base+"/functions/v1/restaurant-api","GET",null,token).optJSONArray("orders")?:JSONArray()
    runOnUiThread {
-    status.text=rows.length().toString()+" assigned order(s)"
-    if(rows.length()==0) root.addView(label("No assigned deliveries. Wait for the manager to assign an order."))
-    for(i in 0 until rows.length()) render(rows.optJSONObject(i)?:continue)
+    val active=setOf("ready_for_pickup","picked_up","out_for_delivery")
+    val history=setOf("delivered","delivery_failed","cancelled","rejected")
+    val filtered=(0 until rows.length()).mapNotNull { rows.optJSONObject(it) }.filter { order ->
+     val s=order.optString("status")
+     when(orderFilter) { "history"->s in history; "all"->true; else->s in active }
+    }
+    status.text=filtered.size.toString()+" order(s) • "+when(orderFilter){"history"->"History";"all"->"All assigned";else->"Active"}
+    if(filtered.isEmpty()) root.addView(label(when(orderFilter){"history"->"No completed or failed deliveries in your history.";"all"->"No assigned deliveries. Wait for the manager to assign an order.";else->"No active deliveries assigned right now."}))
+    filtered.forEach { render(it) }
    }
   } catch(ex:Exception){runOnUiThread{status.text=message(ex)}} }
  }
