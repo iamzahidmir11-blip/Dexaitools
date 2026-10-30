@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 - [x] Created a separate `customer-next/` Next.js App Router project without replacing the live static website.
 - [x] Added a responsive cream/brown/gold customer landing page and live menu reads against the audited `menu_categories`, `menu_items`, and `menu_variants` tables.
 - [x] Added `.env.example` with publishable-key-only configuration; no service-role key added.
-- [ ] Next.js dependency install, production build, and deployment verification — not run in this remote GitHub-only session.
+- [ ] Next.js dependency install, production build, and deployment verification — GitHub Actions CI workflow added; awaiting its run result.
 - [ ] Checkout remains intentionally disabled until the existing `create_order` workflow is safely connected and tested.
 
 ## Fixed architecture
@@ -67,7 +67,7 @@ Last updated: 2026-10-30
 - [ ] Reservation conflicts prevented transactionally.
 - [ ] Rider assignment, location permissions, and OTP verified.
 - [ ] Both Android apps build independently.
-- [ ] Customer website builds and passes responsive checks.
+- [ ] Customer website builds and passes responsive checks (CI workflow now configured; not yet verified green).
 - [ ] Backup/restore strategy verified against the active Supabase plan.
 - [ ] Final test report contains PASS/FAIL/BLOCKED for every test.
 
