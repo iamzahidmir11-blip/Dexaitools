@@ -104,3 +104,17 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Inspect deployed Edge Function source and live function behavior before enabling unverified Admin actions.
 - [ ] Add/verify server-side menu, inventory, reservation, staff, cash and reporting endpoints.
 - [ ] Run Admin Android Gradle build and real-device role tests; not run in this remote GitHub session.
+
+
+## Live Edge Function v4 reconciliation — 2026-10-30
+- [x] Read the Supabase Edge Function/Auth documentation for JWT-scoped requests and RLS context.
+- [x] Confirmed deployed `restaurant-api` is ACTIVE, version 4, with platform JWT verification enabled.
+- [x] Retrieved and reviewed deployed `index.ts` source.
+- [x] Confirmed menu, rider and reservation list routes and their role gates are present in the deployed function; earlier docs understated this.
+- [x] Confirmed menu item/variant and reservation status update action handlers exist in deployed version 4.
+- [x] Reconciled `ADMIN_ANDROID_API_CONTRACT.md` with the actual deployed function.
+- [x] Recorded concrete follow-up risks: reservation transitions/conflicts/audit, menu affected-row verification/audit, order RPC transition tests, rider assignment checks, PII minimization and error detail.
+- [ ] Add transactional reservation state/conflict protection and audit after inspecting the live schema/RPC callers.
+- [ ] Verify menu update row counts and audit trail.
+- [ ] Run role-based API tests and Android Gradle/device tests.
+- [ ] No Edge Function deployment or production database write was made in this phase.
