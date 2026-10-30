@@ -102,8 +102,9 @@ class MainActivity : Activity() {
     if(sharingOrderId==id) stopLocationSharing() else startLocationSharing(id)
    })
   }
-  val next=when(state){"ready_for_pickup"->"picked_up";"picked_up"->"out_for_delivery";"out_for_delivery"->"delivered";else->null}
+  val next=when(state){"ready_for_pickup"->"picked_up";"picked_up"->"out_for_delivery";else->null}
   if(next!=null) card.addView(button(next.replace('_',' ').uppercase()){update(id,next,null)})
+  if(state=="out_for_delivery") card.addView(label("Delivery completion is locked until customer OTP verification is implemented.",13f))
   if(state=="out_for_delivery") card.addView(button("Report delivery failed"){
    val reason=EditText(this).apply{hint="Reason required";setSingleLine(true)}
    android.app.AlertDialog.Builder(this).setTitle("Delivery failed").setView(reason).setNegativeButton("Back",null)
