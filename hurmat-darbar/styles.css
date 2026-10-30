@@ -217,3 +217,19 @@ footer>p,footer>span{color:#b8c1b7}
  .menu-card,.btn,.add-btn,.top nav a{transition:transform .28s ease,box-shadow .28s ease,background .28s ease}
  .menu-card:hover{transform:translateY(-7px)}
 }
+
+
+/* Food photography cards */
+.food-photo{height:220px;position:relative;overflow:hidden;background:#10251d;border-radius:12px 12px 0 0}
+.food-image{display:block;width:100%;height:100%;object-fit:cover;transition:transform .65s cubic-bezier(.2,.7,.2,1),filter .4s;filter:saturate(1.06) contrast(1.03)}
+.menu-card:hover .food-image{transform:scale(1.07);filter:saturate(1.15) contrast(1.05)}
+.food-description{min-height:42px;margin-top:8px!important;color:#77786e;line-height:1.7}
+.menu-card{overflow:hidden}
+.food-body{padding:20px}
+.food-type{padding:6px 9px;border-radius:30px;background:#edf3ec}
+.food-type.nonveg{background:#f7ece7}
+.variant-select{max-width:100%;margin-top:14px;border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:#fff;color:var(--ink);font:600 11px 'Manrope',sans-serif}
+.add-btn{white-space:nowrap}
+.menu-status{color:#657166}
+@media(max-width:760px){.food-photo{height:205px}.menu-grid{gap:14px}.food-body{padding:16px}}
+@media(prefers-reduced-motion:reduce){.food-image,.menu-card{transition:none}}
