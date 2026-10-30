@@ -166,3 +166,8 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Deploy the repository Edge Function change only after source review and release checks; live Edge Function remains unchanged.
 - [ ] Add a proper inventory movement ledger with adjustment reasons, actor, timestamps, and transactional stock changes before production stock accounting.
 - [ ] Verify stock decrement/restoration and concurrent updates using test orders before enabling inventory operations in production.
+
+
+## Inventory menu-read wiring fix — 2026-10-30
+- [x] Updated repository `GET ?view=menu` selection to include verified `track_stock` and `stock_qty` fields so the Admin Android inventory editor can display saved values.
+- [ ] Deploy the matching Edge Function source and verify read/write round-trip using a dedicated non-production test item/account before enabling in production.
