@@ -14,7 +14,7 @@ All requests require a valid Supabase user access token. The Edge Function uses 
 | List menu | `GET ?view=menu` | owner, manager |
 | List reservations | `GET ?view=reservations` | owner, manager |
 | List riders | `GET ?view=riders` | owner, manager, delivery_manager |
-| Update menu item | `POST { action: "update_menu_item", item_id, ...patch }` | owner, manager |
+| Update menu item | `POST { action: "update_menu_item", item_id, ...patch }` including `track_stock` and non-negative `stock_qty` | owner, manager |
 | Update menu variant | `POST { action: "update_menu_variant", variant_id, ...patch }` | owner, manager |
 | Update reservation status | `POST { action: "update_reservation_status", reservation_id, status }` | owner, manager |
 | Assign rider | `POST { action: "assign_rider", order_id, rider_id }` | owner, manager, delivery_manager |
@@ -55,3 +55,8 @@ The current Kotlin activity calls the documented order, menu, rider and reservat
 ## Current status
 
 The deployed API supports more of the current Admin UI than the previous repository README described. Menu, rider and reservation list/action routes are present in live function version 4. However, the security observations above and all end-to-end tests remain open. No production function or database changes were made in this review.
+
+
+## Repository inventory controls (not yet deployed)
+
+The repository Edge Function source now accepts the verified `menu_items.track_stock` boolean and `menu_items.stock_qty` integer (0–1,000,000) fields in `update_menu_item`. The Admin Android menu screen exposes stock tracking and quantity controls. This is a current-count editor only: it is not an inventory movement ledger, does not record reasons or adjustments, and must not be considered a complete stock-accounting workflow. The source change is not deployed to the live Edge Function. Do not use the new controls until deployment and role-based tests are completed.
