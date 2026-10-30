@@ -182,3 +182,14 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Build the Rider APK and test permission denial/grant, GPS disabled, network fallback, API authorization, and location visibility with a test rider/order.
 - [ ] Confirm Android device battery behavior and location update rate before operational use.
 - [ ] Delivery OTP and rider delivery history remain pending.
+
+
+## Delivery OTP security audit — 2026-10-30
+- [x] Inspected live `orders` schema: no OTP verifier, expiry, attempt counter or verification timestamp exists.
+- [x] Inspected live `update_order_status` RPC: rider delivery completion currently has no OTP precondition.
+- [x] Inspected deployed/repository Edge Function: no OTP issue/verify actions exist.
+- [x] Added `documentation/RIDER_OTP_DESIGN.md` with server-side hash, expiry, attempt limits, one-time use, rider/order binding, SMS delivery, audit and exception-flow requirements.
+- [ ] OTP implementation is blocked until an owner-approved SMS provider is configured and the customer delivery channel is verified.
+- [ ] Add server-side OTP storage and atomic verify/consume workflow; enforce OTP inside the database delivery transition so a modified APK cannot bypass it.
+- [ ] Add negative tests for expired, wrong, replayed, cross-order and cross-rider codes.
+- [ ] No production schema changes, SMS sends, or live order changes were made in this audit.
