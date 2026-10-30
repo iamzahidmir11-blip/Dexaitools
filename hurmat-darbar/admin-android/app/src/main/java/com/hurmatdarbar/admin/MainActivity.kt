@@ -187,6 +187,24 @@ class MainActivity : Activity() {
       card.addView(button(if(item.optBoolean("active")) "Deactivate item" else "Activate item") {
        updateEntity("update_menu_item",JSONObject().put("item_id",item.optString("id")).put("active",!item.optBoolean("active"))) { loadMenu() }
       })
+      card.addView(label("Inventory",14f))
+      card.addView(label(if(item.optBoolean("track_stock")) "Stock tracking: ON • Quantity: ${if(item.isNull("stock_qty")) "Not set" else item.optInt("stock_qty").toString()}" else "Stock tracking: OFF",12f))
+      val stockToggle = CheckBox(this).apply { text="Track stock for this item"; isChecked=item.optBoolean("track_stock"); setTextColor(ink) }
+      val stockInput = field("Stock quantity (0 or more)").apply {
+       inputType=2
+       if(!item.isNull("stock_qty")) setText(item.optInt("stock_qty").toString())
+      }
+      card.addView(stockToggle,params())
+      card.addView(stockInput,params())
+      card.addView(button("Save inventory") {
+       val qty=stockInput.text.toString().toIntOrNull()
+       if(stockToggle.isChecked && (qty==null || qty<0 || qty>1000000)) status.text="Enter stock quantity from 0 to 1,000,000."
+       else {
+        val payload=JSONObject().put("item_id",item.optString("id")).put("track_stock",stockToggle.isChecked)
+        if(qty!=null) payload.put("stock_qty",qty)
+        updateEntity("update_menu_item",payload) { loadMenu() }
+       }
+      })
       val variants=item.optJSONArray("menu_variants")?:JSONArray()
       for(j in 0 until variants.length()) {
        val v=variants.optJSONObject(j)?:continue
