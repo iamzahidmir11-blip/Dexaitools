@@ -73,3 +73,12 @@ Last updated: 2026-10-30
 
 ## Operating rule
 Do not mark a task complete until the code/configuration exists and the relevant check has actually run. Do not apply the old draft SQL to the live database.
+
+
+## Customer Next.js menu bag phase — 2026-10-30
+- Added a client-side menu bag with add buttons per priced variant, quantity increase/decrease, subtotal calculation, clear-bag control, and responsive bag panel.
+- Items flagged `needs_verification` and variants without a confirmed price cannot be added.
+- This is a session-only UI bag; it does not create an order, reserve stock, or change inventory.
+- Checkout remains intentionally disabled: live `create_order` requires a verified delivery location, valid coordinates, supported payment method, and authenticated user context. Current restaurant settings and customer auth flow must be confirmed before enabling it.
+- No production database writes or stock changes were made.
+- Build/typecheck still awaits GitHub Actions result; no local build was run in this remote repository session.
