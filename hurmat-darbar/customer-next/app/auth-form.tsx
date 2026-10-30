@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '../lib/supabase/client';
 
 export default function AuthForm() {
@@ -9,6 +9,14 @@ export default function AuthForm() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session?.user)));
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   async function sendCode() {
     const normalized = phone.replace(/[\\s()-]/g, '');
@@ -46,8 +54,8 @@ export default function AuthForm() {
   return <section className="auth-card" id="customer-account">
     <div><p className="eyebrow">CUSTOMER ACCOUNT</p><h2>Order with confidence.</h2></div>
     <p>Phone OTP sign-in checkout aur order history ke liye account verify karega.</p>
-    {!sent ? <div className="auth-controls"><input aria-label="Phone number with country code" placeholder="+91XXXXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel"/><button disabled={busy} onClick={sendCode}>{busy ? 'Sending…' : 'Send OTP'}</button></div> : <div className="auth-controls"><input aria-label="SMS verification code" placeholder="Enter OTP" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value)}/><button disabled={busy} onClick={verifyCode}>{busy ? 'Verifying…' : 'Verify OTP'}</button></div>}
-    <button className="auth-reset" onClick={() => { setSent(false); setCode(''); setMessage(''); }}>Change phone number</button>
+    {signedIn ? <p className="auth-message">Your phone account is verified and signed in.</p> : !sent ? <div className="auth-controls"><input aria-label="Phone number with country code" placeholder="+91XXXXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel"/><button disabled={busy} onClick={sendCode}>{busy ? 'Sending…' : 'Send OTP'}</button></div> : <div className="auth-controls"><input aria-label="SMS verification code" placeholder="Enter OTP" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value)}/><button disabled={busy} onClick={verifyCode}>{busy ? 'Verifying…' : 'Verify OTP'}</button></div>}
+    {!signedIn && <button className="auth-reset" onClick={() => { setSent(false); setCode(''); setMessage(''); }}>Change phone number</button>}
     <button className="auth-reset" disabled={busy} onClick={signOut}>Sign out</button>
     {message && <p className="auth-message" role="status">{message}</p>}
     <small>OTP delivery depends on the restaurant project's Supabase phone provider and SMS configuration. No order is placed by signing in.</small>
