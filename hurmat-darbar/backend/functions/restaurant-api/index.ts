@@ -115,9 +115,11 @@ Deno.serve(async (req: Request) => {
         if (typeof body.name === "string" && body.name.trim().length >= 2 && body.name.length <= 120) patch.name = body.name.trim();
         if (typeof body.description === "string" && body.description.length <= 500) patch.description = body.description;
         if (!Object.keys(patch).length) return reply({ error: "no_valid_changes" }, 400);
-        const { error } = await supabase.from("menu_items").update(patch).eq("id", body.item_id);
+        const { data: updated, error } = await supabase.from("menu_items")
+          .update(patch).eq("id", body.item_id).select("id").maybeSingle();
         if (error) return reply({ error: "menu_update_failed" }, 400);
-        return reply({ ok: true });
+        if (!updated) return reply({ error: "menu_item_not_found_or_not_visible" }, 404);
+        return reply({ ok: true, item_id: updated.id });
       }
       case "update_menu_variant": {
         if (![...roles].some((r) => ["owner", "manager"].includes(r))) return reply({ error: "forbidden" }, 403);
@@ -127,16 +129,20 @@ Deno.serve(async (req: Request) => {
         if (Number.isInteger(body.price) && body.price > 0 && body.price <= 1000000) patch.price = body.price;
         if (typeof body.label === "string" && body.label.trim() && body.label.length <= 60) patch.label = body.label.trim();
         if (!Object.keys(patch).length) return reply({ error: "no_valid_changes" }, 400);
-        const { error } = await supabase.from("menu_variants").update(patch).eq("id", body.variant_id);
+        const { data: updated, error } = await supabase.from("menu_variants")
+          .update(patch).eq("id", body.variant_id).select("id").maybeSingle();
         if (error) return reply({ error: "variant_update_failed" }, 400);
-        return reply({ ok: true });
+        if (!updated) return reply({ error: "menu_variant_not_found_or_not_visible" }, 404);
+        return reply({ ok: true, variant_id: updated.id });
       }
       case "update_reservation_status": {
         if (![...roles].some((r) => ["owner", "manager"].includes(r))) return reply({ error: "forbidden" }, 403);
         if (!isUuid(body.reservation_id) || !["confirmed", "rejected", "cancelled", "pending"].includes(body.status)) return reply({ error: "invalid_reservation_update" }, 400);
-        const { error } = await supabase.from("reservations").update({ status: body.status }).eq("id", body.reservation_id);
+        const { data: updated, error } = await supabase.from("reservations")
+          .update({ status: body.status }).eq("id", body.reservation_id).select("id").maybeSingle();
         if (error) return reply({ error: "reservation_update_failed" }, 400);
-        return reply({ ok: true });
+        if (!updated) return reply({ error: "reservation_not_found_or_not_visible" }, 404);
+        return reply({ ok: true, reservation_id: updated.id });
       }
       case "create_order": {
         const { data, error } = await supabase.rpc("create_order", { p: body.order });
