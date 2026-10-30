@@ -52,3 +52,168 @@ h1,h2,.intro h2,.section-head h2,.visit h2{font-family:'DM Serif Display',serif;
 .cart-panel{overflow-y:auto;padding-bottom:max(22px,env(safe-area-inset-bottom))}
 @media(max-width:760px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.food-photo{height:130px}.food-body{padding:13px}.food-body h3{font-size:16px}.cart-trigger{padding:9px 10px}.logo{font-size:11px;letter-spacing:1.2px}.seal{width:36px;height:36px}}
 @media(max-width:420px){.menu-grid{grid-template-columns:1fr}.food-photo{height:155px}.food-body{padding:16px}.cart-panel{width:100%}.cart-summary{padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
+
+
+/* HURMAT DARBAR — emerald glassmorphism visual layer */
+:root{
+ --ink:#f5f1e7;--muted:#c1c8bd;--cream:#101d18;--paper:#0b1511;
+ --gold:#d5b16d;--line:#ffffff25;
+ --glass:rgba(255,255,255,.075);--glass-strong:rgba(255,255,255,.12);
+}
+html{background:#0b1511}
+body{
+ color:var(--ink);
+ background:
+  radial-gradient(ellipse at 12% 8%,rgba(35,104,73,.38),transparent 36%),
+  radial-gradient(ellipse at 88% 35%,rgba(174,132,62,.18),transparent 32%),
+  linear-gradient(145deg,#09140f 0%,#14271e 48%,#0b1511 100%);
+ background-attachment:fixed;
+}
+.top{
+ background:rgba(10,24,17,.62);border-bottom:1px solid #ffffff20;
+ backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);
+ box-shadow:0 12px 40px #0003;
+}
+.logo,.top nav,.top-cta{color:#f5f1e7}
+.logo small{color:#b8c1b7}
+.seal{border-color:#d5b16d;color:#e6c783;box-shadow:0 0 24px #d5b16d20}
+.top nav a:hover,.details a:hover{color:#e6c783}
+.cart-trigger,.hamb{
+ color:#f5f1e7;background:rgba(255,255,255,.08);
+ border:1px solid #ffffff30;border-radius:12px;
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.cart-trigger b{background:#d5b16d;color:#172019}
+.hero{
+ position:relative;
+ background:linear-gradient(120deg,rgba(15,40,28,.62),rgba(22,35,27,.35));
+ border-bottom:1px solid #ffffff18;
+}
+.hero:before{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(circle at 78% 42%,#d5b16d18,transparent 35%);
+}
+.hero-copy,.hero-art{position:relative;z-index:1}
+.eyebrow{color:#e2c17f}
+h1,h2{color:#f8f3e8}
+h1 i,h2 i{color:#e0bd78}
+.lead,.intro>p:last-child,.visit>div:first-child>p:not(.eyebrow){color:#c0c8bd}
+.btn{border-radius:12px}
+.gold{color:#172019;background:linear-gradient(135deg,#e4c987,#b98b48);box-shadow:0 12px 30px #d5b16d25}
+.outline{color:#f5f1e7;border:1px solid #ffffff48;background:#ffffff0d;backdrop-filter:blur(14px)}
+.hours{color:#b8c1b7}.hours b{color:#f5f1e7}
+.dot{background:#82c49a;box-shadow:0 0 12px #82c49a88}
+.art-frame{
+ background:rgba(255,255,255,.09);border:1px solid #ffffff38;
+ border-radius:24px;padding:13px;transform:rotate(1deg);
+ box-shadow:0 30px 90px #0007,inset 0 1px #ffffff45;
+ backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.art-inner{
+ border-radius:16px;border:1px solid #e4c78366;
+ background:linear-gradient(145deg,rgba(33,79,54,.9),rgba(13,29,21,.9));
+ box-shadow:inset 0 0 70px #d5b16d12;
+}
+.art-kicker,.art-sub{color:#e8cb8e}
+.art-big{color:#fff8e9}
+.art-stamp{
+ background:rgba(205,166,93,.82);color:#142119;
+ border:1px solid #f7dfaa99;box-shadow:0 15px 40px #0005;
+ backdrop-filter:blur(16px);
+}
+.intro{background:linear-gradient(180deg,#0d1b14aa,#101e17aa)}
+.menu{
+ background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+ border-top:1px solid #ffffff17;border-bottom:1px solid #ffffff17;
+}
+.menu-tag,.menu-status,.menu-foot{color:#bac3b8}
+.menu-foot a{color:#f1d99e}
+.chip{
+ color:#e7e7db;background:rgba(255,255,255,.055);
+ border:1px solid #ffffff2b;border-radius:999px;
+ backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.chip.active,.chip:hover{
+ color:#182119;background:linear-gradient(135deg,#e3c783,#b98a49);
+ border-color:#e3c783;
+}
+.menu-search{
+ color:#f5f1e7;background:rgba(255,255,255,.075);
+ border:1px solid #ffffff35;border-radius:12px;
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.menu-search::placeholder{color:#b7c0b5}
+.menu-card{
+ color:#f5f1e7;background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.045));
+ border:1px solid #ffffff30;border-radius:18px;
+ box-shadow:0 16px 45px #0003,inset 0 1px #ffffff30;
+ backdrop-filter:blur(20px) saturate(135%);-webkit-backdrop-filter:blur(20px) saturate(135%);
+}
+.menu-card:hover{box-shadow:0 24px 55px #0006,inset 0 1px #ffffff45}
+.food-photo{border-bottom:1px solid #ffffff20;background:linear-gradient(135deg,#244532,#15251c)}
+.food-body h3{color:#fff7e9}
+.food-body p,.price-stack small{color:#c0c8bd}
+.price-stack{color:#f1d99e}
+.add-btn,.checkout-btn{
+ color:#172019;background:linear-gradient(135deg,#e4c987,#b98b48);
+ border-radius:10px;box-shadow:0 8px 22px #0002;
+}
+.add-btn:hover,.checkout-btn:hover{background:linear-gradient(135deg,#f0d99e,#c99b57)}
+.variant-select{
+ color:#f5f1e7;background:rgba(9,22,15,.72);
+ border:1px solid #ffffff35;border-radius:9px;
+}
+.food-type.veg{color:#8ed3a0}.food-type.nonveg{color:#f0a18f}
+.visit{
+ background:linear-gradient(135deg,rgba(21,54,37,.56),rgba(255,255,255,.035));
+ border-top:1px solid #ffffff1c;
+}
+.details small{color:#e3c783}
+.details p{color:#c0c8bd}
+.dark{
+ color:#172019;background:linear-gradient(135deg,#e4c987,#b98b48);
+ border-radius:12px;
+}
+footer{
+ color:#f5f1e7;background:rgba(5,15,10,.55);
+ border-top:1px solid #ffffff20;
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+footer>p,footer>span{color:#b8c1b7}
+.cart-panel{
+ color:#f5f1e7;background:rgba(13,29,21,.94);
+ border-left:1px solid #ffffff30;border-radius:22px 0 0 22px;
+ box-shadow:-25px 0 70px #0008;
+ backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+}
+.cart-head{border-color:#ffffff25}
+.cart-head button{color:#f5f1e7}
+.cart-line{border-color:#ffffff20}
+.cart-line small{color:#bac3b8}
+.qty-control button{
+ color:#f5f1e7;background:#ffffff12;border:1px solid #ffffff35;border-radius:8px;
+}
+.cart-summary{border-color:#ffffff25}
+.cart-summary small{color:#bac3b8}
+.cart-summary input,.cart-summary textarea{
+ color:#f5f1e7;background:rgba(255,255,255,.08);
+ border:1px solid #ffffff35;border-radius:9px;
+}
+.cart-summary input::placeholder,.cart-summary textarea::placeholder{color:#aeb9ad}
+.payment-box{
+ color:#f5f1e7!important;background:rgba(255,255,255,.09)!important;
+ border:1px solid #e0bd7866!important;border-radius:16px!important;
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.payment-box p{color:#d1d8ce}
+.cart-scrim{background:#020906b8}
+.menu-empty{color:#d4dbd1;background:rgba(255,255,255,.06);border:1px solid #ffffff20;border-radius:12px}
+@media(max-width:760px){
+ .top.nav-open nav{color:#f5f1e7;background:rgba(11,27,19,.94);border-color:#ffffff25;backdrop-filter:blur(24px)}
+ .hero{background:linear-gradient(145deg,rgba(15,40,28,.82),rgba(22,35,27,.55))}
+ .art-frame{transform:none}
+}
+@media(prefers-reduced-motion:no-preference){
+ .menu-card,.btn,.add-btn,.top nav a{transition:transform .28s ease,box-shadow .28s ease,background .28s ease}
+ .menu-card:hover{transform:translateY(-7px)}
+}
