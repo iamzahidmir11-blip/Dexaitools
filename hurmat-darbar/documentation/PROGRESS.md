@@ -118,3 +118,15 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Verify menu update row counts and audit trail.
 - [ ] Run role-based API tests and Android Gradle/device tests.
 - [ ] No Edge Function deployment or production database write was made in this phase.
+
+
+## Reservation and menu write-path audit — 2026-10-30
+- [x] Inspected live reservations columns and constraints.
+- [x] Inspected live triggers on reservations, menu_items and menu_variants; no non-internal triggers found.
+- [x] Re-read deployed Edge Function v4 handlers for reservation and menu updates.
+- [x] Confirmed reservation updates allow direct status assignment without transition graph, conflict checks, affected-row verification or audit.
+- [x] Confirmed menu updates do not verify affected-row count and do not create audit events.
+- [x] Documented required owner decisions for capacity, duration, slot rules and cancellation cutoff.
+- [ ] Implement audited menu update and reservation workflow after rules and migration plan are approved.
+- [ ] Add automated authorization, nonexistent-row, duplicate and concurrency tests.
+- [ ] No production DDL/data writes or Edge Function deployment performed.
