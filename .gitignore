@@ -1,7 +1,0 @@
-.env
-.env.*
-!.env.termux.example
-.venv/
-__pycache__/
-*.py[cod]
-*.log
