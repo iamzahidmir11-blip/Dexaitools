@@ -157,3 +157,12 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [x] Kept existing availability and variant price controls; no stock/inventory field was invented because the verified menu API/schema contract does not expose a stock mutation here.
 - [ ] Run Admin Android Gradle build and test each action against a non-production test account before release.
 - [ ] Add safe inventory ledger endpoints only after live schema and RPC caller review.
+
+
+## Inventory quantity controls — 2026-10-30
+- [x] Confirmed live `menu_items.track_stock` (boolean) and `stock_qty` (nullable non-negative integer) columns.
+- [x] Added validation for `track_stock` and `stock_qty` in the repository Edge Function `update_menu_item` handler.
+- [x] Added Admin Android UI to enable/disable stock tracking and edit current stock quantity.
+- [ ] Deploy the repository Edge Function change only after source review and release checks; live Edge Function remains unchanged.
+- [ ] Add a proper inventory movement ledger with adjustment reasons, actor, timestamps, and transactional stock changes before production stock accounting.
+- [ ] Verify stock decrement/restoration and concurrent updates using test orders before enabling inventory operations in production.
