@@ -37,3 +37,18 @@ h1,h2,.intro h2,.section-head h2,.visit h2{font-family:'DM Serif Display',serif;
 @media(max-width:600px){.food-photo{height:205px}.food-body{padding:17px}.menu-grid{gap:14px}}
 
 .food-photo{position:relative;overflow:hidden}.food-photo-img{display:block;width:100%;height:100%;object-fit:cover}.food-photo.photo-unavailable{display:grid;place-items:center;color:#77786e;font-size:11px;background:linear-gradient(135deg,#e8e2d6,#f5f2eb)}
+
+/* Mobile ordering and photo-safe presentation */
+.food-photo{height:174px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,#756346 0,#403a2b 48%,#25231d 100%)}
+.photo-placeholder{position:relative}
+.photo-label{font:600 10px Manrope,sans-serif;letter-spacing:4px;color:#e7d2a9;border:1px solid #d4b77c88;padding:12px 18px}
+.food-type{display:inline-block;font:700 9px Manrope,sans-serif;letter-spacing:1px;margin-bottom:9px;color:#52734c}
+.food-type.nonveg{color:#a65c4d}
+.variant-select{width:100%;margin-top:12px;padding:10px;border:1px solid var(--line);background:#fbf9f4;color:var(--ink);font:12px Manrope,sans-serif}
+.add-btn:disabled{opacity:.45;cursor:not-allowed}
+.cart-summary input,.cart-summary textarea{width:100%;padding:12px;margin:7px 0 14px;border:1px solid var(--line);background:#fff;color:var(--ink);font:13px Manrope,sans-serif;border-radius:4px}
+.cart-summary textarea{min-height:72px;resize:vertical}
+.cart-summary label{display:block;font-size:11px;font-weight:700;margin-top:7px}
+.cart-panel{overflow-y:auto;padding-bottom:max(22px,env(safe-area-inset-bottom))}
+@media(max-width:760px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.food-photo{height:130px}.food-body{padding:13px}.food-body h3{font-size:16px}.cart-trigger{padding:9px 10px}.logo{font-size:11px;letter-spacing:1.2px}.seal{width:36px;height:36px}}
+@media(max-width:420px){.menu-grid{grid-template-columns:1fr}.food-photo{height:155px}.food-body{padding:16px}.cart-panel{width:100%}.cart-summary{padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
