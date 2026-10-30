@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-30
 
+## Latest work
+- [x] Created a separate `customer-next/` Next.js App Router project without replacing the live static website.
+- [x] Added a responsive cream/brown/gold customer landing page and live menu reads against the audited `menu_categories`, `menu_items`, and `menu_variants` tables.
+- [x] Added `.env.example` with publishable-key-only configuration; no service-role key added.
+- [ ] Next.js dependency install, production build, and deployment verification — not run in this remote GitHub-only session.
+- [ ] Checkout remains intentionally disabled until the existing `create_order` workflow is safely connected and tested.
+
 ## Fixed architecture
 - [x] Exactly three apps defined: Customer Next.js website, separate native Admin Android app, separate native Rider Android app.
 - [x] Shared backend API + Supabase PostgreSQL defined.
@@ -31,7 +38,7 @@ Last updated: 2026-10-30
 - [ ] Safe additive migrations generated and tested.
 
 ## Existing implementation gaps (verified from repository review)
-- [ ] Customer site is not yet the required Next.js application.
+- [x] A separate Next.js customer application scaffold now exists; production build/deployment verification is still pending.
 - [ ] Customer order/checkout flow is not fully persisted through the secure backend.
 - [ ] Multi-item cart checkout must be connected as one transactional order with multiple order_items.
 - [ ] Admin Android functionality is partial.
