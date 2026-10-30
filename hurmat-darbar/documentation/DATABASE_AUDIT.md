@@ -100,3 +100,10 @@ Scope: deployed Edge Function v4 source plus live reservation columns, constrain
 6. Keep production DDL and Edge Function deployment blocked until diffs are reviewed and explicitly authorized.
 
 No production schema changes, data writes, Edge Function deployment, or live booking/menu mutations were performed.
+
+
+## Repository API hardening follow-up — 2026-10-30
+- Updated the repository copy of restaurant-api to use update(...).select('id').maybeSingle() for menu item, menu variant and reservation status writes.
+- A missing or RLS-invisible target now returns 404 instead of a false success response.
+- This change is committed to GitHub only. The currently deployed Supabase Edge Function v4 was not redeployed.
+- Audit logging, reservation transition/capacity rules, and automated tests remain pending; no schema assumptions were added.
