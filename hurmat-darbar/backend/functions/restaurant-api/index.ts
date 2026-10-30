@@ -112,6 +112,8 @@ Deno.serve(async (req: Request) => {
         const patch: Record<string, unknown> = {};
         if (typeof body.available === "boolean") patch.available = body.available;
         if (typeof body.active === "boolean") patch.active = body.active;
+        if (typeof body.track_stock === "boolean") patch.track_stock = body.track_stock;
+        if (Number.isInteger(body.stock_qty) && body.stock_qty >= 0 && body.stock_qty <= 1000000) patch.stock_qty = body.stock_qty;
         if (typeof body.name === "string" && body.name.trim().length >= 2 && body.name.length <= 120) patch.name = body.name.trim();
         if (typeof body.description === "string" && body.description.length <= 500) patch.description = body.description;
         if (!Object.keys(patch).length) return reply({ error: "no_valid_changes" }, 400);
