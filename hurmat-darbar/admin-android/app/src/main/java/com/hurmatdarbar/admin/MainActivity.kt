@@ -74,6 +74,9 @@ class MainActivity : Activity() {
   root.addView(label("Live Orders",28f))
   status=label("Loading orders…"); root.addView(status)
   root.addView(button("Refresh orders") { refreshOrders() })
+  root.addView(button("Menu Management") { loadMenu() })
+  root.addView(button("Rider Assignment") { loadRiders() })
+  root.addView(button("Table Reservations") { loadReservations() })
   root.addView(button("Sign out") { accessToken=null; showLogin() })
   refreshOrders()
  }
@@ -88,7 +91,7 @@ class MainActivity : Activity() {
   }
  }
  private fun renderOrders(orders:JSONArray) {
-  if(root.childCount>5) root.removeViews(5,root.childCount-5)
+  if(root.childCount>8) root.removeViews(8,root.childCount-8)
   status.text="${orders.length()} recent orders"
   if(orders.length()==0) { root.addView(label("No orders found. New orders will appear here when available.")); return }
   for(i in 0 until orders.length()) {
@@ -124,6 +127,104 @@ class MainActivity : Activity() {
    root.addView(card,LinearLayout.LayoutParams(-1,-2).apply { topMargin=10 })
   }
  }
+
+ private fun requestView(view:String):JSONObject =
+  request("$base/functions/v1/restaurant-api?view=$view","GET",null,accessToken)
+
+ private fun clearContent(title:String) {
+  setupRoot()
+  root.addView(label("H U R M A T   D A R B A R",13f).apply { setTextColor(gold) })
+  root.addView(label(title,27f))
+  status=label("Loading…"); root.addView(status)
+  root.addView(button("Back to Dashboard") { loadDashboard() })
+ }
+
+ private fun loadMenu() {
+  clearContent("Menu Management")
+  worker.execute {
+   try {
+    val items=requestView("menu").optJSONArray("items")?:JSONArray()
+    runOnUiThread {
+     status.text="${items.length()} menu items"
+     for(i in 0 until items.length()) {
+      val item=items.optJSONObject(i)?:continue
+      val card=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(14,10,14,10); setBackgroundColor(Color.WHITE) }
+      val category=item.optJSONObject("menu_categories")?.optString("name")?:"Uncategorised"
+      card.addView(label(item.optString("name"),17f))
+      card.addView(label("$category • ${if(item.optBoolean("is_veg")) "Veg" else "Non-veg"} • ${if(item.optBoolean("needs_verification")) "Needs verification" else "Verified"}",12f))
+      val variants=item.optJSONArray("menu_variants")?:JSONArray()
+      for(j in 0 until variants.length()) {
+       val v=variants.optJSONObject(j)?:continue
+       card.addView(label("${v.optString("label")} — ${if(v.isNull("price")) "Price not set" else "₹"+v.optInt("price")} — ${if(v.optBoolean("active")) "Active" else "Inactive"}",12f))
+      }
+      card.addView(button(if(item.optBoolean("available")) "Mark unavailable" else "Mark available") {
+       updateEntity("update_menu_item",JSONObject().put("item_id",item.optString("id")).put("available",!item.optBoolean("available"))) { loadMenu() }
+      })
+      root.addView(card,params())
+     }
+    }
+   } catch(ex:Exception) { runOnUiThread { status.text=safeMessage(ex) } }
+  }
+ }
+
+ private fun loadReservations() {
+  clearContent("Table Reservations")
+  worker.execute {
+   try {
+    val rows=requestView("reservations").optJSONArray("reservations")?:JSONArray()
+    runOnUiThread {
+     status.text="${rows.length()} reservations"
+     for(i in 0 until rows.length()) {
+      val r=rows.optJSONObject(i)?:continue
+      val card=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(14,10,14,10); setBackgroundColor(Color.WHITE) }
+      card.addView(label(r.optString("name"),17f))
+      card.addView(label("${r.optString("phone")} • ${r.optInt("party_size")} guests\n${r.optString("reserve_at")}\n${r.optString("notes")}\nStatus: ${r.optString("status")}",12f))
+      if(r.optString("status")=="pending") {
+       val row=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL }
+       listOf("confirmed","rejected").forEach { next ->
+        row.addView(Button(this).apply { text=next; isAllCaps=false; setOnClickListener {
+         updateEntity("update_reservation_status",JSONObject().put("reservation_id",r.optString("id")).put("status",next)) { loadReservations() }
+        } },LinearLayout.LayoutParams(0,-2,1f))
+       }
+       card.addView(row)
+      }
+      root.addView(card,params())
+     }
+    }
+   } catch(ex:Exception) { runOnUiThread { status.text=safeMessage(ex) } }
+  }
+ }
+
+ private fun loadRiders() {
+  clearContent("Rider Assignment")
+  worker.execute {
+   try {
+    val rows=requestView("riders").optJSONArray("riders")?:JSONArray()
+    runOnUiThread {
+     status.text="${rows.length()} registered riders"
+     if(rows.length()==0) root.addView(label("No rider accounts are registered yet. Owner/Manager must add and authorize riders first."))
+     for(i in 0 until rows.length()) {
+      val r=rows.optJSONObject(i)?:continue
+      val card=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(14,10,14,10); setBackgroundColor(Color.WHITE) }
+      card.addView(label(r.optString("name"),17f))
+      card.addView(label("${r.optString("phone")} • ${if(r.optBoolean("is_online")) "Online" else "Offline"}\nLast seen: ${r.optString("last_seen")}",12f))
+      root.addView(card,params())
+     }
+    }
+   } catch(ex:Exception) { runOnUiThread { status.text=safeMessage(ex) } }
+  }
+ }
+
+ private fun updateEntity(action:String,payload:JSONObject,done:()->Unit) {
+  status.text="Saving…"
+  worker.execute {
+   try {
+    request("$base/functions/v1/restaurant-api","POST",payload.put("action",action).toString(),accessToken)
+    runOnUiThread { done() }
+   } catch(ex:Exception) { runOnUiThread { status.text=safeMessage(ex) } }
+  }
+ }
+
  private fun updateStatus(id:String,next:String) {
   status.text="Updating order…"
   worker.execute {
