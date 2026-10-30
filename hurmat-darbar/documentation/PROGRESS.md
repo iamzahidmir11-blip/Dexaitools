@@ -139,3 +139,12 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Add audit event writes through a reviewed, role-checked database function.
 - [ ] Add Deno/API tests and run CI.
 - [ ] Deploy updated Edge Function only after source review and explicit release approval; live deployed v4 remains unchanged.
+
+
+## Android build automation phase — 2026-10-30
+- [x] Added a separate Android CI matrix job for the native Admin and Rider projects.
+- [x] CI uses JDK 17 and Gradle 8.9, matching the projects' Android Gradle Plugin 8.7.3 requirements.
+- [x] Each app runs its own `assembleDebug` task and uploads a separately named debug APK artifact.
+- [x] Push and pull-request path filters now include both Android project directories.
+- [ ] Wait for GitHub Actions to run; neither APK build is marked passed until the workflow reports success.
+- [ ] Device-level auth/role tests, location permission tests and delivery workflow tests remain pending.
