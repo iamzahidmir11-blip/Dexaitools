@@ -81,10 +81,13 @@ Deno.serve(async (req: Request) => {
         if (error) return reply({ error: "riders_unavailable" }, 500);
         return reply({ riders: data ?? [] });
       }
-      if (![...roles].some((r) => ["owner", "manager", "kitchen", "delivery_manager"].includes(r))) return reply({ error: "forbidden" }, 403);
-      const { data, error } = await supabase.from("orders")
-        .select("id, order_no, customer_name, customer_phone, address_text, notes, payment_method, payment_status, status, subtotal, delivery_fee, total, rider_id, created_at, updated_at, order_items(id, item_name, variant_label, unit_price, qty, line_total)")
-        .order("created_at", { ascending: false }).limit(100);
+      if (![...roles].some((r) => ["owner", "manager", "kitchen", "delivery_manager", "rider"].includes(r))) return reply({ error: "forbidden" }, 403);
+      let orderQuery = supabase.from("orders")
+        .select("id, order_no, customer_name, customer_phone, address_text, lat, lng, notes, payment_method, payment_status, status, subtotal, delivery_fee, total, rider_id, created_at, updated_at, order_items(id, item_name, variant_label, unit_price, qty, line_total)");
+      if (roles.has("rider") && ![...roles].some((r) => ["owner", "manager", "kitchen", "delivery_manager"].includes(r))) {
+        orderQuery = orderQuery.eq("rider_id", user.id);
+      }
+      const { data, error } = await orderQuery.order("created_at", { ascending: false }).limit(100);
       if (error) return reply({ error: "orders_unavailable" }, 500);
       return reply({ orders: data ?? [] });
     }
@@ -95,6 +98,13 @@ Deno.serve(async (req: Request) => {
     }
 
     switch (body.action) {
+
+      case "set_rider_availability": {
+        if (!roles.has("rider") || typeof body.is_online !== "boolean") return reply({ error: "forbidden_or_invalid_availability" }, 403);
+        const { error } = await supabase.from("riders").update({ is_online: body.is_online, last_seen: new Date().toISOString() }).eq("user_id", user.id);
+        if (error) return reply({ error: "availability_update_failed" }, 400);
+        return reply({ ok: true, is_online: body.is_online });
+      }
 
       case "update_menu_item": {
         if (![...roles].some((r) => ["owner", "manager"].includes(r))) return reply({ error: "forbidden" }, 403);
