@@ -201,3 +201,18 @@ Do not mark a task complete until the code/configuration exists and the relevant
 - [ ] Implement server-side OTP verification and enforce it inside the database status-transition RPC before restoring delivery completion.
 - [ ] This is a client-side safeguard only; the live database RPC still permits an assigned rider to set `delivered` without OTP, so it is not a complete security fix.
 - [ ] Build and test Rider APK; not yet verified.
+
+
+## Rider API delivery-completion gate — 2026-10-30
+- [x] Added an authenticated Edge Function guard that rejects rider-role `delivered` requests with HTTP 409 until customer OTP verification is implemented.
+- [x] Owner/manager API completion remains available for operational recovery; this is not a substitute for an audited exception policy.
+- [ ] The live database `update_order_status` SECURITY DEFINER RPC still independently permits rider delivery completion. A database-level OTP gate is still required because callers can invoke the RPC directly.
+- [ ] Repository Edge Function change is not deployed; live `restaurant-api` remains version 4.
+- [ ] Add automated API and database tests, then deploy only after reviewing the migration and provider configuration.
+- [ ] MSG91 is the selected integration direction, but provider account, sender ID, approved DLT template and API secret are not configured/verified. No OTP SMS can be sent yet.
+
+## Security advisor review — 2026-10-30
+- [x] Re-ran Supabase security advisors after reviewing the live project.
+- [x] Advisor still flags 2 anon-callable SECURITY DEFINER functions: `has_role` and `track_order`.
+- [x] Advisor flags 10 authenticated-callable SECURITY DEFINER functions, including order creation/status, rider assignment/location and payment/cash functions. These require caller/dependency review; do not blindly revoke grants because active clients rely on some RPCs.
+- [ ] Map direct RPC callers and least-privilege grants; review `track_order` bearer-token data minimization and rate limits.
