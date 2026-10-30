@@ -69,3 +69,34 @@ The Supabase changelog reports that public tables are no longer automatically ex
 - Security advisor scan: completed; warnings recorded above.
 - Database writes/migrations: intentionally not performed.
 - End-to-end tests: not run.
+
+
+## Reservation and menu write-path audit — 2026-10-30
+
+Scope: deployed Edge Function v4 source plus live reservation columns, constraints and triggers. Read-only; no production writes.
+
+### Reservations
+- Live columns: id, name, phone, party_size, reserve_at, notes, status, created_at.
+- Status is constrained to pending, confirmed, rejected, cancelled.
+- Checks constrain name (2–80), phone (10–20), party size (1–50), and notes (max 300).
+- No non-internal triggers were found on reservations, menu_items or menu_variants in the live public schema.
+- Deployed update_reservation_status handler permits owner/manager to set any of the four statuses directly by UUID. It does not enforce a transition graph, time-window conflict detection, affected-row verification, or audit logging.
+- No visible capacity/slot-locking mechanism was found. Conflict prevention cannot be designed until the owner confirms seating capacity, reservation duration and operating-slot policy.
+- Public reservation inserts remain a potential abuse surface; add rate limiting/abuse protection without assuming phone verification is configured.
+
+### Menu writes
+- Deployed update_menu_item and update_menu_variant handlers restrict callers to owner/manager and validate basic input types/ranges.
+- They issue direct table updates and only inspect the returned error. They do not request a changed row, verify affected-row count, or write an audit log.
+- No non-internal triggers were found on menu_items or menu_variants.
+- RLS still applies through the caller JWT-scoped client. A zero-row update can currently return ok:true if PostgREST reports no error.
+- Recommended: update with select(id), require exactly one returned row, and record a minimal audit event through a trusted role-checked database function or audited endpoint. Log changed field names and appropriate before/after values only; avoid unnecessary personal data.
+
+### Safe next implementation gates
+1. Owner confirms reservation capacity, duration, slot granularity, cancellation cutoff and overlap policy.
+2. Define a transition matrix and audit requirements.
+3. Design transactional capacity checks only after business rules are confirmed.
+4. Update menu handlers to verify exactly one affected row and add audit logging.
+5. Test missing IDs, wrong roles, nonexistent rows, invalid transitions, duplicate requests and concurrent bookings.
+6. Keep production DDL and Edge Function deployment blocked until diffs are reviewed and explicitly authorized.
+
+No production schema changes, data writes, Edge Function deployment, or live booking/menu mutations were performed.
