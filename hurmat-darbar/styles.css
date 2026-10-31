@@ -427,3 +427,5 @@ footer a{color:var(--gold)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 @media(max-width:600px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+.stock-note{display:block;color:var(--gold);font-size:10px;font-weight:700;margin:2px 0 8px}.add-btn:disabled{opacity:.45;cursor:not-allowed}
