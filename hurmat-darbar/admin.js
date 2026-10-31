@@ -86,7 +86,6 @@ function nav(){
   navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
   const more=navRoot.querySelector("#nav-more"), menu=navRoot.querySelector("#nav-more-menu");
   more.onclick=()=>{const open=menu.hidden;menu.hidden=!open;more.classList.toggle("on",open);more.setAttribute("aria-expanded",String(open));};
-  document.addEventListener("click",function closeMore(e){if(!navRoot.contains(e.target)){menu.hidden=true;more.classList.remove("on");more.setAttribute("aria-expanded","false");document.removeEventListener("click",closeMore);}});
 }
 function header(){
   const open=!!settings?.is_open;
