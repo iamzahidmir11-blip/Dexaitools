@@ -1,1 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#211f18"/><circle cx="256" cy="256" r="184" fill="none" stroke="#b58a4b" stroke-width="8"/><text x="256" y="286" fill="#f5f1e8" font-family="Georgia,serif" font-size="126" text-anchor="middle">HD</text><path d="M150 330h212" stroke="#b58a4b" stroke-width="6"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+<title id="title">Hurmat Darbar chef emblem</title>
+<defs>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe69a"/><stop offset=".48" stop-color="#d49a35"/><stop offset="1" stop-color="#8c4c16"/></linearGradient>
+ <linearGradient id="cream" x2="0" y2="1"><stop stop-color="#fff8df"/><stop offset="1" stop-color="#d9c49a"/></linearGradient>
+ <linearGradient id="skin" x2="0" y2="1"><stop stop-color="#ffcb82"/><stop offset="1" stop-color="#bd642d"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="#f8f5e9"/>
+<circle cx="256" cy="244" r="205" fill="#321707" stroke="url(#gold)" stroke-width="10"/>
+<circle cx="256" cy="244" r="190" fill="none" stroke="#f6d77b" stroke-width="3"/>
+<g fill="#28702d" stroke="#183d1c" stroke-width="7" stroke-linejoin="round">
+ <path d="M77 252Q36 212 70 177Q96 165 132 203L184 261Q135 294 77 252Z"/>
+ <path d="M435 224Q479 174 450 141Q423 133 394 181L342 254Q390 281 435 224Z"/>
+</g>
+<path d="M102 228Q76 204 83 185" fill="none" stroke="#f0a33b" stroke-width="9" stroke-linecap="round"/>
+<path d="M411 209Q442 181 438 160" fill="none" stroke="#e96b22" stroke-width="9" stroke-linecap="round"/>
+<g stroke="#42210f" stroke-width="9" stroke-linejoin="round">
+ <path d="M167 175Q154 112 205 94Q226 60 267 82Q302 60 331 95Q373 109 348 177L328 194H180Z" fill="url(#cream)"/>
+ <path d="M176 165Q249 137 342 166L333 211H181Z" fill="#f0dfb8"/>
+ <path d="M190 201Q194 163 256 158Q319 164 326 205L331 283Q321 339 256 349Q191 338 181 284Z" fill="url(#skin)"/>
+ <path d="M190 228Q207 207 229 222M282 222Q304 207 321 228" fill="none" stroke="#4a2414" stroke-width="10" stroke-linecap="round"/>
+ <path d="M203 251Q220 264 237 250M275 250Q293 264 310 250" fill="none" stroke="#2b160d" stroke-width="7" stroke-linecap="round"/>
+ <path d="M213 281Q256 305 300 281Q288 327 256 316Q226 326 213 281Z" fill="#fff4df"/>
+ <path d="M213 278Q234 286 252 271Q269 286 299 276Q287 302 257 294Q229 302 213 278Z" fill="#32170d"/>
+ <path d="M168 345Q201 316 256 326Q311 316 344 345L376 405H136Z" fill="url(#cream)"/>
+ <path d="M214 339L256 373L298 339" fill="none" stroke="#8d6b45" stroke-width="7"/>
+</g>
+<path d="M117 372Q256 348 395 372L395 447Q256 475 117 447Z" fill="#2c1308" stroke="url(#gold)" stroke-width="10"/>
+<path d="M128 382Q256 365 384 382" fill="none" stroke="#f5d77b" stroke-width="3"/>
+<text x="256" y="418" text-anchor="middle" font-family="Georgia,serif" font-size="45" font-weight="bold" letter-spacing="2" fill="url(#gold)" stroke="#6c3510" stroke-width="1">HURMAT</text>
+<text x="256" y="445" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="bold" letter-spacing="4" fill="#fff0c5">DARBAR</text>
+</svg>
