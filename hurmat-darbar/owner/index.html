@@ -452,6 +452,33 @@ input,select,.store-toolbar input,.store-toolbar select,.orders-toolbar input{ba
  .nav-more-menu{bottom:calc(88px + env(safe-area-inset-bottom,0))}
 }
 @media(prefers-reduced-motion:no-preference){.partner-panel,.metric-card,.store-product,.quick-links button,#nav button{transition:transform .2s ease,background .2s ease,box-shadow .2s ease}.partner-panel:hover,.metric-card:hover{box-shadow:0 16px 40px rgba(29,55,42,.13)!important}}
+</style><style id="hurmat-owner-app-shell-v2">
+:root{--dock-green:#173d2d;--dock-gold:#d8bd88}
+html,body{background:radial-gradient(ellipse at 12% 0%,rgba(222,205,164,.28),transparent 42%),linear-gradient(155deg,#f8f6ef,#edf0e9 62%,#f6f0e6)!important}
+.partner-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:12px clamp(14px,3vw,34px)!important;background:rgba(250,249,244,.62)!important;backdrop-filter:blur(28px) saturate(170%)!important;-webkit-backdrop-filter:blur(28px) saturate(170%)!important;border-bottom:1px solid rgba(255,255,255,.72)!important;box-shadow:0 8px 28px rgba(30,50,39,.07)!important}
+.topbar-brand .logo{width:46px!important;height:46px!important;border-radius:15px!important;background:rgba(255,255,255,.65)!important;backdrop-filter:blur(18px)!important;overflow:hidden}
+.topbar-brand .logo img{width:100%;height:100%;object-fit:contain}
+.owner-header-actions{display:flex;align-items:center;gap:10px;position:relative}
+.header-icon{width:43px;height:43px;border-radius:15px;border:1px solid rgba(255,255,255,.86);background:rgba(255,255,255,.52);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);color:#214633;box-shadow:0 7px 22px rgba(31,57,42,.10);display:grid;place-items:center;position:relative;cursor:pointer;font-size:21px}
+.header-icon:active{transform:scale(.96)}
+.notification-trigger i{position:absolute;right:-4px;top:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:#b88b4c;color:white;font:700 10px Manrope;display:grid;place-items:center;border:2px solid #f7f5ef}
+.owner-more-menu{position:absolute;right:0;top:calc(100% + 13px);width:230px;padding:9px;border-radius:22px;background:rgba(248,249,244,.82);border:1px solid rgba(255,255,255,.9);box-shadow:0 22px 60px rgba(22,49,34,.2);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);z-index:100}
+.owner-more-menu[hidden]{display:none!important}
+.owner-more-menu button{display:flex;align-items:center;gap:13px;width:100%;padding:13px 12px;border:0;border-radius:13px;background:transparent;color:#254533;font:650 13px Manrope;text-align:left}
+.owner-more-menu button span{width:23px;font-size:18px;text-align:center}
+.owner-more-menu button:hover,.owner-more-menu button.on{background:rgba(34,75,51,.11)}
+.partner-main{padding-bottom:125px!important}
+#nav{position:fixed!important;z-index:55!important;left:50%!important;transform:translateX(-50%)!important;bottom:calc(14px + env(safe-area-inset-bottom,0))!important;width:min(440px,calc(100vw - 30px))!important;height:76px!important;display:flex!important;align-items:center!important;justify-content:space-around!important;gap:7px!important;padding:8px 11px!important;border-radius:26px!important;background:rgba(22,58,41,.78)!important;border:1px solid rgba(255,255,255,.35)!important;box-shadow:0 16px 45px rgba(20,48,33,.27),inset 0 1px 0 rgba(255,255,255,.22)!important;backdrop-filter:blur(30px) saturate(180%)!important;-webkit-backdrop-filter:blur(30px) saturate(180%)!important}
+#nav .dock-item{height:59px;min-width:0;flex:1;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;border:1px solid transparent!important;border-radius:18px!important;background:transparent!important;color:rgba(255,255,255,.7)!important;padding:5px 3px!important;font-family:Manrope!important}
+#nav .dock-item .dock-icon{font-size:21px;line-height:1.1;color:inherit}
+#nav .dock-item small{font-size:10px;font-weight:650;letter-spacing:.01em;color:inherit}
+#nav .dock-item.on{background:linear-gradient(145deg,rgba(255,255,255,.27),rgba(255,255,255,.10))!important;border-color:rgba(255,255,255,.35)!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 5px 15px rgba(0,0,0,.12)!important}
+#nav .dock-item.on:before{content:"";position:absolute;width:18px;height:3px;border-radius:9px;background:var(--dock-gold);transform:translateY(-25px)}
+.notice,.card,.metric-card,.partner-panel,.welcome-strip,.menu-summary,.store-product,.orders-toolbar,.order-group,.auth-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.82)!important;backdrop-filter:blur(22px) saturate(160%)!important;-webkit-backdrop-filter:blur(22px) saturate(160%)!important;box-shadow:0 12px 35px rgba(35,55,41,.075),inset 0 1px 0 rgba(255,255,255,.62)!important;border-radius:20px!important}
+input,select,textarea{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(14px)!important;border:1px solid rgba(255,255,255,.9)!important}
+@media(min-width:761px){#nav{bottom:22px!important}.partner-main{padding-bottom:125px!important}}
+@media(max-width:760px){.partner-topbar{padding:10px 13px!important}.topbar-brand .logo{width:42px!important;height:42px!important}.topbar-brand b{font-size:12px!important}.topbar-brand small{font-size:9px!important}.owner-header-actions{gap:7px}.header-icon{width:40px;height:40px;border-radius:14px}.partner-main{padding:18px 13px 125px!important}#nav{bottom:calc(12px + env(safe-area-inset-bottom,0))!important;width:calc(100vw - 26px)!important;height:74px!important}}
+@media(prefers-reduced-motion:no-preference){#nav .dock-item,.header-icon,.owner-more-menu{transition:all .2s ease}.owner-more-menu{transform-origin:top right}}
 </style></head>
 <body style="margin:0;min-height:100vh;background:#0e1b14;color:#f4efe0;font-family:system-ui,-apple-system,sans-serif">
 <div id="app" class="wrap">
@@ -478,7 +505,7 @@ input,select,.store-toolbar input,.store-toolbar select,.orders-toolbar input{ba
   } catch(e) {}
   try {
     status.textContent='Loading secure owner system…';
-    await import('../admin.js?v=owner-glass-nav-20261031-1');
+    await import('../admin.js?v=owner-app-shell-v2-20261031');
   } catch(e) {
     status.textContent='Owner app could not start.';
     detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
