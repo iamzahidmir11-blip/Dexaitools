@@ -310,10 +310,86 @@ input,select{background:#fff;color:#242832;border-color:#dfe3e8}
 }
 @media(max-width:360px){.store-product-grid{grid-template-columns:1fr}.store-product-photo{height:175px}.topbar-brand small{display:none}}
 
+
+/* Mobile-first operations layout correction */
+.partner-main{width:calc(100% - 236px);min-width:0;margin-left:236px;padding:26px 30px 56px}
+.partner-topbar{width:100%;min-width:0}
+.partner-panel,.metric-card,.welcome-strip,.menu-summary{min-width:0}
+.dashboard-columns>*{min-width:0}
+@media(max-width:760px){
+  html,body{width:100%;min-width:0;overflow-x:hidden}
+  body{padding:0 0 calc(78px + env(safe-area-inset-bottom,0))}
+  #app.wrap{display:block;width:100%;max-width:none;min-height:100dvh;margin:0;padding:0}
+  .partner-topbar{height:66px;position:sticky;top:0;padding:0 14px;gap:8px}
+  .topbar-brand{gap:9px}
+  .topbar-brand .logo{width:42px;height:42px;flex:0 0 42px;border-radius:11px}
+  .topbar-brand b{font-size:12px;letter-spacing:.04em}
+  .topbar-brand small{font-size:8px;letter-spacing:.08em}
+  .partner-topbar .pill{font-size:9px;padding:6px 8px;white-space:nowrap}
+  .partner-main{width:100%;margin:0;padding:18px 14px 28px}
+  .page-heading{align-items:flex-start;flex-direction:column;gap:5px;margin-bottom:15px}
+  .page-heading h1{font-size:26px;line-height:1.2}
+  .page-heading .sub{font-size:12px;line-height:1.55}
+  .page-updated{font-size:10px}
+  .welcome-strip,.menu-summary{display:block;padding:16px;margin-bottom:12px}
+  .welcome-strip h2,.menu-summary h2{font-size:19px}
+  .welcome-date{display:block;margin-top:12px;font-size:11px;white-space:normal}
+  .partner-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+  .metric-card{padding:13px 12px;border-radius:12px}
+  .metric-card span{font-size:8px;letter-spacing:.08em}
+  .metric-card b{font-size:23px;margin:6px 0 2px;overflow-wrap:anywhere}
+  .metric-card small{font-size:9px;line-height:1.4}
+  .dashboard-columns{grid-template-columns:minmax(0,1fr);gap:0;margin-bottom:0}
+  .partner-panel{padding:15px;border-radius:13px;margin-bottom:11px}
+  .panel-heading{align-items:flex-start;gap:8px}
+  .panel-heading h2{font-size:14px}
+  .panel-heading p{font-size:10px;line-height:1.45}
+  .text-action{font-size:10px}
+  .order-pipeline{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .pipeline-step{padding:10px 5px}
+  .pipeline-step b{font-size:19px}
+  .pipeline-step span{font-size:9px}
+  .quick-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .quick-links button{min-width:0;padding:11px 9px;grid-template-columns:25px minmax(0,1fr);column-gap:6px}
+  .quick-links button b{font-size:10px;overflow-wrap:anywhere}
+  .quick-links button small{font-size:9px;line-height:1.4}
+  .orders-toolbar{align-items:stretch;flex-direction:column;padding:12px}
+  .orders-toolbar input{width:100%;max-width:none}
+  .order-groups{grid-template-columns:minmax(0,1fr)}
+  .store-toolbar{align-items:stretch}
+  .store-toolbar input,.store-toolbar select{width:100%;min-width:0;flex-basis:100%}
+  .store-toolbar .btn{flex:1}
+  .store-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .store-product-photo{height:125px}
+  .store-product-info{padding:10px}
+  .store-product-heading{flex-direction:column;gap:4px}
+  .store-product-heading h3{font-size:12px;overflow-wrap:anywhere}
+  .store-product-info>p{min-height:0}
+  .store-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .inventory-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .inventory-actions{grid-column:1/-1}
+  #nav{position:fixed;top:auto;left:0;right:0;bottom:0;width:100%;height:auto;max-height:76px;display:flex;flex-direction:row;justify-content:flex-start;gap:0;overflow-x:auto;overflow-y:hidden;padding:7px 5px calc(7px + env(safe-area-inset-bottom,0));background:rgba(255,255,255,.97);border:0;border-top:1px solid #e7e9ed;z-index:50;scrollbar-width:none;overscroll-behavior-x:contain}
+  #nav::-webkit-scrollbar{display:none}
+  #nav button{flex:0 0 72px;min-width:72px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 2px;font-size:9px;white-space:nowrap;border-radius:10px}
+  #nav button span{width:auto;font-size:18px;line-height:1.1}
+  #nav button.on{background:#fff0ed;color:#c83f2d}
+  .notice{font-size:11px;line-height:1.5}
+}
+@media(max-width:380px){
+  .partner-main{padding-left:11px;padding-right:11px}
+  .store-product-grid{grid-template-columns:minmax(0,1fr)}
+  .store-product-photo{height:175px}
+  .order-pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #nav button{flex-basis:68px;min-width:68px}
+}
+@media(min-width:761px){
+  #app.wrap{display:block}
+}
+
 </style>
 </head>
 <body style="margin:0;min-height:100vh;background:#0e1b14;color:#f4efe0;font-family:system-ui,-apple-system,sans-serif">
-<div id="app" style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:12vh 18px 40px;box-sizing:border-box">
+<div id="app" class="wrap">
   <div style="width:100%;max-width:440px;padding:26px;background:#17291f;border:1px solid #2a4436;border-radius:18px;box-sizing:border-box;text-align:center">
     <div style="font-size:24px;font-weight:800;letter-spacing:.04em;color:#d9b86c">HURMAT OWNER</div>
     <p id="boot-status" style="font-size:14px;line-height:1.6;color:#f4efe0">Secure app is starting…</p>
@@ -337,7 +413,7 @@ input,select{background:#fff;color:#242832;border-color:#dfe3e8}
   } catch(e) {}
   try {
     status.textContent='Loading secure owner system…';
-    await import('../admin.js?v=owner-preview-20261031-1');
+    await import('../admin.js?v=owner-mobile-20261031-2');
   } catch(e) {
     status.textContent='Owner app could not start.';
     detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
