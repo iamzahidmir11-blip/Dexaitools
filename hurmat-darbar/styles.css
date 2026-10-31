@@ -1020,3 +1020,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 }
 @media(max-width:370px){.menu-grid{grid-template-columns:1fr!important}.food-photo{aspect-ratio:1.55!important}.food-body h3{font-size:14px!important}.food-description{font-size:10px!important}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* Compact menu-first homepage */
+.store-hero,.store-strip,.order-note{display:none!important}
+.menu#menu{padding-top:42px!important;min-height:70vh}
+.menu .section-head{margin-bottom:20px!important}
+.menu .section-head h2{font-size:clamp(38px,5vw,58px)!important}
+.menu .menu-intro{margin-top:9px!important}
+.menu-discovery{margin-bottom:4px!important}
+@media(max-width:650px){
+ .menu#menu{padding:28px 15px 55px!important}
+ .menu .section-head{margin-bottom:14px!important}
+ .menu .section-head h2{font-size:39px!important}
+ .menu .menu-intro{font-size:11px!important}
+}
