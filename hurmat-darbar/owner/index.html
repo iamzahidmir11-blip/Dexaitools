@@ -505,7 +505,7 @@ input,select,textarea{background:rgba(255,255,255,.65)!important;backdrop-filter
   } catch(e) {}
   try {
     status.textContent='Loading secure owner system…';
-    await import('../admin.js?v=owner-syntax-fix-20261031-2');
+    await import('../admin.js?v=owner-menu-notifications-20261031-3');
   } catch(e) {
     status.textContent='Owner app could not start.';
     detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
