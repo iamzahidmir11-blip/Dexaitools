@@ -416,3 +416,12 @@ footer .logo{color:var(--cream)}
 footer a{color:var(--gold)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 @media(max-width:680px){.service-grid{grid-template-columns:1fr}.customer-tools{padding:48px 4vw}.service-card{padding:17px}.visit{margin:18px 3vw;padding:25px}.hero{min-height:unset}.food-photo{height:112px}}
+
+/* Cinematic food-card motion and accessible motion settings */
+.food-photo{overflow:hidden}
+.food-image{transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .4s}
+.menu-card:hover .food-image{transform:scale(1.055);filter:saturate(1.08)}
+.menu-card{transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease}
+.service-card{transition:transform .22s ease,border-color .22s ease}
+.service-card:focus-within{border-color:#8e7846}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
