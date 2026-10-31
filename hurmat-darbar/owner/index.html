@@ -546,7 +546,7 @@ button:focus-visible{outline:3px solid rgba(113,185,115,.55)!important;outline-o
   } catch(e) {}
   try {
     status.textContent='Loading secure owner system…';
-    await import('../admin.js?v=owner-premium-emerald-20261031-4');
+    await import('../admin.js?v=owner-repaired-20261031-4');
   } catch(e) {
     status.textContent='Owner app could not start.';
     detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
