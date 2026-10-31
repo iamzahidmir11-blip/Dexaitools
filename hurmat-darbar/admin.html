@@ -58,91 +58,28 @@ label{font-size:12px;color:var(--mute)}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--gold);color:#16281e;padding:10px 16px;border-radius:99px;font-weight:700;font-size:13px;z-index:60}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.auth-card{max-width:440px;margin:9vh auto 0;padding:22px}
+.auth-card h1{font-size:30px;margin-bottom:8px}
+.auth-card p{color:var(--mute);font-size:13px;line-height:1.6;margin-bottom:16px}
+.auth-card label{display:block;margin-top:10px}
+.auth-card input{margin:7px 0 10px}
+.wide{width:100%}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions select{max-width:170px;margin:0}
+.item-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.item-row:last-child{border:0}
+.item-meta{min-width:0}
+.item-meta b{display:block;overflow-wrap:anywhere}
+.notice{padding:12px 14px;border:1px solid #8b713c;background:#332c1b;color:#f3dfac;border-radius:12px;font-size:12px;line-height:1.6;margin:12px 0}
+.good{color:var(--ok)}.bad{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
 <nav id="nav"></nav>
-<script>
-const $=s=>document.querySelector(s);
-const fmt=n=>'₹'+Number(n).toLocaleString('en-IN');
-const seedMenu=()=>[
-{id:1,name:'Mutton Biryani',cat:'Mains',price:380,on:1},{id:2,name:'Butter Chicken',cat:'Mains',price:320,on:1},
-{id:3,name:'Paneer Tikka',cat:'Starters',price:260,on:1},{id:4,name:'Seekh Kebab',cat:'Starters',price:290,on:1},
-{id:5,name:'Garlic Naan',cat:'Breads',price:60,on:1},{id:6,name:'Tandoori Roti',cat:'Breads',price:30,on:1},
-{id:7,name:'Gulab Jamun',cat:'Desserts',price:90,on:1},{id:8,name:'Phirni',cat:'Desserts',price:110,on:0},
-{id:9,name:'Masala Chai',cat:'Drinks',price:40,on:1},{id:10,name:'Sweet Lassi',cat:'Drinks',price:80,on:1}];
-const seedOrders=()=>[
-{id:1041,table:4,status:'preparing',time:'12:40',items:[{n:'Mutton Biryani',q:2,p:380},{n:'Masala Chai',q:2,p:40}]},
-{id:1042,table:7,status:'new',time:'12:52',items:[{n:'Paneer Tikka',q:1,p:260},{n:'Garlic Naan',q:4,p:60}]},
-{id:1043,table:2,status:'ready',time:'12:35',items:[{n:'Butter Chicken',q:1,p:320},{n:'Tandoori Roti',q:3,p:30}]},
-{id:1044,table:5,status:'served',time:'12:10',items:[{n:'Seekh Kebab',q:2,p:290},{n:'Sweet Lassi',q:2,p:80}]}];
-const seedTables=()=>Array.from({length:9},(_,i)=>({n:i+1,s:[2,4,7].includes(i+1)?'occupied':i+1===5?'reserved':'free'}));
-const seedSet=()=>({sound:1,tax:5,name:'Hurmat Darbar'});
-let S={tab:'home',filter:'all',cat:'All',menu:seedMenu(),orders:seedOrders(),tables:seedTables(),set:seedSet(),nextId:1045,sheet:null,cart:{},toast:''};
-try{const d=JSON.parse(localStorage.getItem('hd_state')||'null');if(d)Object.assign(S,d,{sheet:null,cart:{},toast:''})}catch(e){}
-function save(){try{localStorage.setItem('hd_state',JSON.stringify({menu:S.menu,orders:S.orders,tables:S.tables,set:S.set,nextId:S.nextId}))}catch(e){}}
-const total=o=>o.items.reduce((a,i)=>a+i.q*i.p,0);
-const live=()=>S.orders.filter(o=>o.status!=='cancelled');
-const flow=['new','preparing','ready','served'];
-const label={new:'New',preparing:'Preparing',ready:'Ready',served:'Served',cancelled:'Cancelled'};
-function toast(t){S.toast=t;render();setTimeout(()=>{S.toast='';render()},1800)}
-function go(t){S.tab=t;window.scrollTo(0,0);render()}
-function orderCard(o,actions){
- const nxt=flow[flow.indexOf(o.status)+1];
- return `<div class="card"><div class="row"><b>Order #${o.id} · Table ${o.table}</b><span class="tag s-${o.status}">${label[o.status]}</span></div>
- <div class="mute" style="margin:6px 0">${o.items.map(i=>i.q+'× '+i.n).join(', ')}</div>
- <div class="row"><span class="mute">${o.time}</span><span class="price">${fmt(total(o)*(1+S.set.tax/100))}</span></div>
- ${actions&&nxt?`<div class="row" style="margin-top:10px;justify-content:flex-start"><button class="btn sm" onclick="adv(${o.id})">Mark ${label[nxt].toLowerCase()}</button>${o.status==='new'?`<button class="btn sm ghost" onclick="cancel(${o.id})">Cancel</button>`:''}</div>`:''}</div>`}
-function adv(id){const o=S.orders.find(x=>x.id===id);o.status=flow[flow.indexOf(o.status)+1];save();toast('Order #'+id+' is '+label[o.status].toLowerCase())}
-function cancel(id){S.orders.find(x=>x.id===id).status='cancelled';save();toast('Order #'+id+' cancelled')}
-function home(){
- const L=live(),rev=L.reduce((a,o)=>a+total(o),0),active=L.filter(o=>o.status!=='served').length;
- const days=[['Mon',18],['Tue',22],['Wed',16],['Thu',25],['Fri',34],['Sat',41],['Today',Math.max(4,Math.round(rev/1000))]];
- const max=Math.max(...days.map(d=>d[1]));
- const cnt={};L.forEach(o=>o.items.forEach(i=>cnt[i.n]=(cnt[i.n]||0)+i.q));
- const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,4);
- return `<h1>Dashboard</h1><p class="sub">Welcome back. Here’s what’s happening today.</p>
- <div class="grid"><div class="card stat"><span>Revenue today</span><b>${fmt(rev)}</b></div><div class="card stat"><span>Orders</span><b>${L.length}</b></div><div class="card stat"><span>In kitchen</span><b>${active}</b></div><div class="card stat"><span>Avg. order</span><b>${fmt(L.length?Math.round(rev/L.length):0)}</b></div></div>
- <h2>Sales this week (₹ thousands)</h2><div class="card"><div class="bars">${days.map(d=>`<div><i style="height:${d[1]/max*85}px"></i>${d[0]}</div>`).join('')}</div></div>
- <h2>Best sellers</h2><div class="card">${top.length?top.map(t=>`<div class="row" style="padding:6px 0"><span>${t[0]}</span><span class="price">${t[1]} sold</span></div>`).join(''):'<div class="empty">No sales yet today.</div>'}</div>
- <div class="row"><h2>Recent orders</h2><button class="btn sm ghost" onclick="go('orders')">See all</button></div><div class="list">${S.orders.slice(-3).reverse().map(o=>orderCard(o,false)).join('')}</div>`}
-function orders(){
- const f=['all',...flow,'cancelled'];const L=S.orders.filter(o=>S.filter==='all'||o.status===S.filter).slice().reverse();
- return `<div class="row"><h1 style="font-size:32px">Orders</h1><button class="btn" onclick="openNew()">+ New order</button></div>
- <div class="chips" style="margin-top:12px">${f.map(x=>`<button class="chip ${S.filter===x?'on':''}" onclick="S.filter='${x}';render()">${x==='all'?'All':label[x]}</button>`).join('')}</div>
- <div class="list">${L.length?L.map(o=>orderCard(o,true)).join(''):'<div class="empty">No orders here. Tap “New order” to add one.</div>'}</div>`}
-function menu(){
- const cats=['All',...new Set(S.menu.map(m=>m.cat))];const L=S.menu.filter(m=>S.cat==='All'||m.cat===S.cat);
- return `<div class="row"><h1 style="font-size:32px">Menu</h1><button class="btn" onclick="S.sheet='item';render()">+ Add item</button></div>
- <div class="chips" style="margin-top:12px">${cats.map(c=>`<button class="chip ${S.cat===c?'on':''}" onclick="S.cat='${c}';render()">${c}</button>`).join('')}</div>
- <div class="list">${L.map(m=>`<div class="card row"><div><b>${m.name}</b><div class="mute">${m.cat} · <span class="price">${fmt(m.price)}</span></div></div><div class="row"><button class="btn sm ghost" onclick="delItem(${m.id})" aria-label="Delete ${m.name}">Delete</button><button class="sw ${m.on?'on':''}" onclick="togItem(${m.id})" aria-label="Available"></button></div></div>`).join('')}</div>`}
-function togItem(id){const m=S.menu.find(x=>x.id===id);m.on=m.on?0:1;save();render()}
-function delItem(id){S.menu=S.menu.filter(x=>x.id!==id);save();toast('Item deleted')}
-function more(){return `<h1 style="font-size:32px">More</h1><h2>Tables</h2><p class="mute" style="margin-bottom:10px">Tap a table to change its status.</p><div class="tables">${S.tables.map(t=>`<button class="tb ${t.s}" onclick="togTable(${t.n})">Table ${t.n}<small>${t.s}</small></button>`).join('')}</div>
- <h2>Settings</h2><div class="card"><div class="row"><span>Order sound alerts</span><button class="sw ${S.set.sound?'on':''}" onclick="S.set.sound=S.set.sound?0:1;save();render()" aria-label="Sound"></button></div><label style="display:block;margin-top:14px">Tax (GST) %</label><input type="number" value="${S.set.tax}" min="0" max="28" onchange="S.set.tax=+this.value||0;save();render()"><button class="btn ghost" onclick="resetDemo()">Reset demo data</button></div>`}
-function togTable(n){const t=S.tables.find(x=>x.n===n);t.s={free:'occupied',occupied:'reserved',reserved:'free'}[t.s];save();render()}
-function resetDemo(){S.menu=seedMenu();S.orders=seedOrders();S.tables=seedTables();S.nextId=1045;save();toast('Demo data restored')}
-function profile(){return `<h1 style="font-size:32px">Profile</h1><div class="card" style="text-align:center;margin-top:14px"><div class="logo" style="width:72px;height:72px;font-size:26px;margin:0 auto 10px;border-radius:20px">HD</div><b style="font-size:18px">Restaurant Manager</b><div class="mute">${S.set.name}</div></div>
- <h2>Restaurant</h2><div class="card"><label>Restaurant name</label><input value="${S.set.name}" onchange="S.set.name=this.value;save();toast('Saved')"><div class="row"><span class="mute">Orders served</span><b>${S.orders.filter(o=>o.status==='served').length}</b></div><div class="row" style="margin-top:8px"><span class="mute">Menu items</span><b>${S.menu.length}</b></div></div><button class="btn ghost" style="width:100%;margin-top:14px" onclick="toast('Demo mode: sign-out disabled')">Sign out</button>`}
-function openNew(){S.cart={};S.sheet='order';render()}
-function cartSheet(){
- const items=S.menu.filter(m=>m.on),sum=items.reduce((a,m)=>a+(S.cart[m.id]||0)*m.price,0);
- return `<div class="row"><h2 style="margin:0">New order</h2><button class="btn sm ghost" onclick="closeSheet()">Close</button></div><label style="display:block;margin-top:12px">Table</label><select id="ntable">${S.tables.map(t=>`<option>${t.n}</option>`).join('')}</select>
- ${items.map(m=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line)"><div>${m.name}<div class="price">${fmt(m.price)}</div></div><div class="qty"><button onclick="qty(${m.id},-1)">−</button><b>${S.cart[m.id]||0}</b><button onclick="qty(${m.id},1)">+</button></div></div>`).join('')}
- <button class="btn" style="width:100%;margin-top:14px" onclick="placeOrder()" ${sum?'':'disabled style="width:100%;margin-top:14px;opacity:.5"'}>Place order · ${fmt(sum)}</button>`}
-function qty(id,d){S.cart[id]=Math.max(0,(S.cart[id]||0)+d);const t=$('#ntable')&&$('#ntable').value;render();if(t)$('#ntable').value=t}
-function placeOrder(){const items=S.menu.filter(m=>S.cart[m.id]).map(m=>({n:m.name,q:S.cart[m.id],p:m.price}));if(!items.length)return;const d=new Date(),time=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');S.orders.push({id:S.nextId++,table:+$('#ntable').value,status:'new',time,items});S.sheet=null;S.filter='all';save();toast('Order placed')}
-function itemSheet(){return `<div class="row"><h2 style="margin:0">Add menu item</h2><button class="btn sm ghost" onclick="closeSheet()">Close</button></div><label style="display:block;margin-top:12px">Name</label><input id="in"><label>Category</label><select id="ic">${['Starters','Mains','Breads','Desserts','Drinks'].map(c=>`<option>${c}</option>`).join('')}</select><label>Price (₹)</label><input id="ip" type="number" min="1"><button class="btn" style="width:100%" onclick="addItem()">Save item</button>`}
-function addItem(){const n=$('#in').value.trim(),p=+$('#ip').value;if(!n||!p){toast('Enter a name and price');return}S.menu.push({id:Date.now(),name:n,cat:$('#ic').value,price:p,on:1});S.sheet=null;save();toast('Item added')}
-function closeSheet(){S.sheet=null;render()}
-const tabs=[['home','⌂','Home'],['orders','▤','Orders'],['menu','▦','Menu'],['more','☷','More'],['profile','○','Profile']];
-function render(){
- const hdr=`<header><div class="logo">HD</div><div class="brand">${S.set.name}</div><span class="pill">Demo mode</span></header>`;
- $('#app').innerHTML=hdr+({home,orders,menu,more,profile}[S.tab])()+(S.sheet?`<div class="sheet-bg" onclick="if(event.target===this)closeSheet()"><div class="sheet">${S.sheet==='order'?cartSheet():itemSheet()}</div></div>`:'')+(S.toast?`<div class="toast" role="status">${S.toast}</div>`:'');
- $('#nav').innerHTML=tabs.map(t=>`<button class="${S.tab===t[0]?'on':''}" onclick="go('${t[0]}')"><span>${t[1]}</span>${t[2]}</button>`).join('');
-}
-render();
-</script>
+<script type="module" src="./admin.js"></script>
 </body>
 </html>
