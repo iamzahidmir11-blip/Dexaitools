@@ -103,7 +103,7 @@ function menuView(){
     const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="'+esc(i.name)+'" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="store-photo-fallback" style="display:none">HD</div>':'<div class="store-photo-fallback">HD</div>';
     const variants=(i.menu_variants||[]).map(v=>'<div class="store-variant"><span>'+esc(v.label)+' <b>'+money(v.price)+'</b> '+(v.active?'':'<small>Hidden</small>')+'</span><div class="actions"><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'">Price</button><button class="btn ghost sm" data-variant-toggle="'+esc(v.id)+'" data-active="'+String(v.active)+'">'+(v.active?'Hide':'Enable')+'</button></div></div>').join("");
     const stock=Number(i.stock_qty||0);
-    const stockBlock=i.track_stock?'<div class="inventory-panel"><div><small>INVENTORY ON HAND</small><b class="inventory-number">'+stock+'</b><small>units available</small></div><div class="inventory-stepper"><button class="qty-step" data-stock-minus="'+esc(i.id)+'" data-stock="'+stock+'" '+(stock<=0?'disabled':'')+'>−</button><button class="qty-step" data-stock-plus="'+esc(i.id)+'" data-stock="'+stock+'">+</button></div><span class="stock-state '+(stock===0?'out':stock<=5?'low':'in')+'">'+(stock===0?'Out of stock':stock<=5?'Low stock':'In stock')+'</span></div>':'<div class="inventory-panel inventory-off"><span>Inventory not tracked</span><button class="btn ghost sm" data-stock-enable="'+esc(i.id)+'">Set stock quantity</button></div>';
+    const stockBlock=i.track_stock?'<div class="inventory-panel"><div><small>INVENTORY ON HAND</small><b class="inventory-number">'+stock+'</b><small>units available</small></div><div class="inventory-stepper"><button class="qty-step" data-stock-minus="'+esc(i.id)+'" data-stock="'+stock+'" '+(stock<=0?'disabled':'')+'>−</button><button class="qty-step" data-stock-plus="'+esc(i.id)+'" data-stock="'+stock+'">+</button><button class="btn ghost sm" data-stock-set="'+esc(i.id)+'">Set</button></div><span class="stock-state '+(stock===0?'out':stock<=5?'low':'in')+'">'+(stock===0?'Out of stock':stock<=5?'Low stock':'In stock')+'</span></div>':'<div class="inventory-panel inventory-off"><span>Inventory not tracked</span><button class="btn ghost sm" data-stock-enable="'+esc(i.id)+'">Set stock quantity</button></div>';
     return '<article class="store-product" data-product-card data-name="'+esc((i.name+" "+(i.description||"")+" "+(i.menu_categories?.name||"")).toLowerCase())+'" data-published="'+String(i.active)+'" data-tracked="'+String(i.track_stock)+'" data-stock-value="'+stock+'"><div class="store-product-photo">'+photo+'<span class="store-photo-type">'+(i.is_veg?'VEG':'NON-VEG')+'</span><span class="store-publish-tag '+(i.active?'published':'hidden')+'">'+(i.active?'PUBLISHED':'HIDDEN')+'</span></div><div class="store-product-info"><div class="store-product-heading"><div><small>'+esc(i.menu_categories?.name||"Uncategorised")+'</small><h3>'+esc(i.name)+'</h3></div><b class="store-product-price">'+money(Math.min(...(i.menu_variants||[]).filter(v=>v.active&&v.price!==null).map(v=>Number(v.price)).concat([0]).filter(n=>n>0))||0)+'</b></div><p>'+esc(i.description||"No product description added.")+'</p>'+stockBlock+'<div class="store-variants"><div class="store-section-label">PRICE & VARIANTS</div>'+(variants||'<small>No active variants configured.</small>')+'</div><div class="store-product-actions"><button class="btn ghost sm" data-upload-image="'+esc(i.id)+'">Upload photo</button><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit details</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?'Pause':'Enable')+'</button><button class="btn sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?'Hide product':'Publish product')+'</button></div></div></article>';
   }).join("");
   const catCards=menuCategories.map(c=>'<span class="store-category-chip">'+esc(c.name)+'</span>').join("");
@@ -168,6 +168,13 @@ function bindActions(){
     const rider=document.getElementById("rider-"+b.dataset.assign).value;if(!rider){toast("Choose a rider first.",true);return;}
     try{await api("",{action:"assign_rider",order_id:b.dataset.assign,rider_id:rider});await refresh();toast("Rider assigned.");}catch(e){toast(e.message,true);}
   });
+  document.querySelectorAll("[data-stock-set]").forEach(b=>b.onclick=async()=>{
+    const item=menuItems.find(x=>x.id===b.dataset.stockSet);if(!item)return;
+    const raw=prompt("Set the exact physical stock quantity for "+item.name+":",String(item.stock_qty||0));if(raw===null)return;
+    const qty=Number(raw);if(!Number.isInteger(qty)||qty<0||qty>1000000){toast("Enter a whole number from 0 to 1,000,000.",true);return;}
+    b.disabled=true;
+    try{await api("",{action:"update_menu_item",item_id:item.id,track_stock:true,stock_qty:qty});await refresh();toast("Inventory count saved: "+qty+" units.");}catch(e){toast(e.message,true);b.disabled=false;}
+  });
   document.querySelectorAll("[data-stock-enable]").forEach(b=>b.onclick=async()=>{
     const item=menuItems.find(x=>x.id===b.dataset.stockEnable);if(!item)return;
     const raw=prompt("Enter the current physical stock quantity for "+item.name+":","0");if(raw===null)return;
@@ -177,9 +184,9 @@ function bindActions(){
   });
   document.querySelectorAll("[data-stock-plus],[data-stock-minus]").forEach(b=>b.onclick=async()=>{
     const id=b.dataset.stockPlus||b.dataset.stockMinus,item=menuItems.find(x=>x.id===id);if(!item)return;
-    const delta=b.hasAttribute("data-stock-plus")?1:-1;
+    const delta=b.hasAttribute("data-stock-plus")?1:-1,current=Number(item.stock_qty||0);
     b.disabled=true;
-    try{await api("",{action:"adjust_menu_stock",item_id:id,delta});await refresh();toast("Stock updated: "+next+" units remaining.");}catch(e){toast(e.message,true);b.disabled=false;}
+    try{await api("",{action:"adjust_menu_stock",item_id:id,delta});await refresh();toast("Stock updated: "+(current+delta)+" units remaining.");}catch(e){toast(e.message,true);b.disabled=false;}
   });
   const menuSearch=document.getElementById("menu-search"),menuFilter=document.getElementById("menu-filter");
   const applyStoreFilter=()=>{
