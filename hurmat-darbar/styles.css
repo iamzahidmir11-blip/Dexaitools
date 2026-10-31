@@ -429,3 +429,146 @@ footer a{color:var(--gold)}
 @media(max-width:600px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
 .stock-note{display:block;color:var(--gold);font-size:10px;font-weight:700;margin:2px 0 8px}.add-btn:disabled{opacity:.45;cursor:not-allowed}
+
+
+/* Customer storefront — Zomato-inspired ordering layout, retaining Hurmat Darbar palette and typography */
+:root{--hd-green:#0e1b14;--hd-panel:#17291f;--hd-gold:#d9b86c;--hd-cream:#f4efe0;--hd-muted:#9db1a5;--hd-line:#2a4436}
+body{font-family:'Manrope',system-ui,sans-serif}
+.top{height:76px;padding:0 clamp(16px,5vw,76px);display:flex;gap:22px}
+.top nav{gap:clamp(14px,2.5vw,34px);font-size:12px}
+.top nav a{white-space:nowrap}
+.logo{letter-spacing:1.4px}
+.cart-trigger{border-radius:10px;padding:11px 16px}
+.top-cta{border-radius:10px;padding:11px 15px}
+.zomato-hero{max-width:1320px;margin:25px auto 0;padding:0 clamp(14px,4vw,42px)}
+.restaurant-cover{min-height:340px;position:relative;overflow:hidden;border:1px solid #385642;border-radius:20px;background:radial-gradient(ellipse at 80% 15%,#496c4b66,transparent 38%),radial-gradient(ellipse at 60% 100%,#8a6b3c44,transparent 45%),linear-gradient(115deg,#183c29,#0e1b14 62%,#243a28);display:flex;align-items:center;padding:clamp(25px,5vw,65px);isolation:isolate}
+.restaurant-cover:before,.restaurant-cover:after{content:"";position:absolute;border:1px solid #d9b86c24;border-radius:50%;z-index:-1}
+.restaurant-cover:before{width:430px;height:430px;right:7%;top:-170px}
+.restaurant-cover:after{width:310px;height:310px;right:12%;top:-110px}
+.cover-brand{position:absolute;left:clamp(25px,5vw,65px);top:24px;display:flex;align-items:center;gap:10px;color:#f4efe0;font-size:10px;font-weight:800;letter-spacing:2px}
+.cover-brand .seal{width:32px;height:32px;font-size:12px}
+.cover-copy{max-width:530px;position:relative;z-index:2;margin-top:30px}
+.cover-copy h1{font:700 clamp(42px,6vw,68px)/1.03 'Playfair Display',serif;letter-spacing:-1.6px;margin:14px 0}
+.cover-copy h1 i{color:var(--hd-gold)}
+.cover-copy>p:not(.eyebrow){max-width:420px;color:#c0cfc4;font-size:13px;line-height:1.8;margin-bottom:22px}
+.cover-copy .btn{border-radius:10px}
+.cover-art{position:absolute;right:8%;top:50%;transform:translateY(-43%) rotate(4deg);width:min(33%,340px);aspect-ratio:1/1;border:1px solid #d9b86c77;padding:12px;border-radius:50%;background:linear-gradient(145deg,#d9b86c22,#0e1b14aa);box-shadow:0 25px 70px #0005}
+.cover-art-inner{height:100%;border:1px solid #d9b86c66;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(circle,#35563b,#122319 72%);color:#f4efe0;text-align:center}
+.cover-art-inner span{font-size:11px;letter-spacing:5px;color:#d9b86c}
+.cover-art-inner b{font:700 clamp(26px,4vw,43px) 'Playfair Display',serif;letter-spacing:2px}
+.cover-art-inner small{font-size:7px;letter-spacing:2px;color:#b8c5b9;margin-top:10px}
+.restaurant-summary{padding:23px 4px 8px}
+.restaurant-title{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.restaurant-title .eyebrow{font-size:8px;margin:0 0 4px}
+.restaurant-title h2{font:700 clamp(25px,3vw,34px) 'Playfair Display',serif;color:var(--hd-cream);margin:0}
+.restaurant-title p{font-size:11px;color:var(--hd-muted);margin:5px 0}
+.restaurant-live{border:1px solid #45634d;background:#17291f;color:#9cdaa9;border-radius:99px;padding:8px 12px;font-size:10px;font-weight:800;white-space:nowrap}
+.restaurant-live.closed{border-color:#805b3b;color:#e4bd86;background:#2b2118}
+.restaurant-facts{display:flex;flex-wrap:wrap;gap:12px 25px;border-top:1px solid var(--hd-line);border-bottom:1px solid var(--hd-line);padding:13px 0;margin:16px 0;color:var(--hd-muted);font-size:10px}
+.restaurant-facts b{color:var(--hd-gold);margin-right:5px}
+.restaurant-actions{display:flex;gap:9px;flex-wrap:wrap}
+.restaurant-actions .btn{padding:12px 16px;border-radius:9px;font-size:10px}
+.restaurant-actions .outline{border:1px solid #45634d;color:var(--hd-cream)}
+.menu{max-width:1320px;margin:0 auto;padding:60px clamp(14px,4vw,42px) 75px;background:transparent}
+.menu .section-head{align-items:center;margin-bottom:22px}
+.menu .section-head h2{font-size:clamp(32px,4vw,45px);margin:8px 0}
+.menu-intro{font-size:12px;color:var(--hd-muted);margin:0}
+.menu-discovery{display:flex;align-items:center;justify-content:space-between;margin:24px 0 8px}
+.menu-search-label b{display:block;font-size:13px;color:var(--hd-cream)}
+.menu-search-label small{display:block;font-size:10px;color:var(--hd-muted);margin-top:4px}
+.menu-tools{margin:12px 0 17px}
+.menu-search{width:100%;max-width:520px;height:46px;padding:0 16px 0 43px!important;border-radius:11px!important;background:#17291f!important;border:1px solid #35513e!important;color:var(--hd-cream)!important;font:500 12px Manrope!important;outline:none}
+.menu-search:focus{border-color:var(--hd-gold)!important;box-shadow:0 0 0 3px #d9b86c18}
+.menu-tools{position:relative}
+.menu-tools:before{content:"⌕";position:absolute;left:15px;top:8px;color:var(--hd-gold);font-size:23px;pointer-events:none}
+.categories{display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;padding:5px 0 13px;margin:0 0 12px;scrollbar-width:thin;scrollbar-color:#45634d transparent}
+.categories .chip{white-space:nowrap;flex:none;padding:10px 15px;border-radius:9px;font:700 10px Manrope}
+.menu-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:17px}
+.menu-card{border-radius:14px;min-width:0;display:flex;flex-direction:column}
+.food-photo{height:190px;flex:none;position:relative}
+.food-image{width:100%;height:100%;object-fit:cover;display:block}
+.photo-unavailable{min-height:190px}
+.food-body{padding:15px;display:flex;flex-direction:column;flex:1}
+.food-body h3{font-size:16px;line-height:1.35;min-height:0;margin:0 0 7px}
+.food-description{font-size:10px;line-height:1.55;min-height:31px;margin:0 0 8px}
+.food-type{font-size:8px;letter-spacing:1px;margin-bottom:8px}
+.stock-note{font-size:9px;margin:0 0 8px}
+.variant-select{width:100%;padding:10px 11px;margin-top:auto;font:500 10px Manrope}
+.food-bottom{padding-top:13px;margin-top:0}
+.price-stack{font-size:14px}
+.price-stack small{font-size:9px}
+.food-bottom .card-add{border-radius:9px;padding:10px 13px;font:800 10px Manrope;white-space:nowrap}
+.menu-qty-control button{border-radius:8px}
+.menu-status{font-size:11px;padding:16px 0}
+.menu-foot{font-size:10px;margin-top:20px}
+.customer-tools{max-width:1240px;margin:0 auto;padding:50px clamp(14px,4vw,42px);border:0}
+.customer-tools .section-head h2{font-size:clamp(30px,4vw,42px)}
+.service-card{border-radius:14px}
+.service-card input,.service-card textarea{font-size:12px}
+.visit{max-width:1240px;margin:0 auto 35px;border-radius:18px;padding:clamp(22px,4vw,45px)}
+footer{padding:28px clamp(16px,5vw,76px)}
+.cart-panel{z-index:50}
+.cart-scrim{z-index:49}
+@media(max-width:900px){.cover-art{right:5%;width:30%}.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.food-photo{height:165px}}
+@media(max-width:650px){
+ .top{height:66px;padding:0 13px;gap:9px}
+ .top nav{display:none}
+ .top-cta{display:none}
+ .logo{font-size:10px;gap:8px;letter-spacing:1px}
+ .logo small{font-size:7px;letter-spacing:1px}
+ .seal{width:34px;height:34px}
+ .cart-trigger{padding:9px 10px;font-size:10px}
+ .hamb{display:block;color:var(--hd-cream);font-size:21px}
+ .top.nav-open nav{display:flex;position:absolute;top:65px;left:0;right:0;background:#102017;padding:18px 20px;flex-direction:column;gap:17px;border-bottom:1px solid var(--hd-line)}
+ .zomato-hero{margin-top:12px;padding:0 12px}
+ .restaurant-cover{min-height:300px;border-radius:15px;padding:22px}
+ .cover-brand{left:22px;top:18px;font-size:8px}
+ .cover-brand .seal{width:28px;height:28px}
+ .cover-copy{max-width:75%;margin-top:34px}
+ .cover-copy h1{font-size:clamp(37px,10vw,53px)}
+ .cover-copy>p:not(.eyebrow){font-size:10px;line-height:1.6}
+ .cover-copy .btn{padding:11px 13px;font-size:9px}
+ .cover-art{width:34%;right:-4%;top:57%;opacity:.88;padding:7px}
+ .cover-art-inner small{font-size:5px;letter-spacing:1px}
+ .cover-art-inner span{font-size:7px;letter-spacing:2px}
+ .restaurant-summary{padding:18px 2px 5px}
+ .restaurant-title h2{font-size:24px}
+ .restaurant-title p{font-size:9px}
+ .restaurant-live{font-size:8px;padding:7px 9px}
+ .restaurant-facts{gap:8px 14px;font-size:9px;padding:11px 0}
+ .restaurant-actions{display:grid;grid-template-columns:1fr 1fr}
+ .restaurant-actions .btn:first-child{grid-column:1/-1}
+ .restaurant-actions .btn{justify-content:center;padding:11px 8px;font-size:9px}
+ .menu{padding:44px 13px 55px}
+ .menu .section-head{display:block}
+ .menu .menu-tag{display:inline-block;margin-top:12px}
+ .menu-intro{font-size:10px;line-height:1.6}
+ .menu-discovery{margin-top:20px}
+ .menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px}
+ .food-photo{height:112px}
+ .photo-unavailable{min-height:112px}
+ .food-body{padding:9px}
+ .food-type{font-size:7px;margin-bottom:6px}
+ .food-body h3{font-size:12px;line-height:1.3;min-height:31px}
+ .food-description{font-size:9px;line-height:1.45;min-height:39px}
+ .variant-select{padding:8px 6px;font-size:9px;margin-top:7px}
+ .food-bottom{gap:5px;flex-wrap:wrap;padding-top:9px}
+ .food-bottom .price-stack{font-size:11px;flex:1 1 100%}
+ .food-bottom .price-stack small{font-size:8px}
+ .food-bottom .card-add{padding:8px 9px;font-size:9px}
+ .menu-qty-control{gap:4px}
+ .menu-qty-control button{width:26px;height:26px;font-size:16px}
+ .menu-qty-control .qty-value{font-size:10px}
+ .customer-tools{padding:42px 13px}
+ .customer-tools .section-head{display:block}
+ .customer-tools .menu-tag{display:inline-block;margin-top:10px}
+ .service-grid{grid-template-columns:1fr;gap:11px}
+ .service-card{padding:15px}
+ .visit{margin:12px 12px 25px;padding:23px 18px}
+ .visit h2{font-size:36px}
+ .details{gap:15px}
+ footer{padding:23px 14px;gap:13px}
+ footer>p{font-size:9px}
+}
+@media(max-width:360px){.cover-copy{max-width:80%}.cover-art{right:-10%;width:36%}.menu-grid{gap:7px}.food-body{padding:8px}.food-photo{height:98px}}
+
