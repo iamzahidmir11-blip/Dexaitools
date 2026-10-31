@@ -79,23 +79,24 @@ function loginView(message){
   document.getElementById("forgot-password").onclick=async()=>{const email=document.getElementById("login-email").value.trim();if(!email){toast("Enter your owner email first.",true);return;}const {error}=await supabase.auth.resetPasswordForEmail(email);if(error){toast(error.message,true);return;}toast("Password reset email sent. Check your inbox.");};
 }
 function nav(){
-  const mainTabs=tabs.slice(0,4), moreTabs=tabs.slice(4);
-  navRoot.innerHTML=mainTabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+
-    '<button class="nav-more" type="button" aria-label="More sections" aria-expanded="false" id="nav-more"><span>☰</span><small>More</small></button>'+
-    '<div class="nav-more-menu" id="nav-more-menu" hidden>'+moreTabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+'</div>';
+  const mainTabs=tabs.slice(0,4);
+  navRoot.innerHTML=mainTabs.map(t=>'<button class="dock-item '+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span class="dock-icon">'+t[1]+'</span><small>'+t[2]+'</small></button>').join("");
   navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
-  const more=navRoot.querySelector("#nav-more"), menu=navRoot.querySelector("#nav-more-menu");
-  more.onclick=()=>{const open=menu.hidden;menu.hidden=!open;more.classList.toggle("on",open);more.setAttribute("aria-expanded",String(open));};
 }
 function header(){
   const open=!!settings?.is_open;
-  if(DEVELOPMENT_PREVIEW) return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>DEVELOPMENT WORKSPACE</small></div></div><div class="topbar-actions"><span class="pill">PREVIEW MODE</span></div></header>';
-  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
+  const unread=notifications.filter(n=>!n.is_read).length;
+  const moreTabs=tabs.slice(4);
+  const status=DEVELOPMENT_PREVIEW?'<span class="pill">PREVIEW MODE</span>':'<button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button>';
+  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>'+(DEVELOPMENT_PREVIEW?'DEVELOPMENT WORKSPACE':'LIVE RESTAURANT OPERATIONS')+'</small></div></div><div class="owner-header-actions">'+status+
+  '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Notifications"><span>♧</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
+  '<button class="header-icon menu-trigger" id="owner-menu" aria-label="More options" aria-expanded="false"><span>☰</span></button>'+
+  '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+'</div></div></header>';
 }
 function shell(title,desc,content){
   const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
   root.innerHTML=header()+previewNotice+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
-  const signout=document.getElementById("signout");
+  const notify=document.getElementById("owner-notifications");\n  if(notify)notify.onclick=()=>{page="alerts";render();};\n  const menuBtn=document.getElementById("owner-menu"),moreMenu=document.getElementById("owner-more-menu");\n  if(menuBtn)menuBtn.onclick=()=>{moreMenu.hidden=!moreMenu.hidden;menuBtn.setAttribute("aria-expanded",String(!moreMenu.hidden));};\n  if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});\n  const signout=document.getElementById("signout");
   if(signout)signout.onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
 }
 function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
