@@ -177,10 +177,9 @@ function bindActions(){
   });
   document.querySelectorAll("[data-stock-plus],[data-stock-minus]").forEach(b=>b.onclick=async()=>{
     const id=b.dataset.stockPlus||b.dataset.stockMinus,item=menuItems.find(x=>x.id===id);if(!item)return;
-    const current=Number(item.stock_qty||0),delta=b.hasAttribute("data-stock-plus")?1:-1,next=current+delta;
-    if(next<0||next>1000000)return;
+    const delta=b.hasAttribute("data-stock-plus")?1:-1;
     b.disabled=true;
-    try{await api("",{action:"update_menu_item",item_id:id,track_stock:true,stock_qty:next});await refresh();toast("Stock updated: "+next+" units remaining.");}catch(e){toast(e.message,true);b.disabled=false;}
+    try{await api("",{action:"adjust_menu_stock",item_id:id,delta});await refresh();toast("Stock updated: "+next+" units remaining.");}catch(e){toast(e.message,true);b.disabled=false;}
   });
   const menuSearch=document.getElementById("menu-search"),menuFilter=document.getElementById("menu-filter");
   const applyStoreFilter=()=>{
@@ -230,6 +229,13 @@ function bindActions(){
   });
   document.querySelectorAll("[data-variant-toggle]").forEach(b=>b.onclick=async()=>{
     try{await api("",{action:"update_menu_variant",variant_id:b.dataset.variantToggle,active:b.dataset.active!=="true"});await refresh();toast("Variant availability updated.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-add-variant]").forEach(b=>b.onclick=async()=>{
+    const item=menuItems.find(x=>x.id===b.dataset.addVariant);if(!item)return;
+    const label=prompt("Variant name (e.g. Half, Full, Regular):");if(!label||!label.trim())return;
+    const price=Number(prompt("Variant price in rupees:","100"));
+    if(!Number.isInteger(price)||price<1||price>1000000){toast("Enter a valid whole-number price.",true);return;}
+    try{await api("",{action:"create_menu_variant",item_id:item.id,label:label.trim(),price});await refresh();toast("New product variant added.");}catch(e){toast(e.message,true);}
   });
   document.querySelectorAll("[data-price]").forEach(b=>b.onclick=async()=>{
     const value=prompt("New price in rupees:",b.dataset.current);if(value===null)return;const price=Number(value);
@@ -284,7 +290,10 @@ function bindActions(){
     if(imageUrl.trim()&&!imageUrl.trim().startsWith("https://")){toast("Photo URL must start with https://",true);return;}
     const veg=prompt("Food type: VEG or NON-VEG","NON-VEG");if(!["veg","non-veg"].includes(String(veg||"").trim().toLowerCase())){toast("Enter VEG or NON-VEG.",true);return;}
     const price=Number(prompt("Regular price in rupees:","100"));if(!Number.isInteger(price)||price<1){toast("Enter a valid price.",true);return;}
-    const {data,error}=await supabase.from("menu_items").insert({category_id:match.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg",active:true,available:true}).select("id").single();
+    const trackStock=confirm("Track inventory for this product? Choose OK to enter stock quantity; Cancel keeps stock unlimited.");
+    let initialStock=null;
+    if(trackStock){const raw=prompt("Current stock quantity:","0");if(raw===null)return;initialStock=Number(raw);if(!Number.isInteger(initialStock)||initialStock<0||initialStock>1000000){toast("Enter a whole number from 0 to 1,000,000.",true);return;}}
+    const {data,error}=await supabase.from("menu_items").insert({category_id:match.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg",active:true,available:true,track_stock:trackStock,stock_qty:initialStock}).select("id").single();
     if(error){toast(error.message,true);return;}
     const variant=await supabase.from("menu_variants").insert({item_id:data.id,label:"Regular",price,active:true});
     if(variant.error){toast("Item saved, but price variant failed: "+variant.error.message,true);return;}
