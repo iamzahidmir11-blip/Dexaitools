@@ -13,7 +13,7 @@ settings:[{name:"Restaurant name",value:"Hurmat Darbar"},{name:"Phone",value:"+9
 profile:[{name:"Demo Administrator",email:"admin@demo.local",role:"Owner preview",phone:"Not connected"}],
 activity:[{action:"Demo workspace initialized",when:"Just now"}]};
 let db=load(),page="overview",editState=null;
-function load(){try{return JSON.parse(localStorage.getItem("hd-admin-demo"))||structuredClone(seed)}catch{return structuredClone(seed)}}
+function load(){const base=JSON.parse(JSON.stringify(seed));try{const saved=JSON.parse(localStorage.getItem("hd-admin-demo")||"null");if(!saved||typeof saved!=="object")return base;for(const key of Object.keys(base)){if(Array.isArray(base[key]))base[key]=Array.isArray(saved[key])?saved[key]:base[key]}return base}catch{return base}}
 function save(action="Changes saved in this browser"){localStorage.setItem("hd-admin-demo",JSON.stringify(db));db.activity.unshift({action,when:new Date().toLocaleString()});localStorage.setItem("hd-admin-demo",JSON.stringify(db));toast(action)}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
