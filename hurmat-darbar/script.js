@@ -148,7 +148,7 @@ async function load(){
   if(c.error){status.textContent="Menu is live, but checkout settings are unavailable. Please call the restaurant.";return;}
   restaurantSettings=c.data;
   items=(b.data||[]).map(x=>({...x,category_name:x.menu_categories?.name||"",menu_variants:(x.menu_variants||[]).filter(v=>v.price!==null).sort((p,q)=>p.sort_order-q.sort_order)})).filter(x=>x.menu_variants.length);
-  cart=cart.flatMap(line=>{const item=items.find(x=>x.id===line.item_id&&x.available!==false),variant=item?.menu_variants.find(v=>v.id===line.variant_id);return item&&variant?[{...line,name:item.name,label:variant.label,price:Number(variant.price),qty:Math.max(1,Number(line.qty)||1)}]:[]});
+  cart=cart.flatMap(line=>{const item=items.find(x=>x.id===line.item_id&&x.available!==false),variant=item?.menu_variants.find(v=>v.id===line.variant_id);return item&&variant?[{...line,key:cartKey(item.id,variant.id),name:item.name,label:variant.label,price:Number(variant.price),qty:Math.max(1,Math.min(50,Number(line.qty)||1))}]:[]});
   localStorage.setItem("hd-cart",JSON.stringify(cart));
   renderCats(a.data||[]);
   status.textContent=items.length+" menu items loaded · live restaurant prices";
