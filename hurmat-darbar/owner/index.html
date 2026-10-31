@@ -337,7 +337,7 @@ input,select{background:#fff;color:#242832;border-color:#dfe3e8}
   } catch(e) {}
   try {
     status.textContent='Loading secure owner system…';
-    await import('../admin.js?v=owner-fix-20261031-2');
+    await import('../admin.js?v=owner-fix-20261031-3');
   } catch(e) {
     status.textContent='Owner app could not start.';
     detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
