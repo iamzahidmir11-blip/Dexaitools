@@ -67,10 +67,12 @@ function nav(){
 function header(){
   const open=!!settings?.is_open;
   return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo">HD</div><div><b>HURMAT DARBAR</b><small>RESTAURANT PARTNER CONSOLE</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
-}function shell(title,desc,content){
+}
+function shell(title,desc,content){
   root.innerHTML=header()+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">RESTAURANT OPERATIONS</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
   document.getElementById("signout").onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
-}function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
+}
+function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
 function empty(text){return '<div class="empty">'+esc(text)+'</div>';}
 function nextStatus(s){
   return ({pending_confirmation:"confirmed",confirmed:"preparing",preparing:"ready_for_pickup"})[s]||null;
@@ -103,10 +105,12 @@ function homeView(){
   '<section class="partner-panel"><div class="panel-heading"><div><h2>Quick operations</h2><p>Common restaurant controls</p></div></div><div class="quick-links"><button data-go="menu"><span>▦</span><b>Manage menu</b><small>Items, photos & prices</small></button><button data-go="inventory"><span>▣</span><b>Inventory</b><small>Stock counts & alerts</small></button><button data-go="settings"><span>⚙</span><b>Store setup</b><small>Hours, location & payments</small></button><button data-go="reports"><span>▥</span><b>Business reports</b><small>Sales & popular dishes</small></button></div></section></div>'+
   '<section class="partner-panel"><div class="panel-heading"><div><h2>Recent orders</h2><p>Latest customer activity</p></div><button class="text-action" data-go="orders">View all orders →</button></div>'+(orders.slice(0,6).map(orderCard).join("")||empty("No real orders have been received yet."))+'</section>'+
   '<div class="dashboard-columns"><section class="partner-panel"><div class="panel-heading"><div><h2>Inventory attention</h2><p>Items with five or fewer units</p></div><button class="text-action" data-go="inventory">Manage stock →</button></div>'+(menuItems.filter(i=>i.track_stock&&Number(i.stock_qty||0)<=5).slice(0,5).map(i=>'<div class="item-row"><b>'+esc(i.name)+'</b><span class="stock-state '+(Number(i.stock_qty||0)===0?'out':'low')+'">'+(Number(i.stock_qty||0)===0?'Out of stock':i.stock_qty+' left')+'</span></div>').join("")||empty("No low-stock alerts."))+'</section><section class="partner-panel"><div class="panel-heading"><div><h2>Account connection</h2><p>Secure restaurant access</p></div><span class="connection-dot">● Connected</span></div><p class="mute">Signed in with a verified '+esc(role)+' account. Order and notification updates are subscribed in real time.</p></section></div>';
-}function ordersView(){
+}
+function ordersView(){
   const groups=[["New orders","pending_confirmation"],["Confirmed","confirmed"],["Preparing","preparing"],["Ready for pickup","ready_for_pickup"],["Delivery / completed",["picked_up","out_for_delivery","delivered"]],["Cancelled / rejected",["cancelled","rejected","delivery_failed"]]];
   return '<div class="orders-toolbar"><div><b>'+orders.length+' total orders</b><span> · Latest orders appear first</span></div><input id="order-search" type="search" placeholder="Search order number, customer or phone"></div><div class="order-groups">'+groups.map(([label,status])=>{const list=orders.filter(o=>Array.isArray(status)?status.includes(o.status):o.status===status);return '<section class="order-group"><div class="group-heading"><h2>'+label+'</h2><span>'+list.length+'</span></div>'+(list.map(orderCard).join("")||'<div class="empty compact">No orders in this stage.</div>')+'</section>';}).join("")+'</div>';
-}function menuView(){
+}
+function menuView(){
   const search='<div class="store-toolbar"><input id="menu-search" type="search" placeholder="Search dishes, e.g. Chicken Biryani"><select id="menu-filter"><option value="all">All items</option><option value="published">Published</option><option value="hidden">Hidden</option><option value="stock">Stock tracking on</option><option value="low">Low stock</option><option value="out">Out of stock</option></select><button class="btn" id="add-category">+ Category</button><button class="btn" id="add-item">+ Add menu item</button></div>';
   const cards=menuItems.map(i=>{
     const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="'+esc(i.name)+'" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="store-photo-fallback" style="display:none">HD</div>':'<div class="store-photo-fallback">HD</div>';
@@ -117,7 +121,8 @@ function homeView(){
   }).join("");
   const catCards=menuCategories.map(c=>'<span class="store-category-chip">'+esc(c.name)+'</span>').join("");
   return '<section class="menu-summary"><div><span class="eyebrow">CUSTOMER CATALOGUE</span><h2>Menu management</h2><p>Changes to items, prices, photos and availability sync to the live customer website.</p></div><div class="store-metrics"><div><small>MENU ITEMS</small><b>'+menuItems.length+'</b></div><div><small>LIVE</small><b>'+menuItems.filter(i=>i.active&&i.available).length+'</b></div><div><small>HIDDEN / PAUSED</small><b>'+menuItems.filter(i=>!i.active||!i.available).length+'</b></div><div><small>CATEGORIES</small><b>'+menuCategories.length+'</b></div></div></section>'+search+'<div class="store-category-list">'+catCards+'</div><div class="store-product-grid" id="store-product-grid">'+(cards||empty("No menu items yet. Add your first dish."))+'</div>';
-}function inventoryView(){
+}
+function inventoryView(){
   const tracked=menuItems.filter(i=>i.track_stock),untracked=menuItems.filter(i=>!i.track_stock);
   const low=tracked.filter(i=>Number(i.stock_qty||0)>0&&Number(i.stock_qty||0)<=5),out=tracked.filter(i=>Number(i.stock_qty||0)===0);
   const rows=[...tracked,...untracked].map(i=>'<div class="inventory-row"><div class="inventory-product"><div class="inventory-thumb">'+(i.image_url?'<img src="'+esc(i.image_url)+'" alt="">':'HD')+'</div><div><b>'+esc(i.name)+'</b><small>'+esc(i.menu_categories?.name||"Uncategorised")+'</small></div></div><div class="inventory-count">'+(i.track_stock?'<b>'+Number(i.stock_qty||0)+'</b><small>units on hand</small>':'<span class="not-tracked">Not tracked</span>')+'</div><div class="inventory-actions">'+(i.track_stock?'<button class="qty-step" data-stock-minus="'+esc(i.id)+'" '+(Number(i.stock_qty||0)<=0?'disabled':'')+'>−</button><button class="qty-step" data-stock-plus="'+esc(i.id)+'">+</button><button class="btn ghost sm" data-stock-set="'+esc(i.id)+'">Set quantity</button>':'<button class="btn ghost sm" data-stock-enable="'+esc(i.id)+'">Start tracking</button>')+'</div><span class="stock-state '+(!i.track_stock?'':Number(i.stock_qty||0)===0?'out':Number(i.stock_qty||0)<=5?'low':'in')+'">'+(!i.track_stock?'Unlimited':Number(i.stock_qty||0)===0?'Out of stock':Number(i.stock_qty||0)<=5?'Low stock':'In stock')+'</span></div>').join("");
@@ -125,7 +130,8 @@ function homeView(){
 }
 function reservationsView(){
   return reservations.map(r=>'<article class="card" style="margin:10px 0"><div class="row"><b>'+esc(r.name)+'</b><span class="tag s-new">'+esc(r.status)+'</span></div><p class="mute">'+esc(r.phone)+' · '+esc(r.party_size)+' guests</p><p class="mute">'+new Date(r.reserve_at).toLocaleString()+'</p><p class="mute">'+esc(r.notes||"")+'</p><div class="actions">'+["confirmed","rejected","cancelled"].filter(s=>r.status==="pending"||s==="cancelled").map(s=>'<button class="btn sm '+(s==="cancelled"?"ghost":"")+'" data-reservation="'+esc(r.id)+'" data-res-status="'+s+'">'+s+'</button>').join("")+'</div></article>').join("")||empty("No reservations have been received.");
-}function ridersView(){
+}
+function ridersView(){
   return riders.map(r=>'<div class="item-row"><div class="item-meta"><b>'+esc(r.name||"Rider")+'</b><span class="mute">'+esc(r.phone||"No phone on file")+'</span></div><span class="tag '+(r.is_online?"s-ready":"s-served")+'">'+(r.is_online?"Online":"Offline")+'</span></div>').join("")||empty("No rider accounts are linked yet.");
 }
 function reportsView(){
@@ -139,7 +145,8 @@ function reportsView(){
 }
 function alertsView(){
   return notifications.map(n=>'<div class="item-row"><div class="item-meta"><b>'+esc(n.title)+'</b><span class="mute">'+esc(n.body||"")+'</span><span class="mute">'+new Date(n.created_at).toLocaleString()+'</span></div>'+(n.is_read?"":'<button class="btn ghost sm" data-read="'+esc(n.id)+'">Mark read</button>')+'</div>').join("")||empty("No notifications yet.");
-}function alertsView(){
+}
+function alertsView(){
   return notifications.map(n=>'<div class="item-row"><div class="item-meta"><b>'+esc(n.title)+'</b><span class="mute">'+esc(n.body||"")+'</span><span class="mute">'+new Date(n.created_at).toLocaleString()+'</span></div>'+(n.is_read?"":'<button class="btn ghost sm" data-read="'+esc(n.id)+'">Mark read</button>')+'</div>').join("")||empty("No notifications yet.");
 }
 function settingsView(){
@@ -166,7 +173,8 @@ function render(){
   let content=page==="home"?homeView():page==="orders"?ordersView():page==="menu"?menuView():page==="inventory"?inventoryView():page==="reservations"?reservationsView():page==="riders"?ridersView():page==="reports"?reportsView():page==="settings"?settingsView():alertsView();
   shell(t[0],t[1],content);
   bindActions();
-}async function refresh(){
+}
+async function refresh(){
   const results=await Promise.allSettled([api("orders"),api("menu"),api("reservations"),api("riders"),
     supabase.from("notifications").select("id,title,body,order_id,is_read,created_at").order("created_at",{ascending:false}).limit(60),
     supabase.from("restaurant_settings").select("*").eq("id",1).single()]);
@@ -349,7 +357,7 @@ function bindActions(){
     await refresh();toast("Menu item added to the live website.");
   };
 }
-async async function startApp(){
+async function startApp(){
   await refresh();
   if(channel)await supabase.removeChannel(channel);
   channel=supabase.channel("hurmat-admin-live")
@@ -360,7 +368,8 @@ async async function startApp(){
     .on("postgres_changes",{event:"*",schema:"public",table:"reservations"},()=>refresh())
     .on("postgres_changes",{event:"*",schema:"public",table:"restaurant_settings"},()=>refresh())
     .subscribe();
-}async function init(){
+}
+async function init(){
   try{if(await verifyAccess())await startApp();else loginView("");}
   catch(e){loginView(e.message||"Unable to verify account.");}
 }
