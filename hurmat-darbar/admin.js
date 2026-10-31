@@ -96,7 +96,12 @@ function header(){
 function shell(title,desc,content){
   const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
   root.innerHTML=header()+previewNotice+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
-  const notify=document.getElementById("owner-notifications");\n  if(notify)notify.onclick=()=>{page="alerts";render();};\n  const menuBtn=document.getElementById("owner-menu"),moreMenu=document.getElementById("owner-more-menu");\n  if(menuBtn)menuBtn.onclick=()=>{moreMenu.hidden=!moreMenu.hidden;menuBtn.setAttribute("aria-expanded",String(!moreMenu.hidden));};\n  if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});\n  const signout=document.getElementById("signout");
+  const notify=document.getElementById("owner-notifications");
+  if(notify)notify.onclick=()=>{page="alerts";render();};
+  const menuBtn=document.getElementById("owner-menu"),moreMenu=document.getElementById("owner-more-menu");
+  if(menuBtn)menuBtn.onclick=()=>{moreMenu.hidden=!moreMenu.hidden;menuBtn.setAttribute("aria-expanded",String(!moreMenu.hidden));};
+  if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
+  const signout=document.getElementById("signout");
   if(signout)signout.onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
 }
 function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
