@@ -12,11 +12,50 @@ document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getEl
 function renderCats(data){cats.replaceChildren();[ {id:"all",name:"All categories"},...data].forEach((x,i)=>{const b=el("button","chip"+(i===0?" active":""),x.name);b.dataset.cat=x.id;cats.append(b)});cats.onclick=e=>{const b=e.target.closest("[data-cat]");if(!b)return;cat=b.dataset.cat;cats.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()}}
 function foodImage(item){if(item.image_url&&/^https?:\/\//i.test(item.image_url))return item.image_url;const q=encodeURIComponent((item.name||"Indian food")+" food dish");const lock=[...(item.id||item.name||"hd")].reduce((a,c)=>a+c.charCodeAt(0),0)%997;return "https://loremflickr.com/900/650/"+q+"?lock="+lock}
 function foodDescription(item){if(item.description&&item.description.trim())return item.description.trim();const category=(item.category_name||"").toLowerCase();if(category.includes("wazwan"))return "A traditional Kashmiri-style preparation, served fresh from the Hurmat Darbar kitchen.";if(category.includes("momo"))return "A flavourful momo favourite, prepared fresh and served hot.";if(category.includes("drink")||category.includes("breakfast"))return "A refreshing pick, prepared fresh for your table.";if(category.includes("fries"))return "Crisp, savoury comfort food made for sharing.";if(category.includes("soup"))return "A warm, comforting bowl prepared fresh to order.";if(category.includes("pasta"))return "A satisfying pasta favourite, freshly prepared.";return "A restaurant favourite, freshly prepared and served with care."}
-function render(){grid.replaceChildren();const list=items.filter(x=>(cat==="all"||x.category_id===cat)&&(!query||(x.name+" "+(x.description||"")+" "+x.category_name).toLowerCase().includes(query)));if(!list.length){grid.append(el("p","menu-empty","No matching items found."));return}list.forEach(x=>{const card=el("article","menu-card"),photo=el("div","food-photo"),image=el("img","food-image");image.src=foodImage(x);image.alt=x.name+" food";image.loading="lazy";image.decoding="async";image.referrerPolicy="no-referrer";image.onerror=()=>{image.onerror=null;const c=(x.category_name||"").toLowerCase();const fallback=c.includes("momo")?"https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy%2Cf_auto%2Cq_auto%2Cw_900%2Ch_900%2Cc_fit/FOOD_CATALOG/IMAGES/CMS/2025/11/23/77c5ef0c-9f78-4612-8098-959b00980c08_d1a72a56-2639-412d-a901-e12263ccb1ae.jpg_compressed":c.includes("fries")?"https://www.hollywoodfries.com/__static/ca3a04999523402c7900e5d8387c8510/shutterstock_2148364053.jpg":c.includes("wazwan")?"https://miro.medium.com/v2/resize%3Afit%3A1400/1%2A_es0B-7enIcSYNKSxbGtNA.jpeg":c.includes("pasta")?"https://images.deliveryhero.io/image/fd-bd/LH/mloo-listing.jpg?height=900&width=900":c.includes("soup")?"https://1.bp.blogspot.com/-RUkxSGa_pp8/XhYST1uVasI/AAAAAAADAfo/52zvg5-EjPAfyWj4OIWr20DW9p3_n8zyACLcBGAsYHQ/s1600/70447144_2197214697235894_1613080675747889152_n.jpg":c.includes("breakfast")?"https://acaizando.pt/assets/bebidas-hero-BaLmYtI_.jpg":"https://gravy.pplx.app/assets/dish-butter-chicken.jpg";image.src=fallback;};photo.append(image);const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);body.append(type,title);body.append(el("p","food-description",foodDescription(x)));const select=el("select","variant-select");x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));price.append(el("small","","Selected price"));select.onchange=()=>{price.firstChild.textContent=money(x.menu_variants[Number(select.value)].price)};const add=el("button","add-btn",x.available===false?"Unavailable":"Add +");add.disabled=x.available===false;add.onclick=()=>addItem(x,x.menu_variants[Number(select.value)]);foot.append(price,add);body.append(select,foot);card.append(photo,body);grid.append(card)})}
-function addItem(item,v){const key=item.id+v.id,old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();toggleCart(true)}
+function cartQty(itemId,variantId){return cart.find(x=>x.item_id===itemId&&x.variant_id===variantId)?.qty||0}
+function render(){
+  grid.replaceChildren();
+  const list=items.filter(x=>(cat==="all"||x.category_id===cat)&&(!query||(x.name+" "+(x.description||"")+" "+x.category_name).toLowerCase().includes(query)));
+  if(!list.length){grid.append(el("p","menu-empty","No matching items found."));return}
+  list.forEach(x=>{
+    const card=el("article","menu-card"),photo=el("div","food-photo"),image=el("img","food-image");
+    image.src=foodImage(x);image.alt=x.name+" food";image.loading="lazy";image.decoding="async";image.referrerPolicy="no-referrer";
+    image.onerror=()=>{image.onerror=null;image.style.display="none";photo.classList.add("photo-unavailable");photo.append(el("span","photo-label","HURMAT DARBAR"))};
+    photo.append(image);
+    const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);
+    body.append(type,title,el("p","food-description",foodDescription(x)));
+    const select=el("select","variant-select");
+    x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
+    const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));
+    price.append(el("small","","Selected price"));
+    const controls=el("div","menu-qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value","0"),plus=el("button","qty-plus","+");
+    minus.type=plus.type="button";
+    const syncQty=()=>{const v=x.menu_variants[Number(select.value)];const amount=cartQty(x.id,v.id);qty.textContent=amount;minus.disabled=amount===0;price.firstChild.textContent=money(v.price)};
+    select.onchange=syncQty;
+    minus.onclick=()=>{const v=x.menu_variants[Number(select.value)];qtyChange(x.id+v.id,-1)};
+    plus.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
+    controls.append(minus,qty,plus);foot.append(price,controls);body.append(select,foot);card.append(photo,body);grid.append(card);syncQty();
+  });
+}
+function addItem(item,v,open=true){const key=item.id+v.id,old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
 function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart()}
-function renderCart(){const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;cart.forEach(x=>{subtotal+=x.price*x.qty;count+=x.qty;const row=el("div","cart-line"),info=el("div","",x.name),small=el("small","",x.label+" · "+money(x.price));info.append(small);const controls=el("div","qty-control"),minus=el("button","","−"),qty=el("span","",x.qty),plus=el("button","","+");minus.onclick=()=>qtyChange(x.key,-1);plus.onclick=()=>qtyChange(x.key,1);controls.append(minus,qty,plus);row.append(info,controls);root.append(row)});if(!cart.length)root.append(el("p","menu-empty","Your bag is empty."));document.getElementById("cart-count").textContent=count;document.getElementById("cart-subtotal").textContent=money(subtotal);document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0))}
-function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty+=d;if(x.qty<1)cart=cart.filter(x=>x.key!==key);save()}
+function renderCart(){
+  const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
+  cart.forEach(x=>{
+    subtotal+=x.price*x.qty;count+=x.qty;
+    const row=el("div","cart-line"),info=el("div","cart-item-info",x.name),small=el("small",""," "+x.label+" · "+money(x.price));
+    info.append(small);
+    const controls=el("div","qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value",x.qty),plus=el("button","qty-plus","+");
+    minus.type=plus.type="button";minus.setAttribute("aria-label","Decrease "+x.name);plus.setAttribute("aria-label","Increase "+x.name);
+    minus.onclick=()=>qtyChange(x.key,-1);plus.onclick=()=>qtyChange(x.key,1);
+    controls.append(minus,qty,plus);row.append(info,controls);root.append(row);
+  });
+  if(!cart.length)root.append(el("p","menu-empty","Your bag is empty. Add dishes from the menu."));
+  document.getElementById("cart-count").textContent=count;
+  document.getElementById("cart-subtotal").textContent=money(subtotal);
+  document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
+}
+function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Number(x.qty)+d);if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
 const paymentSelect=el("select","payment-method");
 paymentSelect.id="payment-method";
 const orderHelp=el("small","","Checking restaurant ordering setup…");
