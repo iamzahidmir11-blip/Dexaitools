@@ -25,7 +25,7 @@ function render(){
     if(imageUrl){image.src=imageUrl;image.onerror=()=>{image.onerror=null;image.remove();photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));};photo.append(image);}
     else{photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));}
     const body=el("div","food-body"),title=el("h3","",x.name);
-    if(isIndianFoodCategory(x.category_name)){const type=el("span","food-type "+(x.is_veg===true?"veg":"nonveg"),x.is_veg===true?"VEG":x.is_veg===false?"NON-VEG":"TYPE NOT SET");body.append(type)}
+    if(isIndianFoodCategory(x.category_name)&&typeof x.is_veg==="boolean"){const type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG");body.append(type)}
     body.append(title);const description=foodDescription(x);if(description)body.append(el("p","food-description",description));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
     const select=el("select","variant-select");
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
