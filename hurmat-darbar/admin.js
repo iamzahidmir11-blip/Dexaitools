@@ -103,7 +103,7 @@ function menuView(){
     names.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
       const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"/>':'<div style="width:58px;height:58px;border-radius:10px;background:#203a2b;display:grid;place-items:center;color:var(--gold)">HD</div>';
       const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+' '+(v.active?'':'· Hidden')+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'" data-label="'+esc(v.label)+'">Edit variant</button></div>').join("");
-      return '<div class="item-row" style="align-items:flex-start">'+photo+'<div class="item-meta" style="flex:1"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"No description")+'</span><span class="mute">'+(i.is_veg?'VEG':'NON-VEG')+' · '+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+(i.needs_verification?' · Needs review':'')+'</span>'+variants+'</div><div class="actions"><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button><button class="btn ghost sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?"Hide":"Publish")+'</button></div></div>';
+      return '<div class="item-row" style="align-items:flex-start">'+photo+'<div class="item-meta" style="flex:1"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"No description")+'</span><span class="mute">'+(i.is_veg?'VEG':'NON-VEG')+' · '+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+(i.needs_verification?' · Needs review':'')+'</span>'+variants+'</div><div class="actions"><button class="btn ghost sm" data-upload-image="'+esc(i.id)+'">Photo</button><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button><button class="btn ghost sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?"Hide":"Publish")+'</button></div></div>';
     }).join("")||empty("No products in this category."))).join("");
 }
 function reservationsView(){
@@ -164,6 +164,25 @@ function bindActions(){
   document.querySelectorAll("[data-assign]").forEach(b=>b.onclick=async()=>{
     const rider=document.getElementById("rider-"+b.dataset.assign).value;if(!rider){toast("Choose a rider first.",true);return;}
     try{await api("",{action:"assign_rider",order_id:b.dataset.assign,rider_id:rider});await refresh();toast("Rider assigned.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-upload-image]").forEach(b=>b.onclick=()=>{
+    const item=menuItems.find(x=>x.id===b.dataset.uploadImage);if(!item)return;
+    const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";
+    picker.onchange=async()=>{
+      const file=picker.files&&picker.files[0];if(!file)return;
+      if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){toast("Choose a JPG, PNG or WebP image up to 5 MB.",true);return;}
+      b.disabled=true;b.textContent="Uploading…";
+      try{
+        const safeName=file.name.replace(/[^a-z0-9._-]/gi,"-");
+        const path=item.id+"/"+Date.now()+"-"+safeName;
+        const {data,error}=await supabase.storage.from("menu-images").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+        if(error)throw error;
+        const {data:publicData}=supabase.storage.from("menu-images").getPublicUrl(data.path);
+        await api("",{action:"update_menu_item",item_id:item.id,image_url:publicData.publicUrl});
+        await refresh();toast("Product photo uploaded and published on the customer website.");
+      }catch(e){toast(e.message||"Photo upload failed.",true);b.disabled=false;b.textContent="Photo";}
+    };
+    picker.click();
   });
   document.querySelectorAll("[data-edit-item]").forEach(b=>b.onclick=async()=>{
     const item=menuItems.find(x=>x.id===b.dataset.editItem);if(!item)return;
