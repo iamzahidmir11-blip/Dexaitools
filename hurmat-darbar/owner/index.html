@@ -312,9 +312,38 @@ input,select{background:#fff;color:#242832;border-color:#dfe3e8}
 
 </style>
 </head>
-<body>
-<div class="wrap" id="app"><div style="max-width:440px;margin:12vh auto;padding:24px;background:#fff;border:1px solid #e7e9ed;border-radius:16px;color:#20242b;font:500 15px system-ui;text-align:center"><strong style="display:block;font-size:22px;margin-bottom:8px">Hurmat Owner</strong><span id="boot-status">Loading secure owner app…</span></div></div>
+<body style="margin:0;min-height:100vh;background:#0e1b14;color:#f4efe0;font-family:system-ui,-apple-system,sans-serif">
+<div id="app" style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:12vh 18px 40px;box-sizing:border-box">
+  <div style="width:100%;max-width:440px;padding:26px;background:#17291f;border:1px solid #2a4436;border-radius:18px;box-sizing:border-box;text-align:center">
+    <div style="font-size:24px;font-weight:800;letter-spacing:.04em;color:#d9b86c">HURMAT OWNER</div>
+    <p id="boot-status" style="font-size:14px;line-height:1.6;color:#f4efe0">Secure app is starting…</p>
+    <p id="boot-detail" style="font-size:12px;line-height:1.6;color:#9db1a5">Please keep this page open.</p>
+  </div>
+</div>
 <nav id="nav"></nav>
-<script type="module" src="../admin.js" onerror="document.getElementById('boot-status').textContent='App script could not load. Check internet connection and refresh this page.'"></script>
+<script>
+(async function(){
+  const status=document.getElementById('boot-status');
+  const detail=document.getElementById('boot-detail');
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) if (reg.scope.includes('/Hurmatdarbar/owner/')) await reg.unregister();
+    }
+    if ('caches' in window) {
+      const keys=await caches.keys();
+      for (const key of keys) if (key.startsWith('hurmat-owner-shell-')) await caches.delete(key);
+    }
+  } catch(e) {}
+  try {
+    status.textContent='Loading secure owner system…';
+    await import('../admin.js?v=owner-fix-20261031-2');
+  } catch(e) {
+    status.textContent='Owner app could not start.';
+    detail.textContent=(e && e.message ? e.message : 'Please check the internet connection, then refresh.');
+    console.error('Hurmat Owner boot error:',e);
+  }
+})();
+</script>
 </body>
 </html>
