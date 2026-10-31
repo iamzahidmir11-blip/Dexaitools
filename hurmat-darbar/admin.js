@@ -1,55 +1,204 @@
-const $=id=>document.getElementById(id);
-const seed={
-orders:[{id:"HD-1048",customer:"Ayaan Khan",type:"Delivery",status:"Pending",amount:1010,items:"Wazwan Platter ×1, Kahwa ×2",payment:"UPI pending"},{id:"HD-1047",customer:"Sara Ahmad",type:"Pickup",status:"Preparing",amount:560,items:"Chicken Biryani ×2",payment:"Cash on delivery"},{id:"HD-1046",customer:"Ibrahim Mir",type:"Delivery",status:"Ready",amount:400,items:"Seekh Kebab ×1, Roti ×4",payment:"UPI demo paid"},{id:"HD-1045",customer:"Zoya",type:"Delivery",status:"Delivered",amount:290,items:"Paneer Special ×1",payment:"Cash"}],
-menu:[{name:"Wazwan Platter",category:"Wazwan",price:850,availability:"Available"},{name:"Chicken Biryani",category:"Rice",price:280,availability:"Available"},{name:"Seekh Kebab",category:"Starters",price:320,availability:"Available"},{name:"Kahwa",category:"Beverages",price:80,availability:"Available"}],
-inventory:[{name:"Chicken",stock:8,unit:"kg",minimum:5},{name:"Rice",stock:24,unit:"kg",minimum:10},{name:"Paneer",stock:2,unit:"kg",minimum:4}],
-riders:[{name:"Danish",phone:"Demo contact",zone:"Uri Market",status:"Available"},{name:"Sameer",phone:"Demo contact",zone:"Tehsil Road",status:"On delivery"}],
-reservations:[{guest:"Areeba",date:"Today 7:30 PM",guests:4,status:"Confirmed"},{guest:"Musaib",date:"Today 8:00 PM",guests:2,status:"Pending"}],
-customers:[{name:"Ayaan Khan",phone:"Demo contact",orders:6,spent:4250},{name:"Sara Ahmad",phone:"Demo contact",orders:3,spent:1890}],
-staff:[{name:"Demo Manager",role:"Manager",status:"Active"},{name:"Demo Cashier",role:"Cashier",status:"Active"}],
-payments:[{reference:"PAY-2081",order:"HD-1048",method:"UPI",amount:1010,status:"Pending"},{reference:"PAY-2080",order:"HD-1047",method:"Cash",amount:560,status:"Due"}],
-support:[{ticket:"T-021",customer:"Ayaan Khan",subject:"Order timing",status:"Open"},{ticket:"T-020",customer:"Sara Ahmad",subject:"Menu question",status:"In review"}],
-settings:[{name:"Restaurant name",value:"Hurmat Darbar"},{name:"Phone",value:"+91 97971 51590"},{name:"Address",value:"Opposite Tehsil, Uri, Baramulla"},{name:"Opening hours",value:"9:00 AM – 11:00 PM"},{name:"Delivery radius",value:"Demo: 5 km"}],
-profile:[{name:"Demo Administrator",email:"admin@demo.local",role:"Owner preview",phone:"Not connected"}],
-activity:[{action:"Demo workspace initialized",when:"Just now"}]};
-let db=load(),page="overview",editState=null;
-function load(){const base=JSON.parse(JSON.stringify(seed));try{const saved=JSON.parse(localStorage.getItem("hd-admin-demo")||"null");if(!saved||typeof saved!=="object")return base;for(const key of Object.keys(base)){if(Array.isArray(base[key]))base[key]=Array.isArray(saved[key])?saved[key]:base[key]}return base}catch{return base}}
-function save(action="Changes saved in this browser"){localStorage.setItem("hd-admin-demo",JSON.stringify(db));db.activity.unshift({action,when:new Date().toLocaleString()});localStorage.setItem("hd-admin-demo",JSON.stringify(db));toast(action)}
-function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
-const money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
-const config={
-orders:{title:"Orders",desc:"Track and update customer orders.",fields:{customer:"Customer",type:"Order type",status:"Status",amount:"Total amount",items:"Items",payment:"Payment"},options:{type:["Delivery","Pickup"],status:["Pending","Confirmed","Preparing","Ready","Picked up","Delivered","Cancelled"]}},
-menu:{title:"Menu & Categories",desc:"Create dishes, edit prices and control availability.",fields:{name:"Item name",category:"Category",price:"Price (₹)",availability:"Availability"},options:{availability:["Available","Unavailable"]}},
-inventory:{title:"Inventory",desc:"Maintain ingredient quantities and low-stock thresholds.",fields:{name:"Ingredient",stock:"Current stock",unit:"Unit",minimum:"Minimum stock"}},
-riders:{title:"Delivery Riders",desc:"Manage rider profiles and availability.",fields:{name:"Rider name",phone:"Contact label",zone:"Delivery zone",status:"Status"},options:{status:["Available","On delivery","Offline"]}},
-reservations:{title:"Reservations",desc:"Manage table bookings and guest details.",fields:{guest:"Guest name",date:"Date and time",guests:"Number of guests",status:"Booking status"},options:{status:["Pending","Confirmed","Seated","Completed","Cancelled"]}},
-customers:{title:"Customers",desc:"View and maintain sample customer records.",fields:{name:"Customer name",phone:"Contact label",orders:"Orders count",spent:"Sample spend (₹)"}},
-staff:{title:"Staff & Roles",desc:"Preview team records and role assignments.",fields:{name:"Staff name",role:"Role",status:"Status"},options:{role:["Owner","Manager","Cashier","Kitchen","Rider"],status:["Active","Inactive"]}},
-payments:{title:"Payments",desc:"Review demo payment records. No money moves.",fields:{reference:"Reference",order:"Order ID",method:"Method",amount:"Amount (₹)",status:"Status"},options:{method:["UPI","Cash","Card"],status:["Pending","Paid (demo)","Refunded (demo)","Due"]}},
-support:{title:"Support Inbox",desc:"Manage customer enquiries and ticket status.",fields:{ticket:"Ticket ID",customer:"Customer",subject:"Subject",status:"Status"},options:{status:["Open","In review","Resolved","Closed"]}},
-settings:{title:"Restaurant Settings",desc:"Edit the demo restaurant profile and operating preferences.",fields:{name:"Setting",value:"Value"}},
-profile:{title:"My Profile",desc:"Demo administrator profile. Authentication is intentionally disabled.",fields:{name:"Display name",email:"Demo email",role:"Role label",phone:"Contact label"}},
-activity:{title:"Activity Log",desc:"Recent changes made inside this browser preview.",fields:{action:"Activity",when:"Time"}}
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = "https://rvrboufrnkzuptfjopwd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_n1PWbHcomKpd63FPDdWSEw_iSo6UTi0";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+const root = document.getElementById("app");
+const navRoot = document.getElementById("nav");
+const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const statusNames = {
+  pending_confirmation:"Pending confirmation", confirmed:"Confirmed", preparing:"Preparing",
+  ready_for_pickup:"Ready for pickup", picked_up:"Picked up", out_for_delivery:"Out for delivery",
+  delivered:"Delivered", cancelled:"Cancelled", rejected:"Rejected", delivery_failed:"Delivery failed"
 };
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function go(p){page=p;render()}
-function nav(){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page))}
-function tablePage(key){let c=config[key],rows=db[key]||[],fields=Object.keys(c.fields);let headers=fields.map(f=>c.fields[f]).concat(key==="orders"?["Actions"]:["Actions"]);let body=rows.map((r,i)=>'<tr>'+fields.map(f=>'<td>'+esc(f==="amount"||f==="spent"?money(r[f]):r[f])+'</td>').join("")+'<td><div class="row-actions"><button data-edit="'+key+'" data-i="'+i+'">Edit</button><button data-delete="'+key+'" data-i="'+i+'" class="danger-link">Delete</button>'+ (key==="orders"?'<button data-next="'+i+'">Next status</button>':"")+'</div></td></tr>').join("");return '<div class="panel"><div class="panel-head"><div><h2>'+c.title+'</h2><p>'+c.desc+'</p></div><button class="primary compact" data-add="'+key+'">＋ Add new</button></div><div class="search-row"><input id="search" placeholder="Search '+c.title.toLowerCase()+'..."><span>'+rows.length+' records</span></div><div id="table-host">'+makeTable(headers,body)+'</div></div>'}
-function makeTable(h,b){return '<div class="table-wrap"><table><thead><tr>'+h.map(x=>'<th>'+esc(x)+'</th>').join("")+'</tr></thead><tbody>'+(b||'<tr><td colspan="10" class="empty">No records yet. Add your first demo record.</td></tr>')+'</tbody></table></div>'}
-function overview(){let total=db.orders.reduce((a,x)=>a+Number(x.amount||0),0),pending=db.orders.filter(x=>x.status==="Pending").length,confirmed=db.orders.filter(x=>x.status==="Confirmed").length,preparing=db.orders.filter(x=>x.status==="Preparing").length,ready=db.orders.filter(x=>x.status==="Ready").length,delivered=db.orders.filter(x=>x.status==="Delivered").length,low=db.inventory.filter(x=>Number(x.stock)<=Number(x.minimum)).length;return '<div class="metric-grid"><article class="metric primary-metric"><span>TODAY\'S ORDERS</span><b>'+db.orders.length+'</b><small>All demo orders</small></article><article class="metric"><span>SALES VALUE</span><b>'+money(total)+'</b><small>Sample value only</small></article><article class="metric"><span>LOW STOCK ITEMS</span><b>'+low+'</b><small>Need attention</small></article><article class="metric"><span>AVAILABLE RIDERS</span><b>'+db.riders.filter(x=>x.status==="Available").length+'</b><small>Sample roster</small></article></div><div class="panel"><div class="panel-head"><div><h2>Order overview</h2><p>Track every stage of today\'s orders</p></div><button class="text-btn" data-go="orders">View orders →</button></div><div class="status-grid"><div class="status-card"><b>'+pending+'</b><span>Pending</span></div><div class="status-card"><b>'+confirmed+'</b><span>Confirmed</span></div><div class="status-card"><b>'+preparing+'</b><span>Preparing</span></div><div class="status-card"><b>'+ready+'</b><span>Ready</span></div></div><div class="status-grid"><div class="status-card"><b>'+delivered+'</b><span>Delivered</span></div><div class="status-card"><b>'+db.orders.filter(x=>x.status==="Cancelled").length+'</b><span>Cancelled</span></div></div></div><div class="panel"><div class="panel-head"><div><h2>Recent orders</h2><p>Latest customer activity</p></div><button class="text-btn" data-go="orders">See all</button></div>'+makeTable(["Order","Customer","Type","Status","Total"],db.orders.slice(0,6).map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.type)+'</td><td><span class="status">'+esc(x.status)+'</span></td><td>'+money(x.amount)+'</td></tr>').join(""))+'</div><div class="shortcut-grid">'+["reservations","inventory","riders","customers"].map(k=>'<button class="shortcut" data-go="'+k+'"><b>'+config[k].title+'</b><span>Open section →</span></button>').join("")+'</div>'}
-function render(){nav();let c=config[page]||{title:"Dashboard",desc:"Welcome back. Here's what's happening today."};$("page-title").textContent=page==="overview"?"Dashboard":c.title;$("page-desc").textContent=page==="overview"?"Welcome back. Here's what's happening today.":c.desc||"";$("page-content").innerHTML=page==="overview"?overview():page==="reports"?reports():tablePage(page);if(page==="profile")$("page-content").insertAdjacentHTML("afterbegin",'<div class="info-banner">Demo administrator profile. Sign-in and account security are not connected in preview mode.</div>');}
-function reports(){let total=db.orders.reduce((a,x)=>a+Number(x.amount||0),0);return '<div class="metric-grid"><article class="metric"><span>TOTAL ORDERS</span><b>'+db.orders.length+'</b></article><article class="metric"><span>GROSS DEMO VALUE</span><b>'+money(total)+'</b></article><article class="metric"><span>AVERAGE ORDER</span><b>'+money(db.orders.length?Math.round(total/db.orders.length):0)+'</b></article><article class="metric"><span>COMPLETED</span><b>'+db.orders.filter(x=>x.status==="Delivered").length+'</b></article></div><div class="panel"><h2>Order status summary</h2>'+makeTable(["Status","Count"],[...new Set(db.orders.map(x=>x.status))].map(s=>'<tr><td>'+esc(s)+'</td><td>'+db.orders.filter(x=>x.status===s).length+'</td></tr>').join(""))+'</div><div class="panel"><button class="primary compact" data-export="csv">Export orders CSV</button> <button class="ghost" data-export="json">Backup demo data</button></div>'}
-function openForm(key,index=null){let c=config[key],record=index===null?{}:{...db[key][index]};editState={key,index};$("modal-title").textContent=(index===null?"Add ":"Edit ")+c.title;$("form-fields").innerHTML=Object.entries(c.fields).map(([f,label])=>{let value=record[f]??"";let opts=c.options?.[f];return '<label>'+esc(label)+(opts?'<select name="'+f+'">'+opts.map(o=>'<option '+(o===value?"selected":"")+'>'+esc(o)+'</option>').join("")+'</select>':'<input name="'+f+'" value="'+esc(value)+'" '+(["price","amount","stock","minimum","guests","orders","spent"].includes(f)?'type="number" step="any"':'type="text"')+' required>')+'</label>'}).join("");$("modal").hidden=false}
-function closeForm(){$("modal").hidden=true;editState=null}
-$("record-form").addEventListener("submit",e=>{e.preventDefault();let obj=Object.fromEntries(new FormData(e.currentTarget).entries());for(let k of Object.keys(obj))if(["price","amount","stock","minimum","guests","orders","spent"].includes(k))obj[k]=Number(obj[k]);let {key,index}=editState;if(index===null)db[key].unshift(obj);else db[key][index]=obj;closeForm();save((index===null?"Added ":"Updated ")+config[key].title+" record");render()});
-$("modal-close").onclick=closeForm;$("modal-cancel").onclick=closeForm;$("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeForm()});
-$("nav").addEventListener("click",e=>{let b=e.target.closest("[data-page]");if(!b)return;if(b.dataset.page==="more"){$("module-sheet").hidden=!$("module-sheet").hidden;document.querySelectorAll(".bottom-nav .nav-btn").forEach(x=>x.classList.toggle("active",x===b));return}go(b.dataset.page);$("module-sheet").hidden=true});
-$("module-grid").addEventListener("click",e=>{let b=e.target.closest("[data-page]");if(b){go(b.dataset.page);$("module-sheet").hidden=true}});
-$("sheet-close").onclick=()=>{$("module-sheet").hidden=true;nav()};
-$("page-content").addEventListener("click",e=>{let b=e.target.closest("button");if(!b)return;if(b.dataset.go){go(b.dataset.go);return}if(b.dataset.add){openForm(b.dataset.add);return}if(b.dataset.edit){openForm(b.dataset.edit,+b.dataset.i);return}if(b.dataset.delete){let k=b.dataset.delete,i=+b.dataset.i;if(confirm("Delete this demo record?")){db[k].splice(i,1);save("Deleted "+config[k].title+" record");render()}return}if(b.dataset.next!==undefined){let o=db.orders[+b.dataset.next],steps=["Pending","Confirmed","Preparing","Ready","Picked up","Delivered","Cancelled"];o.status=steps[(steps.indexOf(o.status)+1)%steps.length];save("Updated order "+o.id);render();return}if(b.dataset.export){download(b.dataset.export);return}});
-$("page-content").addEventListener("input",e=>{if(e.target.id==="search"){let q=e.target.value.toLowerCase(),rows=[...$("table-host").querySelectorAll("tbody tr")];rows.forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(q))}});
-function download(type){let content=type==="json"?JSON.stringify(db,null,2):["id,customer,type,status,amount,items",...db.orders.map(o=>[o.id,o.customer,o.type,o.status,o.amount,'"'+o.items+'"'].join(","))].join("\n");let blob=new Blob([content],{type:type==="json"?"application/json":"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hurmat-darbar-demo."+(type==="json"?"json":"csv");a.click();URL.revokeObjectURL(a.href);toast("Demo backup exported")}
-$("top-more").onclick=()=>{$("more-menu").hidden=!$("more-menu").hidden};
-$("more-menu").addEventListener("click",e=>{let b=e.target.closest("[data-menu]");if(!b)return;$("more-menu").hidden=true;let v=b.dataset.menu;if(v==="modules")$("module-sheet").hidden=!$("module-sheet").hidden;if(v==="profile"||v==="settings"||v==="activity")go(v);if(v==="export")download("json");if(v==="reset"&&confirm("Restore all sample data?")){db=structuredClone(seed);save("Demo data reset");go("overview")}});
-document.addEventListener("click",e=>{if(!e.target.closest(".top-actions"))$("more-menu").hidden=true});
-render();
+const tabs = [["home","⌂","Home"],["orders","▤","Orders"],["menu","▦","Menu"],["reservations","▣","Bookings"],["riders","♧","Riders"],["alerts","♢","Alerts"],["settings","⚙","Settings"]];
+let user=null, role=null, page="home", orders=[], menuItems=[], reservations=[], riders=[], notifications=[], settings=null, channel=null, busy=false;
+
+function toast(message, bad=false){
+  let el=document.getElementById("admin-toast");
+  if(!el){el=document.createElement("div");el.id="admin-toast";el.className="toast";document.body.append(el);}
+  el.textContent=message;el.style.background=bad?"#8b342c":"var(--gold)";el.style.color=bad?"white":"#16281e";
+  clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.remove(),2600);
+}
+async function api(view, body){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session) throw new Error("Please sign in again.");
+  const url=SUPABASE_URL+"/functions/v1/restaurant-api"+(body?"":"?view="+encodeURIComponent(view||"orders"));
+  const res=await fetch(url,{method:body?"POST":"GET",headers:{
+    "apikey":SUPABASE_KEY,"Authorization":"Bearer "+session.access_token,"Content-Type":"application/json"
+  },body:body?JSON.stringify(body):undefined});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||"The server could not complete this request.");
+  return data;
+}
+async function verifyAccess(){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){user=null;role=null;return false;}
+  user=session.user;
+  if(!user.email_confirmed_at){await supabase.auth.signOut();user=null;role=null;throw new Error("Verify your email address before signing in.");}
+  const {data,error}=await supabase.from("user_roles").select("role,active").eq("user_id",user.id).eq("active",true);
+  if(error) throw error;
+  const match=(data||[]).find(x=>["owner","manager"].includes(x.role));
+  if(!match){await supabase.auth.signOut();user=null;role=null;throw new Error("This verified account does not have an active Owner or Manager role.");}
+  role=match.role;
+  return true;
+}
+function loginView(message){
+  navRoot.innerHTML="";
+  root.innerHTML='<div class="auth-card card"><div class="logo">HD</div><h1>Admin sign in</h1><p>Sign in with the verified Supabase account assigned an active Owner or Manager role. New accounts do not receive admin access automatically.</p>'+
+    (message?'<div class="notice">'+esc(message)+'</div>':'')+
+    '<form id="login-form"><label>Email address</label><input id="login-email" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="btn wide" id="login-submit" type="submit">Sign in securely</button></form><p style="margin:14px 0 0">Access is checked against Supabase Auth, email verification and the database role table.</p></div>';
+  document.getElementById("login-form").addEventListener("submit",async e=>{
+    e.preventDefault();const button=document.getElementById("login-submit");button.disabled=true;button.textContent="Checking account…";
+    try{
+      const {error}=await supabase.auth.signInWithPassword({email:document.getElementById("login-email").value.trim(),password:document.getElementById("login-password").value});
+      if(error) throw error;
+      await verifyAccess();await startApp();
+    }catch(err){await supabase.auth.signOut().catch(()=>{});loginView(err.message||"Sign-in failed.");}
+  });
+}
+function nav(){
+  navRoot.innerHTML=tabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("");
+  navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
+}
+function header(){
+  return '<header><div class="logo">HD</div><div class="brand">HURMAT DARBAR</div><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></header>';
+}
+function shell(title,desc,content){
+  root.innerHTML=header()+'<h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p>'+content;
+  document.getElementById("signout").onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
+}
+function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
+function empty(text){return '<div class="empty">'+esc(text)+'</div>';}
+function nextStatus(s){
+  return ({pending_confirmation:"confirmed",confirmed:"preparing",preparing:"ready_for_pickup"})[s]||null;
+}
+function orderCard(o){
+  const items=(o.order_items||[]).map(i=>esc(i.qty)+" × "+esc(i.item_name)+" ("+esc(i.variant_label)+")").join("<br>");
+  const next=nextStatus(o.status);
+  const riderOptions=riders.map(r=>'<option value="'+esc(r.user_id)+'">'+esc(r.name||"Rider")+(r.is_online?" · Online":" · Offline")+'</option>').join("");
+  return '<article class="card" style="margin:10px 0"><div class="row"><b>Order #'+esc(o.order_no)+'</b><span class="tag s-'+(o.status==="delivered"?"served":o.status==="cancelled"||o.status==="rejected"?"cancelled":o.status==="preparing"?"preparing":o.status==="ready_for_pickup"?"ready":"new")+'">'+esc(statusNames[o.status]||o.status)+'</span></div>'+
+    '<p class="mute" style="margin:8px 0">'+esc(o.customer_name)+' · '+esc(o.customer_phone)+'</p><p class="mute">'+esc(o.address_text)+'</p><p style="margin:10px 0;line-height:1.7">'+(items||"No item details")+'</p>'+
+    '<div class="row"><span class="mute">'+new Date(o.created_at).toLocaleString()+'</span><b class="price">'+money(o.total)+'</b></div>'+
+    '<p class="mute" style="margin-top:7px">Payment: '+esc(o.payment_method)+' · '+esc(o.payment_status)+'</p>'+
+    (next?'<div class="actions"><button class="btn sm" data-order="'+esc(o.id)+'" data-status="'+next+'">Mark '+esc(statusNames[next])+'</button><button class="btn sm ghost" data-cancel="'+esc(o.id)+'">Cancel / reject</button></div>':'')+
+    (o.status==="ready_for_pickup"&&riderOptions?'<div class="actions"><select id="rider-'+esc(o.id)+'"><option value="">Choose rider</option>'+riderOptions+'</select><button class="btn sm ghost" data-assign="'+esc(o.id)+'">Assign rider</button></div>':'')+
+    '</article>';
+}
+function homeView(){
+  const pending=orders.filter(o=>o.status==="pending_confirmation").length;
+  const active=orders.filter(o=>!["delivered","cancelled","rejected"].includes(o.status)).length;
+  const sales=orders.filter(o=>o.status==="delivered").reduce((a,o)=>a+Number(o.total||0),0);
+  return '<div class="grid"><div class="card stat"><span>Orders in system</span><b>'+orders.length+'</b></div><div class="card stat"><span>Awaiting confirmation</span><b>'+pending+'</b></div><div class="card stat"><span>Active orders</span><b>'+active+'</b></div><div class="card stat"><span>Delivered value</span><b>'+money(sales)+'</b></div></div>'+
+    card("Latest orders",orders.slice(0,5).map(orderCard).join("")||empty("No real orders have been received yet."))+
+    card("System connection",'<p class="good">Connected to Supabase</p><p class="mute">Signed in as '+esc(user.email||"verified account")+' · '+esc(role)+' role</p><p class="mute">Live order and notification updates are enabled while this panel is open.</p>');
+}
+function ordersView(){return orders.map(orderCard).join("")||empty("No customer orders in the database yet.");}
+function menuView(){
+  const cats=[...new Map(menuItems.map(i=>[i.menu_categories?.name||"Uncategorised",i.menu_categories?.name||"Uncategorised"])).values()];
+  return '<div class="actions"><button class="btn sm" id="add-category">Add category</button><button class="btn sm" id="add-item">Add menu item</button></div>'+
+    cats.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
+      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'">Edit price</button></div>').join("");
+      return '<div class="item-row"><div class="item-meta"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"")+'</span><span class="mute">'+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+'</span>'+variants+'</div><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button></div>';
+    }).join("")||empty("No items in this category."))).join("");
+}
+function reservationsView(){
+  return reservations.map(r=>'<article class="card" style="margin:10px 0"><div class="row"><b>'+esc(r.name)+'</b><span class="tag s-new">'+esc(r.status)+'</span></div><p class="mute">'+esc(r.phone)+' · '+esc(r.party_size)+' guests</p><p class="mute">'+new Date(r.reserve_at).toLocaleString()+'</p><p class="mute">'+esc(r.notes||"")+'</p><div class="actions">'+["confirmed","rejected","cancelled"].filter(s=>r.status==="pending"||s==="cancelled").map(s=>'<button class="btn sm '+(s==="cancelled"?"ghost":"")+'" data-reservation="'+esc(r.id)+'" data-res-status="'+s+'">'+s+'</button>').join("")+'</div></article>').join("")||empty("No reservations have been received.");
+}
+function ridersView(){
+  return riders.map(r=>'<div class="item-row"><div class="item-meta"><b>'+esc(r.name||"Rider")+'</b><span class="mute">'+esc(r.phone||"No phone on file")+'</span></div><span class="tag '+(r.is_online?"s-ready":"s-served")+'">'+(r.is_online?"Online":"Offline")+'</span></div>').join("")||empty("No rider accounts are linked yet.");
+}
+function alertsView(){
+  return notifications.map(n=>'<div class="item-row"><div class="item-meta"><b>'+esc(n.title)+'</b><span class="mute">'+esc(n.body||"")+'</span><span class="mute">'+new Date(n.created_at).toLocaleString()+'</span></div>'+(n.is_read?"":'<button class="btn ghost sm" data-read="'+esc(n.id)+'">Mark read</button>')+'</div>').join("")||empty("No notifications yet.");
+}
+function settingsView(){
+  const s=settings||{};
+  return '<div class="notice">Ordering is not ready to accept live customer orders until the restaurant location is verified and at least one real payment method is enabled. Do not enable a payment method until the restaurant operator confirms it.</div>'+
+    card("Restaurant configuration",'<div class="item-row"><span>Restaurant</span><b>'+esc(s.name||"Hurmat Darbar")+'</b></div><div class="item-row"><span>Phone</span><b>'+esc(s.phone||"Not configured")+'</b></div><div class="item-row"><span>Address</span><b>'+esc(s.address||"Not configured")+'</b></div><div class="item-row"><span>Opening status</span><b>'+(s.is_open?"Open":"Closed")+'</b></div><div class="item-row"><span>Delivery location verified</span><b class="'+(s.location_verified?"good":"bad")+'">'+(s.location_verified?"Yes":"No")+'</b></div><div class="item-row"><span>Delivery radius</span><b>'+esc(s.delivery_radius_m||0)+' m</b></div><div class="item-row"><span>Delivery fee</span><b>'+money(s.delivery_fee)+'</b></div><div class="item-row"><span>Cash on delivery</span><b>'+ (s.cod_enabled?"Enabled":"Disabled")+'</b></div><div class="item-row"><span>UPI</span><b>'+ (s.upi_enabled?"Enabled":"Disabled")+'</b></div>');
+}
+function render(){
+  nav();
+  const titles={home:["Dashboard","Live restaurant operations."],orders:["Orders","Customer orders stored in Supabase."],menu:["Menu management","Changes here update the customer website menu."],reservations:["Reservations","Real customer booking requests."],riders:["Delivery riders","Accounts with an active rider role."],alerts:["Notifications","Live notifications from the database."],settings:["Restaurant settings","Current verified operational configuration."]};
+  const t=titles[page]||titles.home;
+  let content=page==="home"?homeView():page==="orders"?ordersView():page==="menu"?menuView():page==="reservations"?reservationsView():page==="riders"?ridersView():page==="alerts"?alertsView():settingsView();
+  shell(t[0],t[1],content);
+  bindActions();
+}
+async function refresh(){
+  const results=await Promise.allSettled([api("orders"),api("menu"),api("reservations"),api("riders"),
+    supabase.from("notifications").select("id,title,body,order_id,is_read,created_at").order("created_at",{ascending:false}).limit(60),
+    supabase.from("restaurant_settings").select("*").eq("id",1).single()]);
+  if(results[0].status==="fulfilled")orders=results[0].value.orders||[];
+  if(results[1].status==="fulfilled")menuItems=results[1].value.items||[];
+  if(results[2].status==="fulfilled")reservations=results[2].value.reservations||[];
+  if(results[3].status==="fulfilled")riders=results[3].value.riders||[];
+  if(results[4].status==="fulfilled"&&!results[4].value.error)notifications=results[4].value.data||[];
+  if(results[5].status==="fulfilled"&&!results[5].value.error)settings=results[5].value.data;
+  render();
+}
+function bindActions(){
+  document.querySelectorAll("[data-order]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true;try{await api("",{action:"update_order_status",order_id:b.dataset.order,status:b.dataset.status});await refresh();toast("Order status updated.");}catch(e){toast(e.message,true);b.disabled=false;}
+  });
+  document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{
+    const reason=prompt("Enter a reason for cancelling or rejecting this order:");if(!reason||!reason.trim())return;
+    try{await api("",{action:"update_order_status",order_id:b.dataset.cancel,status:"cancelled",reason:reason.trim()});await refresh();toast("Order cancelled.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-assign]").forEach(b=>b.onclick=async()=>{
+    const rider=document.getElementById("rider-"+b.dataset.assign).value;if(!rider){toast("Choose a rider first.",true);return;}
+    try{await api("",{action:"assign_rider",order_id:b.dataset.assign,rider_id:rider});await refresh();toast("Rider assigned.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
+    try{await api("",{action:"update_menu_item",item_id:b.dataset.toggle,available:b.dataset.available!=="true"});await refresh();toast("Website menu availability updated.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-price]").forEach(b=>b.onclick=async()=>{
+    const value=prompt("New price in rupees:",b.dataset.current);if(value===null)return;const price=Number(value);
+    if(!Number.isInteger(price)||price<1||price>1000000){toast("Enter a valid whole-number price.",true);return;}
+    try{await api("",{action:"update_menu_variant",variant_id:b.dataset.price,price});await refresh();toast("Menu price updated.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-reservation]").forEach(b=>b.onclick=async()=>{
+    try{await api("",{action:"update_reservation_status",reservation_id:b.dataset.reservation,status:b.dataset.resStatus});await refresh();toast("Reservation updated.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=async()=>{
+    const {error}=await supabase.from("notifications").update({is_read:true}).eq("id",b.dataset.read);if(error){toast(error.message,true);return;}await refresh();
+  });
+  const addCategory=document.getElementById("add-category");
+  if(addCategory)addCategory.onclick=async()=>{
+    const name=prompt("New category name:");if(!name||!name.trim())return;
+    const {error}=await supabase.from("menu_categories").insert({name:name.trim(),active:true});
+    if(error){toast(error.message,true);return;}await refresh();toast("Category added.");
+  };
+  const addItem=document.getElementById("add-item");
+  if(addItem)addItem.onclick=async()=>{
+    const name=prompt("Menu item name:");if(!name||!name.trim())return;
+    const category=(menuItems.find(x=>x.menu_categories)?.category_id)||null;
+    const categoryName=prompt("Enter an existing category name exactly:",menuItems[0]?.menu_categories?.name||"");
+    const match=menuItems.find(x=>x.menu_categories?.name?.toLowerCase()===String(categoryName||"").trim().toLowerCase());
+    if(!match){toast("Select a category that already has a menu item.",true);return;}
+    const price=Number(prompt("Price in rupees:","100"));if(!Number.isInteger(price)||price<1){toast("Enter a valid price.",true);return;}
+    const {data,error}=await supabase.from("menu_items").insert({category_id:match.category_id,name:name.trim(),active:true,available:true}).select("id").single();
+    if(error){toast(error.message,true);return;}
+    const variant=await supabase.from("menu_variants").insert({item_id:data.id,label:"Regular",price,active:true});
+    if(variant.error){toast("Item saved, but price variant failed: "+variant.error.message,true);return;}
+    await refresh();toast("Menu item added to the live website.");
+  };
+}
+async function startApp(){
+  await refresh();
+  if(channel)await supabase.removeChannel(channel);
+  channel=supabase.channel("hurmat-admin-live")
+    .on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>refresh())
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications"},()=>{refresh();toast("New restaurant notification.");})
+    .subscribe();
+}
+async function init(){
+  try{if(await verifyAccess())await startApp();else loginView("");}
+  catch(e){loginView(e.message||"Unable to verify account.");}
+}
+supabase.auth.onAuthStateChange((event,session)=>{
+  if(event==="SIGNED_OUT"){if(channel)supabase.removeChannel(channel);user=null;role=null;loginView("You have signed out.");}
+});
+init();
