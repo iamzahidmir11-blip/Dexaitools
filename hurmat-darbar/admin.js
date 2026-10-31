@@ -79,8 +79,14 @@ function loginView(message){
   document.getElementById("forgot-password").onclick=async()=>{const email=document.getElementById("login-email").value.trim();if(!email){toast("Enter your owner email first.",true);return;}const {error}=await supabase.auth.resetPasswordForEmail(email);if(error){toast(error.message,true);return;}toast("Password reset email sent. Check your inbox.");};
 }
 function nav(){
-  navRoot.innerHTML=tabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("");
+  const mainTabs=tabs.slice(0,4), moreTabs=tabs.slice(4);
+  navRoot.innerHTML=mainTabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+
+    '<button class="nav-more" type="button" aria-label="More sections" aria-expanded="false" id="nav-more"><span>☰</span><small>More</small></button>'+
+    '<div class="nav-more-menu" id="nav-more-menu" hidden>'+moreTabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+'</div>';
   navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
+  const more=navRoot.querySelector("#nav-more"), menu=navRoot.querySelector("#nav-more-menu");
+  more.onclick=()=>{const open=menu.hidden;menu.hidden=!open;more.classList.toggle("on",open);more.setAttribute("aria-expanded",String(open));};
+  document.addEventListener("click",function closeMore(e){if(!navRoot.contains(e.target)){menu.hidden=true;more.classList.remove("on");more.setAttribute("aria-expanded","false");document.removeEventListener("click",closeMore);}});
 }
 function header(){
   const open=!!settings?.is_open;
