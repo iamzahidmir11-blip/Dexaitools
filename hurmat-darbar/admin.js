@@ -387,3 +387,4 @@ supabase.auth.onAuthStateChange((event,session)=>{
   if(event==="SIGNED_OUT"){if(channel)supabase.removeChannel(channel);user=null;role=null;loginView("You have signed out.");}
 });
 init();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./owner-sw.js",{scope:"./"}).catch(()=>{}));}
