@@ -89,8 +89,8 @@ function header(){
   const moreTabs=tabs.slice(4);
   const status=DEVELOPMENT_PREVIEW?'<span class="pill">PREVIEW MODE</span>':'<button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button>';
   return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>'+(DEVELOPMENT_PREVIEW?'DEVELOPMENT WORKSPACE':'LIVE RESTAURANT OPERATIONS')+'</small></div></div><div class="owner-header-actions">'+status+
-  '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Notifications"><span>♧</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
-  '<button class="header-icon menu-trigger" id="owner-menu" aria-label="More options" aria-expanded="false"><span>☰</span></button>'+
+  '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Open notifications" title="Notifications"><span aria-hidden="true">🔔</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
+  '<button class="header-icon menu-trigger" id="owner-menu" aria-label="Open menu" title="More options" aria-expanded="false"><span aria-hidden="true">☰</span></button>'+
   '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+'</div></div></header>';
 }
 function shell(title,desc,content){
@@ -100,6 +100,9 @@ function shell(title,desc,content){
   if(notify)notify.onclick=()=>{page="alerts";render();};
   const menuBtn=document.getElementById("owner-menu"),moreMenu=document.getElementById("owner-more-menu");
   if(menuBtn)menuBtn.onclick=()=>{moreMenu.hidden=!moreMenu.hidden;menuBtn.setAttribute("aria-expanded",String(!moreMenu.hidden));};
+  if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");page=b.dataset.tab;render();});
+  document.onclick=e=>{if(!e.target.closest(".owner-header-actions")&&moreMenu&&!moreMenu.hidden){moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");}};
+  document.onkeydown=e=>{if(e.key==="Escape"&&moreMenu&&!moreMenu.hidden){moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");}};
   if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
   const signout=document.getElementById("signout");
   if(signout)signout.onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
@@ -227,7 +230,7 @@ function bindActions(){
   document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{page=b.dataset.go;render();});
   if(DEVELOPMENT_PREVIEW){
     document.querySelectorAll("button,input,select,textarea").forEach(el=>{
-      if(el.matches("[data-tab],[data-go],#menu-search,#menu-filter,#order-search,#inventory-search")) return;
+      if(el.matches("[data-tab],[data-go],#owner-menu,#owner-notifications,#menu-search,#menu-filter,#order-search,#inventory-search")) return;
       el.disabled=true;
       if(el.tagName==="BUTTON" && !el.title) el.title="Disabled in development preview";
     });
@@ -415,6 +418,13 @@ function bindActions(){
     if(variant.error){toast("Item saved, but price variant failed: "+variant.error.message,true);return;}
     await refresh();toast("Menu item added to the live website.");
   };
+  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true;
+    const {error}=await supabase.from("notifications").update({is_read:true}).eq("id",b.dataset.read);
+    if(error){toast(error.message,true);b.disabled=false;return;}
+    await refresh();toast("Notification marked as read.");
+  });
+
 }
 async function startApp(){
   await refresh();
