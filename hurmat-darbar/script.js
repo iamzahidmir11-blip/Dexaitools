@@ -85,11 +85,11 @@ function checkoutState(){
   methods.forEach(m=>{const o=document.createElement("option");o.value=m.value;o.textContent=m.label;paymentSelect.append(o);});
   if(!methods.length){const o=document.createElement("option");o.value="";o.textContent="No payment method enabled";paymentSelect.append(o);}
   const ready=cart.length>0&&!!restaurantSettings?.is_open&&!!restaurantSettings?.location_verified&&methods.length>0;
-  checkoutButton.disabled=!ready||placingOrder;
+  checkoutButton.disabled=!ready||placingOrder||Number(document.getElementById("cart-subtotal").textContent.replace(/[^0-9]/g,""))<Number(restaurantSettings?.min_order||0);
   orderHelp.textContent=!restaurantSettings?"Restaurant setup could not be loaded.":
     !restaurantSettings.is_open?"The restaurant is currently not accepting orders.":
     !restaurantSettings.location_verified?"Online delivery is not enabled: restaurant map location still needs verification.":
-    !methods.length?"Online ordering is paused until the restaurant enables a payment method.":"Your order will be saved directly to the restaurant order system.";
+    !methods.length?"Online ordering is paused until the restaurant enables a payment method.":Number(document.getElementById("cart-subtotal").textContent.replace(/[^0-9]/g,""))<Number(restaurantSettings?.min_order||0)?"Minimum order is "+money(restaurantSettings.min_order)+". Add more items to continue.":"Your order will be saved directly to the restaurant order system.";
 }
 function getPosition(){
   return new Promise((resolve,reject)=>{
@@ -119,7 +119,7 @@ checkoutButton.onclick=async()=>{
       name:name,phone:phone,address:address,lat:position.lat,lng:position.lng,notes:notes,
       payment_method:paymentSelect.value,
       idempotency_key:(crypto.randomUUID?crypto.randomUUID():"hd-"+Date.now()+"-"+Math.random().toString(36).slice(2)),
-      items:cart.map(x=>({variant_id:x.variant_id,qty:x.qty}))
+      items:cart.map(x=>({variant_id:x.variant_id,qty:Math.max(1,Math.min(50,Number(x.qty)||1))}))
     };
     const response=await fetch("https://rvrboufrnkzuptfjopwd.supabase.co/functions/v1/restaurant-api",{
       method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_n1PWbHcomKpd63FPDdWSEw_iSo6UTi0","Authorization":"Bearer "+session.access_token},
@@ -141,13 +141,13 @@ async function load(){
   status.textContent="Loading live menu and restaurant settings…";
   const [a,b,c]=await Promise.all([
     db.from("menu_categories").select("id,name,sort_order").eq("active",true).order("sort_order"),
-    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,sort_order,menu_categories(name),menu_variants(id,label,price,sort_order)").eq("active",true).order("sort_order"),
+    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,sort_order,menu_categories(name),undefined").eq("active",true).order("sort_order"),
     db.from("restaurant_settings").select("name,is_open,location_verified,lat,lng,delivery_fee,min_order,cod_enabled,upi_enabled,upi_id").eq("id",1).single()
   ]);
   if(a.error||b.error){status.textContent="Menu unavailable. Please call +91 97971 51590.";return;}
   if(c.error){status.textContent="Menu is live, but checkout settings are unavailable. Please call the restaurant.";return;}
   restaurantSettings=c.data;
-  items=(b.data||[]).map(x=>({...x,category_name:x.menu_categories?.name||"",menu_variants:(x.menu_variants||[]).filter(v=>v.price!==null).sort((p,q)=>p.sort_order-q.sort_order)})).filter(x=>x.menu_variants.length);
+  items=(b.data||[]).map(x=>({...x,category_name:x.menu_categories?.name||"",menu_variants:(x.menu_variants||[]).filter(v=>v.active!==false&&v.price!==null).sort((p,q)=>p.sort_order-q.sort_order)})).filter(x=>x.menu_variants.length);
   cart=cart.flatMap(line=>{const item=items.find(x=>x.id===line.item_id&&x.available!==false),variant=item?.menu_variants.find(v=>v.id===line.variant_id);return item&&variant?[{...line,key:cartKey(item.id,variant.id),name:item.name,label:variant.label,price:Number(variant.price),qty:Math.max(1,Math.min(50,Number(line.qty)||1))}]:[]});
   localStorage.setItem("hd-cart",JSON.stringify(cart));
   renderCats(a.data||[]);
@@ -156,3 +156,26 @@ async function load(){
   const tools=el("div","menu-tools");tools.append(search);cats.after(tools);render();renderCart();checkoutState();
 }
 renderCart();load();if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+const reservationForm=document.getElementById("reservation-form");
+if(reservationForm)reservationForm.addEventListener("submit",async e=>{
+ e.preventDefault();const button=reservationForm.querySelector("button[type=submit]"),message=document.getElementById("res-message");
+ const name=document.getElementById("res-name").value.trim(),phone=document.getElementById("res-phone").value.trim(),party=Number(document.getElementById("res-party").value),when=document.getElementById("res-time").value,notes=document.getElementById("res-notes").value.trim();
+ if(name.length<2||phone.replace(/\\D/g,"").length<10||!Number.isInteger(party)||party<1||party>30||!when||new Date(when)<=new Date()){message.textContent="Please check your name, mobile number, guest count and future date/time.";return;}
+ button.disabled=true;button.textContent="Sending request…";
+ try{const {error}=await db.from("reservations").insert({name,phone,party_size:party,reserve_at:new Date(when).toISOString(),notes:notes||null,status:"pending"});if(error)throw error;message.textContent="Reservation request received. The restaurant will confirm it.";reservationForm.reset();document.getElementById("res-party").value="2";}
+ catch(err){message.textContent="Could not send request: "+(err.message||"Please call the restaurant.");}
+ finally{button.disabled=false;button.textContent="Request reservation ↗";}
+});
+const trackingForm=document.getElementById("tracking-form");
+if(trackingForm)trackingForm.addEventListener("submit",async e=>{
+ e.preventDefault();const button=trackingForm.querySelector("button[type=submit]"),box=document.getElementById("tracking-result"),token=document.getElementById("tracking-token").value.trim();
+ if(token.length<16){box.textContent="Enter the complete tracking reference.";return;}
+ button.disabled=true;button.textContent="Checking…";box.replaceChildren();
+ try{const {data,error}=await db.rpc("track_order",{p_token:token});if(error)throw error;if(!data){box.textContent="No order found for this tracking reference.";return;}
+ const heading=el("b","", "Order #"+data.order_no+" · "+String(data.status||"").replaceAll("_"," "));
+ box.append(heading);(data.items||[]).forEach(it=>box.append(el("p","",it.qty+" × "+it.name+" ("+it.variant+")")));
+ box.append(el("p","tracking-total","Total "+money(data.total)));
+ (data.history||[]).forEach(h=>box.append(el("small","tracking-step",String(h.status).replaceAll("_"," ")+" · "+new Date(h.at).toLocaleString())));
+ }catch(err){box.textContent="Tracking is temporarily unavailable: "+(err.message||"Try again later.");}
+ finally{button.disabled=false;button.textContent="Track order ↗";}
+});
