@@ -233,3 +233,78 @@ footer>p,footer>span{color:#b8c1b7}
 .menu-status{color:#657166}
 @media(max-width:760px){.food-photo{height:205px}.menu-grid{gap:14px}.food-body{padding:16px}}
 @media(prefers-reduced-motion:reduce){.food-image,.menu-card{transition:none}}
+
+
+/* Customer menu + bag aligned with the Hurmat Darbar admin app */
+:root{--admin-bg:#0e1b14;--admin-card:#17291f;--admin-line:#2a4436;--admin-gold:#d9b86c;--admin-cream:#f4efe0;--admin-muted:#9db1a5}
+.menu{background:linear-gradient(145deg,rgba(16,34,25,.84),rgba(10,22,16,.9));}
+.menu .section-head h2{color:var(--admin-cream);font-family:Manrope,sans-serif;font-weight:700;letter-spacing:-1.5px}
+.menu .section-head h2 i{color:var(--admin-gold);font-family:'DM Serif Display',serif}
+.menu-tag,.menu-status,.menu-foot{color:var(--admin-muted)}
+.menu-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.menu-card{min-width:0;background:linear-gradient(145deg,#1b3024,#14251c);border:1px solid #ffffff20;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px #0003;backdrop-filter:blur(18px)}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px #0005}
+.food-photo{height:170px;background:#17291f}
+.food-image{width:100%;height:100%;display:block;object-fit:cover}
+.food-body{padding:14px}
+.food-body h3{font:700 16px/1.3 Manrope,sans-serif;color:var(--admin-cream);letter-spacing:-.3px;min-height:2.6em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.food-body .food-description{font:400 10px/1.55 Manrope,sans-serif;color:var(--admin-muted);min-height:3.1em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.food-type{font-size:8px;letter-spacing:1px}
+.variant-select{margin-top:10px;padding:9px 10px;font-size:10px}
+.food-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.price-stack{font:700 13px Manrope,sans-serif;color:var(--admin-gold);min-width:0}
+.price-stack small{font:500 9px Manrope,sans-serif;color:var(--admin-muted)}
+.menu-qty-control,.qty-control{display:flex;align-items:center;gap:7px;flex:none}
+.menu-qty-control button,.qty-control button{width:30px;height:30px;display:grid;place-items:center;border:1px solid #d9b86c66;border-radius:9px;background:#d9b86c;color:#17251c;font:700 19px Manrope;cursor:pointer}
+.menu-qty-control button:disabled{opacity:.3;cursor:not-allowed;background:#ffffff10;color:var(--admin-muted);border-color:#ffffff25}
+.menu-qty-control .qty-value,.qty-control .qty-value{min-width:16px;text-align:center;color:var(--admin-cream);font:700 13px Manrope}
+.cart-trigger{background:#17291f;color:var(--admin-cream);border:1px solid #d9b86c66;border-radius:10px}
+.cart-trigger b{background:var(--admin-gold);color:#17251c}
+.cart-panel{background:rgba(14,27,20,.98);border-left:1px solid var(--admin-line);color:var(--admin-cream)}
+.cart-head{border-color:var(--admin-line)}
+.cart-head h2{font:700 27px Manrope,sans-serif;letter-spacing:-.8px}
+.cart-head h2 i{font-family:'DM Serif Display',serif;color:var(--admin-gold)}
+.cart-head button{color:var(--admin-cream)}
+.cart-line{gap:12px;border-color:var(--admin-line);font:600 12px Manrope,sans-serif}
+.cart-item-info{min-width:0;overflow-wrap:anywhere}
+.cart-line small{color:var(--admin-muted);font:500 10px Manrope,sans-serif}
+.qty-control button{background:#d9b86c;color:#17251c;border:0}
+.qty-control button:disabled{opacity:.35}
+.cart-summary{background:linear-gradient(180deg,rgba(14,27,20,.75),#0e1b14);border-color:var(--admin-line)}
+.cart-summary p{color:var(--admin-muted);font:500 12px Manrope,sans-serif}
+.cart-summary p b{color:var(--admin-cream)}
+.cart-summary .cart-total{font-size:16px;color:var(--admin-cream)}
+.cart-summary .cart-total b{color:var(--admin-gold)}
+.cart-summary label{color:var(--admin-muted);font:700 11px Manrope,sans-serif}
+.cart-summary input,.cart-summary textarea,.payment-method{color:var(--admin-cream);background:#17291f;border:1px solid var(--admin-line);border-radius:9px;font:500 12px Manrope,sans-serif}
+.cart-summary input::placeholder,.cart-summary textarea::placeholder{color:#809589}
+.checkout-btn{background:var(--admin-gold);color:#17251c;border-radius:10px;font:800 13px Manrope,sans-serif;padding:14px}
+.checkout-btn:disabled{opacity:.4;cursor:not-allowed}
+.menu-empty{background:#17291f;border:1px solid var(--admin-line);color:var(--admin-muted)}
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.food-photo{height:145px}}
+@media(max-width:600px){
+ .menu{padding:58px 4.5vw}
+ .menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .menu-card{border-radius:12px}
+ .food-photo{height:112px}
+ .food-body{padding:10px}
+ .food-body h3{font-size:12px;min-height:2.6em}
+ .food-body .food-description{font-size:9px;min-height:3.1em}
+ .food-type{font-size:7px;margin-bottom:6px}
+ .variant-select{padding:8px 6px;font-size:9px;margin-top:8px}
+ .food-bottom{gap:5px;margin-top:9px;align-items:center}
+ .price-stack{font-size:11px}
+ .price-stack small{font-size:8px}
+ .menu-qty-control{gap:4px}
+ .menu-qty-control button,.qty-control button{width:27px;height:27px;border-radius:8px;font-size:17px}
+ .menu-qty-control .qty-value{min-width:12px;font-size:11px}
+ .cart-panel{width:min(100%,440px);padding:18px 15px}
+ .cart-summary{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+}
+@media(max-width:360px){
+ .menu{padding-left:12px;padding-right:12px}
+ .menu-grid{gap:7px}
+ .food-photo{height:100px}
+ .food-body{padding:8px}
+ .menu-qty-control button{width:25px;height:25px}
+}
