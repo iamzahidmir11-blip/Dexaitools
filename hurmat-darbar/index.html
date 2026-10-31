@@ -18,42 +18,15 @@
   <button class="hamb" type="button" aria-label="Toggle navigation">☰</button>
 </header>
 <main id="home">
-  <section class="store-hero">
-    <div class="hero-copy">
-      <p class="eyebrow"><span class="live-dot"></span> HURMAT DARBAR · URI</p>
-      <h1>Your cravings.<br><span>Our kitchen.</span></h1>
-      <p class="hero-description">Explore the menu, choose your favourites and order directly from Hurmat Darbar.</p>
-      <div class="hero-actions"><a class="btn primary" href="#menu">Start your order <span>↓</span></a><a class="btn secondary" href="#visit">Restaurant details ↗</a></div>
-      <div class="hero-meta"><span><b>01</b> Browse the menu</span><span><b>02</b> Add to your bag</span><span><b>03</b> Place your order</span></div>
-    </div>
-    <div class="hero-art" aria-label="Hurmat Darbar online ordering">
-      <div class="hero-art-top"><span>THE HURMAT DARBAR MENU</span><span>URI · J&K</span></div>
-      <div class="hero-art-center"><span class="hero-monogram">HD</span><strong>GOOD FOOD<br>GOOD MOOD.</strong></div>
-      <div class="hero-art-bottom"><span>MADE TO BE SHARED</span><span>ORDER ONLINE ↗</span></div>
-    </div>
-  </section>
-  <section class="store-strip" aria-label="Restaurant information">
-    <div class="store-status"><span class="status-mark">●</span><div><b id="restaurant-open-state">Checking status…</b><small>Live restaurant status</small></div></div>
-    <div><span class="strip-icon">⌖</span><div><b>Find us</b><small>Opposite Tehsil, Uri</small></div></div>
-    <div><span class="strip-icon">☎</span><div><b>Call us</b><small>+91 97971 51590</small></div></div>
-    <div><span class="strip-icon">↗</span><div><b>Order direct</b><small>From our restaurant menu</small></div></div>
-  </section>
   <section class="menu" id="menu">
-    <div class="section-head">
-      <div><p class="eyebrow">THE HURMAT DARBAR MENU</p><h2>What are you<br><span>in the mood for?</span></h2><p class="menu-intro">Choose a category or search for a dish. Prices and availability come from the live restaurant menu.</p></div>
-      <div class="menu-side-note"><span>01 / MENU</span><b>Pick your<br>favourites.</b></div>
-    </div>
-    <div class="menu-discovery"><div class="menu-search-label"><b>Explore every flavour</b><small>Search dishes, categories and more</small></div></div>
+    <div class="section-head"><div><p class="eyebrow">HURMAT DARBAR · URI</p><h2>Our <span>Menu.</span></h2><p class="menu-intro">Fresh choices from our restaurant. Select your favourites to order.</p></div></div>
+    <div class="menu-discovery"><div class="menu-search-label"><b>Find a dish</b></div></div>
     <div class="categories" id="menu-categories" aria-label="Menu categories"><button class="chip active" data-cat="all">All items</button></div>
     <div id="menu-status" class="menu-status" role="status">Loading the live restaurant menu…</div>
     <div id="menu-grid" class="menu-grid" aria-live="polite"></div>
     <div class="menu-end"><span>HURMAT DARBAR · URI</span><span>More dishes. More reasons to gather.</span></div>
   </section>
-  <section class="order-note">
-    <div><p class="eyebrow">ORDERING MADE SIMPLE</p><h2>Good food is<br><span>just a few taps away.</span></h2></div>
-    <div class="order-steps"><div><b>01</b><span><strong>Choose your food</strong><small>Browse categories, portions and prices.</small></span></div><div><b>02</b><span><strong>Review your bag</strong><small>Adjust quantities before checkout.</small></span></div><div><b>03</b><span><strong>Send your order</strong><small>We send it to the restaurant team.</small></span></div></div>
-  </section>
-  <section class="customer-tools" id="services">
+<section class="customer-tools" id="services">
     <div class="section-head"><div><p class="eyebrow">A LITTLE MORE SERVICE</p><h2>Here when<br><span>you need us.</span></h2></div><span class="menu-side-note"><span>02 / SERVICES</span><b>Stay connected<br>with our team.</b></span></div>
     <div class="service-grid">
       <form class="service-card" id="reservation-form"><div class="service-kicker">01 · TABLE BOOKINGS</div><h3>Book a table</h3><p>Send a reservation request. Our restaurant team will confirm it with you.</p><label for="res-name">Your name</label><input id="res-name" required minlength="2" maxlength="80" placeholder="Full name"><label for="res-phone">Mobile number</label><input id="res-phone" required type="tel" inputmode="tel" placeholder="10-digit mobile number"><div class="service-two"><div><label for="res-party">Guests</label><input id="res-party" type="number" min="1" max="30" value="2" required></div><div><label for="res-time">Date and time</label><input id="res-time" type="datetime-local" required></div></div><label for="res-notes">Notes (optional)</label><textarea id="res-notes" maxlength="300" placeholder="Any special request"></textarea><button class="btn primary" type="submit">Request a table ↗</button><small id="res-message">Your request is sent to the restaurant for confirmation.</small></form>
