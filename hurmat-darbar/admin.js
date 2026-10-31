@@ -102,7 +102,7 @@ function menuView(){
   return '<div class="notice">Menu changes are live: product name, description, food photo, veg label, price and availability update the customer website from the same database.</div><div class="actions"><button class="btn sm" id="add-category">Add category</button><button class="btn sm" id="add-item">Add product</button></div>'+
     names.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
       const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"/>':'<div style="width:58px;height:58px;border-radius:10px;background:#203a2b;display:grid;place-items:center;color:var(--gold)">HD</div>';
-      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+' '+(v.active?'':'· Hidden')+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'" data-label="'+esc(v.label)+'">Edit variant</button></div>').join("");
+      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+' '+(v.active?'':'· Hidden')+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'" data-label="'+esc(v.label)+'">Edit variant</button><button class="btn ghost sm" data-variant-toggle="'+esc(v.id)+'" data-active="'+String(v.active)+'">'+(v.active?"Hide":"Enable")+'</button></div>').join("");
       return '<div class="item-row" style="align-items:flex-start">'+photo+'<div class="item-meta" style="flex:1"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"No description")+'</span><span class="mute">'+(i.is_veg?'VEG':'NON-VEG')+' · '+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+(i.needs_verification?' · Needs review':'')+'</span>'+variants+'</div><div class="actions"><button class="btn ghost sm" data-upload-image="'+esc(i.id)+'">Photo</button><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button><button class="btn ghost sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?"Hide":"Publish")+'</button></div></div>';
     }).join("")||empty("No products in this category."))).join("");
 }
@@ -199,6 +199,9 @@ function bindActions(){
   });
   document.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
     try{await api("",{action:"update_menu_item",item_id:b.dataset.toggle,available:b.dataset.available!=="true"});await refresh();toast("Website menu availability updated.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-variant-toggle]").forEach(b=>b.onclick=async()=>{
+    try{await api("",{action:"update_menu_variant",variant_id:b.dataset.variantToggle,active:b.dataset.active!=="true"});await refresh();toast("Variant availability updated.");}catch(e){toast(e.message,true);}
   });
   document.querySelectorAll("[data-price]").forEach(b=>b.onclick=async()=>{
     const value=prompt("New price in rupees:",b.dataset.current);if(value===null)return;const price=Number(value);
