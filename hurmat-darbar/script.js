@@ -3,7 +3,7 @@ const db=createClient("https://rvrboufrnkzuptfjopwd.supabase.co","sb_publishable
 document.getElementById("year").textContent=new Date().getFullYear();
 document.querySelector(".hamb").onclick=()=>document.querySelector(".top").classList.toggle("nav-open");
 const cats=document.getElementById("menu-categories"),grid=document.getElementById("menu-grid"),status=document.getElementById("menu-status"),panel=document.getElementById("cart-panel"),scrim=document.getElementById("cart-scrim");
-let items=[],cat="all",query="",cart=[],restaurantSettings=null,placingOrder=false;try{cart=JSON.parse(localStorage.getItem("hd-cart")||"[]");if(!Array.isArray(cart))cart=[]}catch{cart=[]}
+let items=[],cat="all",query="",cart=[],selectedVariants={},restaurantSettings=null,placingOrder=false;try{cart=JSON.parse(localStorage.getItem("hd-cart")||"[]");if(!Array.isArray(cart))cart=[]}catch{cart=[]}
 const money=n=>"₹"+Number(n).toLocaleString("en-IN");
 
 function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
@@ -27,6 +27,7 @@ function render(){
     body.append(type,title,el("p","food-description",foodDescription(x)));
     const select=el("select","variant-select");
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
+    const savedVariantIndex=x.menu_variants.findIndex(v=>v.id===selectedVariants[x.id]);if(savedVariantIndex>=0)select.value=String(savedVariantIndex);
     const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));
     price.append(el("small","","Selected price"));
     const add=el("button","add-btn card-add","Add to bag");
@@ -35,18 +36,18 @@ function render(){
     minus.type=plus.type="button";plus.disabled=x.available===false;
     const sync=()=>{
       const v=x.menu_variants[Number(select.value)],amount=cartQty(x.id,v.id);
-      qty.textContent=String(amount);minus.disabled=amount===0;price.firstChild.textContent=money(v.price);
+      qty.textContent=String(amount);minus.disabled=amount===0;plus.disabled=x.available===false||amount>=50;price.firstChild.textContent=money(v.price);
       add.hidden=amount>0;controls.hidden=amount===0;
       add.textContent=x.available===false?"Unavailable":"Add to bag";
     };
-    select.onchange=sync;
+    select.onchange=()=>{selectedVariants[x.id]=x.menu_variants[Number(select.value)].id;sync()};
     add.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
     minus.onclick=()=>{const v=x.menu_variants[Number(select.value)];qtyChange(cartKey(x.id,v.id),-1)};
     plus.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
     controls.append(minus,qty,plus);foot.append(price,add,controls);body.append(select,foot);card.append(photo,body);grid.append(card);sync();
   });
 }
-function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
+function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key);if(old&&old.qty>=50){alert("Maximum 50 units per item.");return}selectedVariants[item.id]=v.id;if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
 function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart();checkoutState()}
 function renderCart(){
   const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
@@ -56,7 +57,7 @@ function renderCart(){
     info.append(small);
     const controls=el("div","qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value",x.qty),plus=el("button","qty-plus","+");
     minus.type=plus.type="button";minus.setAttribute("aria-label","Decrease "+x.name);plus.setAttribute("aria-label","Increase "+x.name);
-    minus.onclick=()=>qtyChange(x.key,-1);plus.onclick=()=>qtyChange(x.key,1);
+    minus.onclick=()=>qtyChange(x.key,-1);plus.disabled=Number(x.qty)>=50;plus.onclick=()=>qtyChange(x.key,1);
     controls.append(minus,qty,plus);row.append(info,controls);root.append(row);
   });
   if(!cart.length)root.append(el("p","menu-empty","Your bag is empty. Add dishes from the menu."));
@@ -65,7 +66,7 @@ function renderCart(){
   document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
   const checkout=document.getElementById("checkout");if(checkout&&!placingOrder)checkout.disabled=!cart.length||!restaurantSettings?.is_open||!restaurantSettings?.location_verified||!(restaurantSettings?.cod_enabled||(restaurantSettings?.upi_enabled&&restaurantSettings?.upi_id));
 }
-function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Number(x.qty)+d);if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
+function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Math.min(50,Number(x.qty)+d));if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
 const paymentSelect=el("select","payment-method");
 paymentSelect.id="payment-method";
 const orderHelp=el("small","","Checking restaurant ordering setup…");
