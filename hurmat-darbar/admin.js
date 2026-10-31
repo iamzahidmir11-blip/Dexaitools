@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://rvrboufrnkzuptfjopwd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_n1PWbHcomKpd63FPDdWSEw_iSo6UTi0";
@@ -62,7 +62,7 @@ function passwordSetupView(){
 }
 function loginView(message){
   navRoot.innerHTML="";
-  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./icon.svg" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
+  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
     (message?'<div class="notice">'+esc(message)+'</div>':'')+
     '<form id="login-form"><label>Email address</label><input id="login-email" type="email" autocomplete="username" required placeholder="owner@example.com"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="btn wide" id="login-submit" type="submit">Sign in to Hurmat Owner</button></form><button type="button" class="text-action" id="forgot-password" style="margin-top:14px">Forgot password?</button><p style="margin:14px 0 0">Owner accounts require a secure invitation and verified email. Owner accounts are issued through secure invitation only.</p></div>';
   document.getElementById("login-form").addEventListener("submit",async e=>{
@@ -81,7 +81,7 @@ function nav(){
 }
 function header(){
   const open=!!settings?.is_open;
-  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="./icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
+  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
 }
 function shell(title,desc,content){
   root.innerHTML=header()+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
