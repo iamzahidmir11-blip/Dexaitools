@@ -116,8 +116,20 @@ function alertsView(){
 }
 function settingsView(){
   const s=settings||{};
-  return '<div class="notice">Ordering is not ready to accept live customer orders until the restaurant location is verified and at least one real payment method is enabled. Do not enable a payment method until the restaurant operator confirms it.</div>'+
-    card("Restaurant configuration",'<div class="item-row"><span>Restaurant</span><b>'+esc(s.name||"Hurmat Darbar")+'</b></div><div class="item-row"><span>Phone</span><b>'+esc(s.phone||"Not configured")+'</b></div><div class="item-row"><span>Address</span><b>'+esc(s.address||"Not configured")+'</b></div><div class="item-row"><span>Opening status</span><b>'+(s.is_open?"Open":"Closed")+'</b></div><div class="item-row"><span>Delivery location verified</span><b class="'+(s.location_verified?"good":"bad")+'">'+(s.location_verified?"Yes":"No")+'</b></div><div class="item-row"><span>Delivery radius</span><b>'+esc(s.delivery_radius_m||0)+' m</b></div><div class="item-row"><span>Delivery fee</span><b>'+money(s.delivery_fee)+'</b></div><div class="item-row"><span>Cash on delivery</span><b>'+ (s.cod_enabled?"Enabled":"Disabled")+'</b></div><div class="item-row"><span>UPI</span><b>'+ (s.upi_enabled?"Enabled":"Disabled")+'</b></div>');
+  return '<div class="notice">Enter the restaurant’s exact map-pin coordinates and confirm them only after checking the pin. Orders remain blocked until the location is verified and a real payment method is enabled.</div>'+
+    '<form id="settings-form" class="card"><h2 style="margin:0 0 12px">Restaurant details</h2>'+
+    '<label>Restaurant name</label><input id="set-name" required value="'+esc(s.name||"Hurmat Darbar")+'">'+
+    '<label>Contact phone</label><input id="set-phone" value="'+esc(s.phone||"")+'">'+
+    '<label>Full address</label><input id="set-address" value="'+esc(s.address||"")+'">'+
+    '<div class="grid"><div><label>Latitude</label><input id="set-lat" type="number" step="any" min="-90" max="90" value="'+(s.lat==null?"":esc(s.lat))+'"></div><div><label>Longitude</label><input id="set-lng" type="number" step="any" min="-180" max="180" value="'+(s.lng==null?"":esc(s.lng))+'"></div></div>'+
+    '<label>Delivery radius (metres)</label><input id="set-radius" type="number" min="100" max="50000" value="'+esc(s.delivery_radius_m||5000)+'">'+
+    '<div class="grid"><div><label>Delivery fee (₹)</label><input id="set-fee" type="number" min="0" max="100000" value="'+esc(s.delivery_fee||0)+'"></div><div><label>Minimum order (₹)</label><input id="set-min" type="number" min="0" max="100000" value="'+esc(s.min_order||0)+'"></div></div>'+
+    '<label style="display:flex;align-items:center;gap:8px;margin:10px 0"><input id="set-open" type="checkbox" style="width:auto;margin:0" '+(s.is_open?"checked":"")+'> Accept orders while restaurant is open</label>'+
+    '<label style="display:flex;align-items:center;gap:8px;margin:10px 0"><input id="set-cod" type="checkbox" style="width:auto;margin:0" '+(s.cod_enabled?"checked":"")+'> Enable cash on delivery</label>'+
+    '<label style="display:flex;align-items:center;gap:8px;margin:10px 0"><input id="set-upi" type="checkbox" style="width:auto;margin:0" '+(s.upi_enabled?"checked":"")+'> Enable manual UPI (not automatic payment verification)</label>'+
+    '<label>UPI ID (required only if manual UPI is enabled)</label><input id="set-upi-id" value="'+esc(s.upi_id||"")+'">'+
+    '<label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input id="set-verified" type="checkbox" style="width:auto;margin:0" '+(s.location_verified?"checked":"")+'> I have checked and verified the restaurant map pin</label>'+
+    '<button class="btn wide" type="submit">Save real restaurant settings</button></form>';
 }
 function render(){
   nav();
@@ -165,6 +177,31 @@ function bindActions(){
   document.querySelectorAll("[data-read]").forEach(b=>b.onclick=async()=>{
     const {error}=await supabase.from("notifications").update({is_read:true}).eq("id",b.dataset.read);if(error){toast(error.message,true);return;}await refresh();
   });
+  const settingsForm=document.getElementById("settings-form");
+  if(settingsForm)settingsForm.onsubmit=async e=>{
+    e.preventDefault();
+    const latRaw=document.getElementById("set-lat").value.trim(),lngRaw=document.getElementById("set-lng").value.trim();
+    const lat=latRaw===""?null:Number(latRaw),lng=lngRaw===""?null:Number(lngRaw);
+    const verified=document.getElementById("set-verified").checked;
+    if(verified&&(lat===null||lng===null||!Number.isFinite(lat)||!Number.isFinite(lng)||lat < -90||lat > 90||lng < -180||lng > 180)){toast("Enter valid map-pin coordinates before verifying.",true);return;}
+    const cod=document.getElementById("set-cod").checked,upi=document.getElementById("set-upi").checked,upiId=document.getElementById("set-upi-id").value.trim();
+    if(upi&&(!upiId||!upiId.includes("@"))){toast("Enter a valid UPI ID before enabling manual UPI.",true);return;}
+    const patch={
+      name:document.getElementById("set-name").value.trim(),
+      phone:document.getElementById("set-phone").value.trim(),
+      address:document.getElementById("set-address").value.trim(),
+      lat:lat,lng:lng,location_verified:verified,
+      delivery_radius_m:Number(document.getElementById("set-radius").value),
+      delivery_fee:Number(document.getElementById("set-fee").value),
+      min_order:Number(document.getElementById("set-min").value),
+      is_open:document.getElementById("set-open").checked,
+      cod_enabled:cod,upi_enabled:upi,upi_id:upi?upiId:null,updated_at:new Date().toISOString()
+    };
+    if(!patch.name||!patch.address||!Number.isInteger(patch.delivery_radius_m)||patch.delivery_radius_m<100||!Number.isInteger(patch.delivery_fee)||patch.delivery_fee<0||!Number.isInteger(patch.min_order)||patch.min_order<0){toast("Check the restaurant details and numeric settings.",true);return;}
+    const {error}=await supabase.from("restaurant_settings").update(patch).eq("id",1);
+    if(error){toast(error.message,true);return;}
+    await refresh();toast("Restaurant settings saved.");
+  };
   const addCategory=document.getElementById("add-category");
   if(addCategory)addCategory.onclick=async()=>{
     const name=prompt("New category name:");if(!name||!name.trim())return;
