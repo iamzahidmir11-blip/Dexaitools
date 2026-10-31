@@ -1,0 +1,13 @@
+{
+  "id": "./owner.html",
+  "name": "Hurmat Owner",
+  "short_name": "Hurmat Owner",
+  "description": "Secure live owner app for Hurmat Darbar restaurant operations.",
+  "start_url": "./owner.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1b14",
+  "theme_color": "#0e1b14",
+  "orientation": "portrait",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
