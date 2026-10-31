@@ -12,7 +12,8 @@ document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getEl
 function renderCats(data){cats.replaceChildren();[ {id:"all",name:"All categories"},...data].forEach((x,i)=>{const b=el("button","chip"+(i===0?" active":""),x.name);b.dataset.cat=x.id;cats.append(b)});cats.onclick=e=>{const b=e.target.closest("[data-cat]");if(!b)return;cat=b.dataset.cat;cats.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()}}
 function foodImage(item){if(item.image_url&&/^https?:\/\//i.test(item.image_url))return item.image_url;const q=encodeURIComponent((item.name||"Indian food")+" food dish");const lock=[...(item.id||item.name||"hd")].reduce((a,c)=>a+c.charCodeAt(0),0)%997;return "https://loremflickr.com/900/650/"+q+"?lock="+lock}
 function foodDescription(item){if(item.description&&item.description.trim())return item.description.trim();const category=(item.category_name||"").toLowerCase();if(category.includes("wazwan"))return "A traditional Kashmiri-style preparation, served fresh from the Hurmat Darbar kitchen.";if(category.includes("momo"))return "A flavourful momo favourite, prepared fresh and served hot.";if(category.includes("drink")||category.includes("breakfast"))return "A refreshing pick, prepared fresh for your table.";if(category.includes("fries"))return "Crisp, savoury comfort food made for sharing.";if(category.includes("soup"))return "A warm, comforting bowl prepared fresh to order.";if(category.includes("pasta"))return "A satisfying pasta favourite, freshly prepared.";return "A restaurant favourite, freshly prepared and served with care."}
-function cartQty(itemId,variantId){return cart.find(x=>x.item_id===itemId&&x.variant_id===variantId)?.qty||0}
+function cartKey(itemId,variantId){return itemId+":"+variantId}
+function cartQty(itemId,variantId){return cart.find(x=>x.key===cartKey(itemId,variantId))?.qty||0}
 function render(){
   grid.replaceChildren();
   const list=items.filter(x=>(cat==="all"||x.category_id===cat)&&(!query||(x.name+" "+(x.description||"")+" "+x.category_name).toLowerCase().includes(query)));
@@ -28,16 +29,24 @@ function render(){
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
     const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));
     price.append(el("small","","Selected price"));
+    const add=el("button","add-btn card-add","Add to bag");
+    add.type="button";add.disabled=x.available===false;
     const controls=el("div","menu-qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value","0"),plus=el("button","qty-plus","+");
-    minus.type=plus.type="button";plus.disabled=x.available===false;plus.title=x.available===false?"Currently unavailable":"Add one";
-    const syncQty=()=>{const v=x.menu_variants[Number(select.value)];const amount=cartQty(x.id,v.id);qty.textContent=amount;minus.disabled=amount===0;price.firstChild.textContent=money(v.price)};
-    select.onchange=syncQty;
-    minus.onclick=()=>{const v=x.menu_variants[Number(select.value)];qtyChange(x.id+v.id,-1)};
+    minus.type=plus.type="button";plus.disabled=x.available===false;
+    const sync=()=>{
+      const v=x.menu_variants[Number(select.value)],amount=cartQty(x.id,v.id);
+      qty.textContent=String(amount);minus.disabled=amount===0;price.firstChild.textContent=money(v.price);
+      add.hidden=amount>0;controls.hidden=amount===0;
+      add.textContent=x.available===false?"Unavailable":"Add to bag";
+    };
+    select.onchange=sync;
+    add.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
+    minus.onclick=()=>{const v=x.menu_variants[Number(select.value)];qtyChange(cartKey(x.id,v.id),-1)};
     plus.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
-    controls.append(minus,qty,plus);foot.append(price,controls);body.append(select,foot);card.append(photo,body);grid.append(card);syncQty();
+    controls.append(minus,qty,plus);foot.append(price,add,controls);body.append(select,foot);card.append(photo,body);grid.append(card);sync();
   });
 }
-function addItem(item,v,open=true){const key=item.id+v.id,old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
+function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
 function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart()}
 function renderCart(){
   const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
