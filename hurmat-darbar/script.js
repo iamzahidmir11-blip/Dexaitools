@@ -75,7 +75,7 @@ function checkoutState(){
   paymentSelect.replaceChildren();
   methods.forEach(m=>{const o=document.createElement("option");o.value=m.value;o.textContent=m.label;paymentSelect.append(o);});
   if(!methods.length){const o=document.createElement("option");o.value="";o.textContent="No payment method enabled";paymentSelect.append(o);}
-  const ready=!!restaurantSettings?.is_open&&!!restaurantSettings?.location_verified&&methods.length>0;
+  const ready=cart.length>0&&!!restaurantSettings?.is_open&&!!restaurantSettings?.location_verified&&methods.length>0;
   checkoutButton.disabled=!ready||placingOrder;
   orderHelp.textContent=!restaurantSettings?"Restaurant setup could not be loaded.":
     !restaurantSettings.is_open?"The restaurant is currently not accepting orders.":
