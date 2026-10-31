@@ -9,5 +9,5 @@
   "background_color": "#0e1b14",
   "theme_color": "#0e1b14",
   "orientation": "portrait",
-  "icons": [{"src":"../icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "icons": [{"src":"../assets/hurmat-logo-repo.png","sizes":"128x128","type":"image/png","purpose":"any maskable"}]
 }
