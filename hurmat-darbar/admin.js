@@ -16,6 +16,8 @@ const statusNames = {
   delivered:"Delivered", cancelled:"Cancelled", rejected:"Rejected", delivery_failed:"Delivery failed"
 };
 const tabs = [["home","⌂","Overview"],["orders","▤","Orders"],["menu","▦","Menu"],["inventory","▣","Inventory"],["reservations","◷","Bookings"],["riders","♧","Riders"],["reports","▥","Reports"],["settings","⚙","Store setup"],["alerts","♢","Alerts"]];
+// Temporary development-only UI preview. Live data and all write operations remain protected.
+const DEVELOPMENT_PREVIEW = true;
 let user=null, role=null, page="home", orders=[], menuItems=[], menuCategories=[], reservations=[], riders=[], notifications=[], settings=null, channel=null, busy=false;
 
 function toast(message, bad=false){
@@ -25,6 +27,7 @@ function toast(message, bad=false){
   clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.remove(),2600);
 }
 async function api(view, body){
+  if(DEVELOPMENT_PREVIEW) throw new Error("Development preview: live actions are disabled until secure phone login is integrated.");
   const {data:{session}}=await supabase.auth.getSession();
   if(!session) throw new Error("Please sign in again.");
   const url=SUPABASE_URL+"/functions/v1/restaurant-api"+(body?"":"?view="+encodeURIComponent(view||"orders"));
@@ -81,11 +84,14 @@ function nav(){
 }
 function header(){
   const open=!!settings?.is_open;
+  if(DEVELOPMENT_PREVIEW) return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>DEVELOPMENT WORKSPACE</small></div></div><div class="topbar-actions"><span class="pill">PREVIEW MODE</span></div></header>';
   return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
 }
 function shell(title,desc,content){
-  root.innerHTML=header()+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
-  document.getElementById("signout").onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
+  const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
+  root.innerHTML=header()+previewNotice+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
+  const signout=document.getElementById("signout");
+  if(signout)signout.onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
 }
 function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
 function empty(text){return '<div class="empty">'+esc(text)+'</div>';}
@@ -178,7 +184,7 @@ function settingsView(){
     '<label>UPI ID (required only if manual UPI is enabled)</label><input id="set-upi-id" value="'+esc(s.upi_id||"")+'">'+
     '<label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input id="set-verified" type="checkbox" style="width:auto;margin:0" '+(s.location_verified?"checked":"")+'> I have checked and verified the restaurant map pin</label>'+
     '<button class="btn wide" type="submit">Save restaurant settings</button></form>'+
-    '<section class="card" style="margin-top:14px"><h2 style="margin:0 0 8px">Owner account access</h2><p class="mute" style="margin:0 0 14px">Invite the restaurant owner using their email. They receive a secure account setup link and are assigned the Owner role after invitation.</p><form id="owner-invite-form"><label>Owner email address</label><input id="owner-invite-email" type="email" autocomplete="email" required placeholder="owner@example.com"><button class="btn wide" id="owner-invite-submit" type="submit">Send secure owner invitation</button></form></section>';
+    '';
 }
 function render(){
   nav();
@@ -189,6 +195,11 @@ function render(){
   bindActions();
 }
 async function refresh(){
+  if(DEVELOPMENT_PREVIEW){
+    orders=[];menuItems=[];menuCategories=[];reservations=[];riders=[];notifications=[];
+    settings={name:"Hurmat Darbar",phone:"+91 97971 51590",address:"Opposite Tehsil, Uri, Baramulla, J&K 193123",is_open:true,location_verified:false,cod_enabled:false,upi_enabled:false,delivery_radius_m:5000,delivery_fee:0,min_order:0};
+    render();return;
+  }
   const results=await Promise.allSettled([api("orders"),api("menu"),api("reservations"),api("riders"),
     supabase.from("notifications").select("id,title,body,order_id,is_read,created_at").order("created_at",{ascending:false}).limit(60),
     supabase.from("restaurant_settings").select("*").eq("id",1).single()]);
@@ -203,6 +214,23 @@ async function refresh(){
 }
 function bindActions(){
   document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{page=b.dataset.go;render();});
+  if(DEVELOPMENT_PREVIEW){
+    document.querySelectorAll("button,input,select,textarea").forEach(el=>{
+      if(el.matches("[data-tab],[data-go],#menu-search,#menu-filter,#order-search,#inventory-search")) return;
+      el.disabled=true;
+      if(el.tagName==="BUTTON" && !el.title) el.title="Disabled in development preview";
+    });
+    const filterInputs=["menu-search","menu-filter","order-search","inventory-search"];
+    filterInputs.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false;});
+    const orderSearch=document.getElementById("order-search");
+    if(orderSearch)orderSearch.oninput=()=>{const q=orderSearch.value.trim().toLowerCase();document.querySelectorAll(".order-groups article.card").forEach(el=>{el.hidden=!el.textContent.toLowerCase().includes(q);});};
+    const inventorySearch=document.getElementById("inventory-search");
+    if(inventorySearch)inventorySearch.oninput=()=>{const q=inventorySearch.value.trim().toLowerCase();document.querySelectorAll(".inventory-row").forEach(el=>{el.hidden=!el.textContent.toLowerCase().includes(q);});};
+    const menuSearch=document.getElementById("menu-search"),menuFilter=document.getElementById("menu-filter");
+    const filterMenu=()=>{const q=(menuSearch?.value||"").trim().toLowerCase(),f=menuFilter?.value||"all";document.querySelectorAll("[data-product-card]").forEach(card=>{const tracked=card.dataset.tracked==="true",qty=Number(card.dataset.stockValue||0),published=card.dataset.published==="true";const match=card.dataset.name.includes(q);const state=f==="all"||(f==="published"&&published)||(f==="hidden"&&!published)||(f==="stock"&&tracked)||(f==="low"&&tracked&&qty>0&&qty<=5)||(f==="out"&&tracked&&qty===0);card.hidden=!(match&&state);});};
+    if(menuSearch)menuSearch.oninput=filterMenu;if(menuFilter)menuFilter.onchange=filterMenu;
+    return;
+  }
   const outletToggle=document.getElementById("outlet-toggle");
   if(outletToggle)outletToggle.onclick=async()=>{
     const next=outletToggle.dataset.open!=="true";
@@ -379,6 +407,7 @@ function bindActions(){
 }
 async function startApp(){
   await refresh();
+  if(DEVELOPMENT_PREVIEW) return;
   if(channel)await supabase.removeChannel(channel);
   channel=supabase.channel("hurmat-admin-live")
     .on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>refresh())
@@ -390,10 +419,11 @@ async function startApp(){
     .subscribe();
 }
 async function init(){
+  if(DEVELOPMENT_PREVIEW){await startApp();return;}
   try{const {data:{session}}=await supabase.auth.getSession();if(session?.user?.user_metadata?.owner_password_setup_required){passwordSetupView();return;}if(await verifyAccess())await startApp();else loginView("");}
   catch(e){loginView(e.message||"Unable to verify account.");}
 }
-supabase.auth.onAuthStateChange((event,session)=>{
+if(!DEVELOPMENT_PREVIEW)supabase.auth.onAuthStateChange((event,session)=>{
   if(event==="SIGNED_OUT"){if(channel)supabase.removeChannel(channel);user=null;role=null;loginView("You have signed out.");}
 });
 init();
