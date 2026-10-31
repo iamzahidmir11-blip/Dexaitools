@@ -24,7 +24,7 @@ function render(){
     if(imageUrl){image.src=imageUrl;image.onerror=()=>{image.onerror=null;image.remove();photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));};photo.append(image);}
     else{photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));}
     const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);
-    body.append(type,title,el("h3","food-title",x.name),el("p","food-description",foodDescription(x)));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
+    body.append(type,title,el("p","food-description",foodDescription(x)));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
     const select=el("select","variant-select");
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
     const savedVariantIndex=x.menu_variants.findIndex(v=>v.id===selectedVariants[x.id]);if(savedVariantIndex>=0)select.value=String(savedVariantIndex);
