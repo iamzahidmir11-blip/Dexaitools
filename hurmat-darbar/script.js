@@ -8,10 +8,10 @@ const money=n=>"₹"+Number(n).toLocaleString("en-IN");
 
 function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
 function toggleCart(on){panel.classList.toggle("open",on);scrim.classList.toggle("open",on)}
-document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getElementById("close-cart").onclick=()=>toggleCart(false);scrim.onclick=()=>toggleCart(false);
+document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getElementById("close-cart").onclick=()=>toggleCart(false);scrim.onclick=()=>toggleCart(false);const mobileCart=document.getElementById("mobile-cart-bar");if(mobileCart)mobileCart.onclick=()=>toggleCart(true);
 function renderCats(data){cats.replaceChildren();[ {id:"all",name:"All categories"},...data].forEach((x,i)=>{const b=el("button","chip"+(i===0?" active":""),x.name);b.dataset.cat=x.id;cats.append(b)});cats.onclick=e=>{const b=e.target.closest("[data-cat]");if(!b)return;cat=b.dataset.cat;cats.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()}}
 function foodImage(item){return item.image_url&&item.image_url.startsWith("https://")?item.image_url:""}
-function foodDescription(item){if(item.description&&item.description.trim())return item.description.trim();const category=(item.category_name||"").toLowerCase();if(category.includes("wazwan"))return "A traditional Kashmiri-style preparation, served fresh from the Hurmat Darbar kitchen.";if(category.includes("momo"))return "A flavourful momo favourite, prepared fresh and served hot.";if(category.includes("drink")||category.includes("breakfast"))return "A refreshing pick, prepared fresh for your table.";if(category.includes("fries"))return "Crisp, savoury comfort food made for sharing.";if(category.includes("soup"))return "A warm, comforting bowl prepared fresh to order.";if(category.includes("pasta"))return "A satisfying pasta favourite, freshly prepared.";return "A restaurant favourite, freshly prepared and served with care."}
+function foodDescription(item){return item.description&&item.description.trim()?item.description.trim():""}
 function cartKey(itemId,variantId){return itemId+":"+variantId}
 function cartQty(itemId,variantId){return cart.find(x=>x.key===cartKey(itemId,variantId))?.qty||0}
 function render(){
@@ -24,7 +24,7 @@ function render(){
     if(imageUrl){image.src=imageUrl;image.onerror=()=>{image.onerror=null;image.remove();photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));};photo.append(image);}
     else{photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));}
     const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);
-    body.append(type,title,el("p","food-description",foodDescription(x)));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
+    body.append(type,title);const description=foodDescription(x);if(description)body.append(el("p","food-description",description));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
     const select=el("select","variant-select");
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
     const savedVariantIndex=x.menu_variants.findIndex(v=>v.id===selectedVariants[x.id]);if(savedVariantIndex>=0)select.value=String(savedVariantIndex);
@@ -63,7 +63,7 @@ function renderCart(){
   if(!cart.length)root.append(el("p","menu-empty","Your bag is empty. Add dishes from the menu."));
   document.getElementById("cart-count").textContent=count;
   document.getElementById("cart-subtotal").textContent=money(subtotal);
-  document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
+  document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));const mobileCount=document.getElementById("mobile-cart-count"),mobileTotal=document.getElementById("mobile-cart-total");if(mobileCount)mobileCount.textContent=count+" "+(count===1?"item":"items");if(mobileTotal)mobileTotal.textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));if(mobileCart)mobileCart.hidden=count===0;
   const checkout=document.getElementById("checkout");if(checkout&&!placingOrder)checkout.disabled=!cart.length||!restaurantSettings?.is_open||!restaurantSettings?.location_verified||!(restaurantSettings?.cod_enabled||(restaurantSettings?.upi_enabled&&restaurantSettings?.upi_id));
 }
 function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;const item=items.find(i=>i.id===x.item_id),limit=item?.track_stock===true?Number(item.stock_qty||0):50;if(d>0&&Number(x.qty)>=Math.min(50,limit)){alert("Stock limit reached for this product.");return}x.qty=Math.max(0,Math.min(50,Number(x.qty)+d));if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
@@ -131,7 +131,7 @@ checkoutButton.onclick=async()=>{
     if(!response.ok)throw new Error(result.code||result.error||"Order could not be submitted.");
     const order=result.order||{};
     cart=[];save();toggleCart(false);
-    alert("Order received successfully.\nOrder #"+(order.order_no||"")+"\nTotal: "+money(order.total||0)+"\nKeep your tracking reference safe: "+(order.tracking_token||""));
+    const success=document.getElementById("order-success"),token=order.tracking_token||"";document.getElementById("success-copy").textContent="Order #"+(order.order_no||"—")+" has been sent to Hurmat Darbar. Total: "+money(order.total||0)+".";document.getElementById("success-token").textContent=token||"Tracking reference unavailable";if(success)success.hidden=false;
     document.getElementById("customer-name").value="";
     document.getElementById("customer-phone").value="";
     document.getElementById("customer-address").value="";
@@ -183,3 +183,15 @@ if(trackingForm)trackingForm.addEventListener("submit",async e=>{
  }catch(err){box.textContent="Tracking is temporarily unavailable: "+(err.message||"Try again later.");}
  finally{button.disabled=false;button.textContent="Track order ↗";}
 });
+
+const successModal=document.getElementById("order-success");
+const successClose=document.getElementById("success-close");
+if(successClose)successClose.onclick=()=>{if(successModal)successModal.hidden=true;};
+const copyTracking=document.getElementById("copy-tracking");
+if(copyTracking)copyTracking.onclick=async()=>{
+ const value=document.getElementById("success-token").textContent;
+ if(!value||value==="Tracking reference unavailable")return;
+ try{await navigator.clipboard.writeText(value);copyTracking.textContent="Copied ✓";}
+ catch{window.prompt("Copy your tracking reference:",value);}
+};
+if(successModal)successModal.addEventListener("click",e=>{if(e.target===successModal)successModal.hidden=true;});
