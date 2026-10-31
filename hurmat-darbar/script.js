@@ -53,26 +53,42 @@ function renderCart(){
   const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
   cart.forEach(x=>{
     subtotal+=x.price*x.qty;count+=x.qty;
-    const row=el("div","cart-line"),info=el("div","cart-item-info",x.name),small=el("small",""," "+x.label+" · "+money(x.price));
-    info.append(small);
-    const controls=el("div","qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value",x.qty),plus=el("button","qty-plus","+");
+    const row=el("article","cart-line"),stockItem=items.find(i=>i.id===x.item_id);
+    const thumb=el("div","cart-item-thumb"),photo=foodImage(stockItem||{});
+    if(photo){const img=el("img","",undefined);img.src=photo;img.alt=x.name;img.loading="lazy";img.onerror=()=>{img.remove();thumb.textContent="HD"};thumb.append(img)}else thumb.textContent="HD";
+    const info=el("div","cart-item-info"),top=el("div","cart-item-top"),name=el("strong","cart-item-name",x.name),remove=el("button","cart-remove","Remove");
+    remove.type="button";remove.setAttribute("aria-label","Remove "+x.name+" from bag");remove.onclick=()=>{cart=cart.filter(line=>line.key!==x.key);save();render()};
+    top.append(name,remove);
+    const small=el("small","cart-item-variant",x.label+" · "+money(x.price));
+    const bottom=el("div","cart-item-bottom"),controls=el("div","qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value",x.qty),plus=el("button","qty-plus","+"),lineTotal=el("strong","cart-line-total",money(x.price*x.qty));
     minus.type=plus.type="button";minus.setAttribute("aria-label","Decrease "+x.name);plus.setAttribute("aria-label","Increase "+x.name);
-    minus.onclick=()=>qtyChange(x.key,-1);const stockItem=items.find(i=>i.id===x.item_id),stockLimit=stockItem?.track_stock===true?Number(stockItem.stock_qty||0):50;plus.disabled=Number(x.qty)>=Math.min(50,stockLimit);plus.onclick=()=>qtyChange(x.key,1);
-    controls.append(minus,qty,plus);row.append(info,controls);root.append(row);
+    minus.onclick=()=>qtyChange(x.key,-1);const stockLimit=stockItem?.track_stock===true?Number(stockItem.stock_qty||0):50;plus.disabled=Number(x.qty)>=Math.min(50,stockLimit);plus.onclick=()=>qtyChange(x.key,1);
+    controls.append(minus,qty,plus);bottom.append(controls,lineTotal);info.append(top,small,bottom);row.append(thumb,info);root.append(row);
   });
-  if(!cart.length)root.append(el("p","menu-empty","Your bag is empty. Add dishes from the menu."));
+  if(!cart.length){
+    const empty=el("div","cart-empty"),mark=el("div","cart-empty-mark","＋"),title=el("h3","","Your bag is empty"),copy=el("p","","Add your favourite dishes and they will appear here."),browse=el("button","cart-browse","Explore the menu");
+    browse.type="button";browse.onclick=()=>{toggleCart(false);document.getElementById("menu").scrollIntoView({behavior:"smooth"})};empty.append(mark,title,copy,browse);root.append(empty);
+  }
+  const summary=document.querySelector(".cart-summary");if(summary)summary.hidden=!cart.length;
   document.getElementById("cart-count").textContent=count;
   document.getElementById("cart-subtotal").textContent=money(subtotal);
-  document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));const mobileCount=document.getElementById("mobile-cart-count"),mobileTotal=document.getElementById("mobile-cart-total");if(mobileCount)mobileCount.textContent=count+" "+(count===1?"item":"items");if(mobileTotal)mobileTotal.textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));if(mobileCart)mobileCart.hidden=count===0;
+  document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
+  const mobileCount=document.getElementById("mobile-cart-count"),mobileTotal=document.getElementById("mobile-cart-total");
+  if(mobileCount)mobileCount.textContent=count+" "+(count===1?"item":"items");
+  if(mobileTotal)mobileTotal.textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
+  if(mobileCart)mobileCart.hidden=count===0;
+  const headerCount=document.getElementById("cart-header-count");if(headerCount)headerCount.textContent=count+" "+(count===1?"item":"items");
   const checkout=document.getElementById("checkout");if(checkout&&!placingOrder)checkout.disabled=!cart.length||!restaurantSettings?.is_open||!restaurantSettings?.location_verified||!(restaurantSettings?.cod_enabled||(restaurantSettings?.upi_enabled&&restaurantSettings?.upi_id));
 }
 function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;const item=items.find(i=>i.id===x.item_id),limit=item?.track_stock===true?Number(item.stock_qty||0):50;if(d>0&&Number(x.qty)>=Math.min(50,limit)){alert("Stock limit reached for this product.");return}x.qty=Math.max(0,Math.min(50,Number(x.qty)+d));if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
+const paymentLabel=el("label","payment-label","Payment method");
 const paymentSelect=el("select","payment-method");
-paymentSelect.id="payment-method";
+paymentSelect.id="payment-method";paymentLabel.htmlFor=paymentSelect.id;
 const orderHelp=el("small","","Checking restaurant ordering setup…");
 orderHelp.id="order-help";
 const checkoutButton=document.getElementById("checkout");
 checkoutButton.textContent="Place order";
+checkoutButton.insertAdjacentElement("beforebegin",paymentLabel);
 checkoutButton.insertAdjacentElement("beforebegin",paymentSelect);
 checkoutButton.insertAdjacentElement("afterend",orderHelp);
 function checkoutState(){
