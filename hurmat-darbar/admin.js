@@ -15,21 +15,7 @@ const statusNames = {
   ready_for_pickup:"Ready for pickup", picked_up:"Picked up", out_for_delivery:"Out for delivery",
   delivered:"Delivered", cancelled:"Cancelled", rejected:"Rejected", delivery_failed:"Delivery failed"
 };
-const tabs = [["home","home","Overview"],["orders","orders","Orders"],["menu","menu","Menu"],["inventory","inventory","Inventory"],["reservations","calendar","Bookings"],["riders","truck","Riders"],["reports","chart","Reports"],["settings","settings","Store setup"],["alerts","bell","Alerts"]];
-function iconSvg(name){
- const p={
- home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
- orders:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
- menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
- inventory:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
- calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
- truck:'<path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="17.5" cy="18" r="1.5"/>',
- chart:'<path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 5-7"/>',
- settings:'<circle cx="12" cy="12" r="3"/><path d="M19 13.5 21 15l-2 3-2-.6-2 1-.4 2h-3l-.4-2-2-1-2 .6-2-3 2-1.5v-2L4 10l2-3 2 .6 2-1 .4-2h3l.4 2 2 1 2-.6 2 3-2 1.5z"/>',
- bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>'
- };
- return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(p[name]||p.menu)+'</svg>';
-}
+const tabs = [["home","⌂","Overview"],["orders","▤","Orders"],["menu","▦","Menu"],["inventory","▣","Inventory"],["reservations","◷","Bookings"],["riders","♧","Riders"],["reports","▥","Reports"],["settings","⚙","Store setup"],["alerts","♢","Alerts"]];
 // Temporary development-only UI preview. Live data and all write operations remain protected.
 const DEVELOPMENT_PREVIEW = true;
 let user=null, role=null, page="home", orders=[], menuItems=[], menuCategories=[], reservations=[], riders=[], notifications=[], settings=null, channel=null, busy=false;
@@ -94,7 +80,7 @@ function loginView(message){
 }
 function nav(){
   const mainTabs=tabs.slice(0,4);
-  navRoot.innerHTML=mainTabs.map(t=>'<button class="dock-item '+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span class="dock-icon">'+iconSvg(t[1])+'</span><small>'+t[2]+'</small></button>').join("");
+  navRoot.innerHTML=mainTabs.map(t=>'<button class="dock-item '+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span class="dock-icon">'+t[1]+'</span><small>'+t[2]+'</small></button>').join("");
   navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
 }
 function header(){
@@ -103,9 +89,9 @@ function header(){
   const moreTabs=tabs.slice(4);
   const status=DEVELOPMENT_PREVIEW?'<span class="pill">PREVIEW MODE</span>':'<button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button>';
   return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>'+(DEVELOPMENT_PREVIEW?'DEVELOPMENT WORKSPACE':'LIVE RESTAURANT OPERATIONS')+'</small></div></div><div class="owner-header-actions">'+status+
-  '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Open notifications" title="Notifications"><span aria-hidden="true">'+iconSvg("bell")+'</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
-  '<button class="header-icon menu-trigger" id="owner-menu" aria-label="Open menu" title="More options" aria-expanded="false"><span aria-hidden="true">'+iconSvg("menu")+'</span></button>'+
-  '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span class="menu-item-icon">'+iconSvg(t[1])+'</span><span class="menu-item-label">'+t[2]+'</span><span class="menu-item-arrow">›</span></button>').join("")+'</div></div></header>';
+  '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Notifications"><span>♧</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
+  '<button class="header-icon menu-trigger" id="owner-menu" aria-label="More options" aria-expanded="false"><span>☰</span></button>'+
+  '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("")+'</div></div></header>';
 }
 function shell(title,desc,content){
   const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
@@ -114,9 +100,6 @@ function shell(title,desc,content){
   if(notify)notify.onclick=()=>{page="alerts";render();};
   const menuBtn=document.getElementById("owner-menu"),moreMenu=document.getElementById("owner-more-menu");
   if(menuBtn)menuBtn.onclick=()=>{moreMenu.hidden=!moreMenu.hidden;menuBtn.setAttribute("aria-expanded",String(!moreMenu.hidden));};
-  if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");page=b.dataset.tab;render();});
-  document.onclick=e=>{if(!e.target.closest(".owner-header-actions")&&moreMenu&&!moreMenu.hidden){moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");}};
-  document.onkeydown=e=>{if(e.key==="Escape"&&moreMenu&&!moreMenu.hidden){moreMenu.hidden=true;menuBtn?.setAttribute("aria-expanded","false");}};
   if(moreMenu)moreMenu.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
   const signout=document.getElementById("signout");
   if(signout)signout.onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
@@ -151,7 +134,7 @@ function homeView(){
   return '<section class="welcome-strip"><div><span class="eyebrow">TODAY AT HURMAT DARBAR</span><h2>Restaurant overview</h2><p>Orders, kitchen activity and sales — all in one place.</p></div><div class="welcome-date">'+now.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short",year:"numeric"})+'</div></section>'+
   '<div class="partner-metrics"><article class="metric-card"><span>ORDERS TODAY</span><b>'+todays.length+'</b><small>'+pending+' awaiting confirmation</small></article><article class="metric-card"><span>SALES TODAY</span><b>'+money(revenue)+'</b><small>Delivered orders only</small></article><article class="metric-card"><span>ACTIVE ORDERS</span><b>'+active+'</b><small>Across kitchen and delivery</small></article><article class="metric-card"><span>STOCK ALERTS</span><b>'+low+'</b><small>Low or out-of-stock items</small></article></div>'+
   '<div class="dashboard-columns"><section class="partner-panel"><div class="panel-heading"><div><h2>Order workflow</h2><p>Live status across the restaurant</p></div><button class="text-action" data-go="orders">Open orders →</button></div><div class="order-pipeline">'+pipeline+'</div></section>'+
-  '<section class="partner-panel"><div class="panel-heading"><div><h2>Quick operations</h2><p>Common restaurant controls</p></div></div><div class="quick-links"><button data-go="menu"><span class="quick-icon">'+iconSvg("menu")+'</span><b>Manage menu</b><small>Items, photos & prices</small></button><button data-go="inventory"><span class="quick-icon">'+iconSvg("inventory")+'</span><b>Inventory</b><small>Stock counts & alerts</small></button><button data-go="settings"><span class="quick-icon">'+iconSvg("settings")+'</span><b>Store setup</b><small>Hours, location & payments</small></button><button data-go="reports"><span class="quick-icon">'+iconSvg("chart")+'</span><b>Business reports</b><small>Sales & popular dishes</small></button></div></section></div>'+
+  '<section class="partner-panel"><div class="panel-heading"><div><h2>Quick operations</h2><p>Common restaurant controls</p></div></div><div class="quick-links"><button data-go="menu"><span>▦</span><b>Manage menu</b><small>Items, photos & prices</small></button><button data-go="inventory"><span>▣</span><b>Inventory</b><small>Stock counts & alerts</small></button><button data-go="settings"><span>⚙</span><b>Store setup</b><small>Hours, location & payments</small></button><button data-go="reports"><span>▥</span><b>Business reports</b><small>Sales & popular dishes</small></button></div></section></div>'+
   '<section class="partner-panel"><div class="panel-heading"><div><h2>Recent orders</h2><p>Latest customer activity</p></div><button class="text-action" data-go="orders">View all orders →</button></div>'+(orders.slice(0,6).map(orderCard).join("")||empty("No real orders have been received yet."))+'</section>'+
   '<div class="dashboard-columns"><section class="partner-panel"><div class="panel-heading"><div><h2>Inventory attention</h2><p>Items with five or fewer units</p></div><button class="text-action" data-go="inventory">Manage stock →</button></div>'+(menuItems.filter(i=>i.track_stock&&Number(i.stock_qty||0)<=5).slice(0,5).map(i=>'<div class="item-row"><b>'+esc(i.name)+'</b><span class="stock-state '+(Number(i.stock_qty||0)===0?'out':'low')+'">'+(Number(i.stock_qty||0)===0?'Out of stock':i.stock_qty+' left')+'</span></div>').join("")||empty("No low-stock alerts."))+'</section><section class="partner-panel"><div class="panel-heading"><div><h2>Account connection</h2><p>Development status</p></div><span class="connection-dot">'+(DEVELOPMENT_PREVIEW?'● Preview only':'● Connected')+'</span></div><p class="mute">'+(DEVELOPMENT_PREVIEW?'Live restaurant data and realtime updates are disabled in this development workspace.':'Signed in with a verified '+esc(role)+' account. Order and notification updates are subscribed in real time.')+'</p></section></div>';
 }
@@ -244,7 +227,7 @@ function bindActions(){
   document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{page=b.dataset.go;render();});
   if(DEVELOPMENT_PREVIEW){
     document.querySelectorAll("button,input,select,textarea").forEach(el=>{
-      if(el.matches("[data-tab],[data-go],#owner-menu,#owner-notifications,#menu-search,#menu-filter,#order-search,#inventory-search")) return;
+      if(el.matches("[data-tab],[data-go],#menu-search,#menu-filter,#order-search,#inventory-search")) return;
       el.disabled=true;
       if(el.tagName==="BUTTON" && !el.title) el.title="Disabled in development preview";
     });
@@ -432,13 +415,6 @@ function bindActions(){
     if(variant.error){toast("Item saved, but price variant failed: "+variant.error.message,true);return;}
     await refresh();toast("Menu item added to the live website.");
   };
-  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=async()=>{
-    b.disabled=true;
-    const {error}=await supabase.from("notifications").update({is_read:true}).eq("id",b.dataset.read);
-    if(error){toast(error.message,true);b.disabled=false;return;}
-    await refresh();toast("Notification marked as read.");
-  });
-
 }
 async function startApp(){
   await refresh();
