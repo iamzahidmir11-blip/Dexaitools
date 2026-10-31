@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hurmat Owner | Restaurant Operations</title>
-<meta name="theme-color" content="#0e1b14"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hurmat Owner"><link rel="apple-touch-icon" href="../icon.svg"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="theme-color" content="#0e1b14"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Hurmat Owner"><link rel="apple-touch-icon" href="../icon.svg"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1b14;--bg2:#163325;--card:#17291f;--line:#2a4436;--gold:#d9b86c;--cream:#f4efe0;--mute:#9db1a5;--ok:#6fcf97;--warn:#f2c94c;--bad:#eb7a6b;--blue:#7fb5e8;box-sizing:border-box}
@@ -313,8 +313,8 @@ input,select{background:#fff;color:#242832;border-color:#dfe3e8}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<div class="wrap" id="app"><div style="max-width:440px;margin:12vh auto;padding:24px;background:#fff;border:1px solid #e7e9ed;border-radius:16px;color:#20242b;font:500 15px system-ui;text-align:center"><strong style="display:block;font-size:22px;margin-bottom:8px">Hurmat Owner</strong><span id="boot-status">Loading secure owner app…</span></div></div>
 <nav id="nav"></nav>
-<script type="module" src="../admin.js"></script>
+<script type="module" src="../admin.js" onerror="document.getElementById('boot-status').textContent='App script could not load. Check internet connection and refresh this page.'"></script>
 </body>
 </html>
