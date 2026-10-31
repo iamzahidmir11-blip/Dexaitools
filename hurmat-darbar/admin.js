@@ -169,7 +169,7 @@ function bindActions(){
     const name=prompt("Product name:",item.name);if(name===null)return;
     const description=prompt("Product description:",item.description||"");if(description===null)return;
     const imageUrl=prompt("Food photo URL (https://) — leave blank for no photo:",item.image_url||"");if(imageUrl===null)return;
-    if(imageUrl.trim()&&!/^https:\\/\\//i.test(imageUrl.trim())){toast("Photo URL must start with https://",true);return;}
+    if(imageUrl.trim()&&!imageUrl.trim().startsWith("https://")){toast("Photo URL must start with https://",true);return;}
     const veg=prompt("Food type: enter VEG or NON-VEG",item.is_veg?"VEG":"NON-VEG");if(veg===null)return;
     if(!name.trim()||name.trim().length<2||name.length>120||description.length>500||!["veg","non-veg"].includes(veg.trim().toLowerCase())){toast("Check product name, description and food type.",true);return;}
     try{await api("",{action:"update_menu_item",item_id:item.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg"});await refresh();toast("Product details and photo updated on the website.");}catch(e){toast(e.message,true);}
