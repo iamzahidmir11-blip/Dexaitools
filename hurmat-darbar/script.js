@@ -29,7 +29,7 @@ function render(){
     const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));
     price.append(el("small","","Selected price"));
     const controls=el("div","menu-qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value","0"),plus=el("button","qty-plus","+");
-    minus.type=plus.type="button";
+    minus.type=plus.type="button";plus.disabled=x.available===false;plus.title=x.available===false?"Currently unavailable":"Add one";
     const syncQty=()=>{const v=x.menu_variants[Number(select.value)];const amount=cartQty(x.id,v.id);qty.textContent=amount;minus.disabled=amount===0;price.firstChild.textContent=money(v.price)};
     select.onchange=syncQty;
     minus.onclick=()=>{const v=x.menu_variants[Number(select.value)];qtyChange(x.id+v.id,-1)};
