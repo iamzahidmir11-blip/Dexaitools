@@ -927,3 +927,96 @@ footer>span a{color:#fff!important}
 }
 @media(max-width:360px){.menu-grid{grid-template-columns:1fr!important}.food-photo{aspect-ratio:1.5!important}.store-strip{gap:12px;padding:13px}.hero-art-center strong{font-size:23px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.menu-card,.food-image,.btn{transition:none!important}}
+
+
+/* Hurmat Darbar storefront polish */
+:root{--hd-ink:#101010;--hd-muted:#6b6b6b;--hd-line:#e8e8e8;--hd-paper:#fff}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{font-family:Manrope,Arial,sans-serif!important;background:#fff!important;color:var(--hd-ink)!important;-webkit-font-smoothing:antialiased}
+.top{height:78px!important;padding-inline:clamp(18px,5vw,76px)!important;background:rgba(255,255,255,.96)!important;border-bottom:1px solid #ededed!important;backdrop-filter:blur(16px);box-shadow:0 5px 22px #00000005}
+.logo{font-family:Manrope,Arial,sans-serif!important;font-weight:900!important;letter-spacing:1.1px!important}
+.logo .seal{border:1px solid #111!important;color:#111!important;font-family:Georgia,serif!important}
+.top nav a{font-size:11px!important;font-weight:800!important;color:#555!important;transition:color .2s}
+.top nav a:hover{color:#000!important}
+.store-hero{min-height:500px!important;margin-top:30px!important}
+.hero-copy h1{font-family:Manrope,Arial,sans-serif!important;max-width:680px;font-size:clamp(54px,6.6vw,90px)!important;line-height:.99!important;letter-spacing:-5.5px!important}
+.hero-copy h1 span{color:#666!important}
+.hero-description{max-width:430px!important;font-size:14px!important;line-height:1.85!important}
+.hero-actions .btn{min-height:50px!important;padding-inline:21px!important}
+.hero-meta{max-width:520px!important;gap:clamp(16px,3vw,30px)!important}
+.hero-art{min-height:420px!important;border-radius:4px!important;background:radial-gradient(circle at 75% 25%,#353535 0,#171717 36%,#080808 78%)!important;box-shadow:0 24px 65px #00000016}
+.hero-art:before{width:390px;height:390px;right:-80px;top:20px;border-color:#ffffff30!important;box-shadow:0 0 0 35px #ffffff0a,0 0 0 75px #ffffff07!important}
+.hero-art-center{gap:clamp(18px,3vw,36px)!important}
+.hero-monogram{border-color:#ffffff85!important;font-family:Georgia,serif!important}
+.hero-art-center strong{font-family:Manrope,Arial,sans-serif!important;letter-spacing:-2px!important}
+.store-strip{margin-top:35px!important;border-radius:4px!important;border-color:#e7e7e7!important;box-shadow:0 12px 35px #00000004}
+.status-mark,.strip-icon{border-radius:4px!important}
+.menu{padding-top:105px!important}
+.section-head h2{font-family:Manrope,Arial,sans-serif!important}
+.menu-side-note{border-left:2px solid #111!important}
+.menu-search{border-radius:4px!important;background:#fafafa!important}
+.categories .chip{border-radius:4px!important}
+.menu-grid{gap:18px!important}
+.menu-card{border-radius:4px!important;background:#fff!important;box-shadow:0 8px 28px #00000005!important;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease!important}
+.menu-card:hover{transform:translateY(-4px);border-color:#cfcfcf!important;box-shadow:0 18px 38px #0000000c!important}
+.food-photo{height:auto!important;aspect-ratio:1.42!important;background:#f2f2f2!important;overflow:hidden}
+.food-image{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;transition:transform .45s ease!important}
+.menu-card:hover .food-image{transform:scale(1.045)}
+.photo-unavailable{display:grid!important;place-items:center!important;background:linear-gradient(135deg,#f5f5f5,#e9e9e9)!important}
+.photo-label{max-width:85%;font-size:10px!important;font-weight:900!important;letter-spacing:1.2px!important;text-transform:uppercase!important;color:#777!important;text-align:center!important}
+.food-body{display:flex!important;flex-direction:column!important;gap:8px!important;padding:17px!important}
+.food-type{align-self:flex-start!important;font-size:8px!important;font-weight:900!important;letter-spacing:1px!important}
+.food-body h3{min-height:0!important;font-family:Manrope,Arial,sans-serif!important;font-size:15px!important;font-weight:900!important;line-height:1.3!important;letter-spacing:-.35px!important}
+.food-description{min-height:0!important;color:#777!important;font-size:10px!important;line-height:1.65!important}
+.stock-note{font-size:9px!important;color:#666!important}
+.variant-select{border-radius:4px!important;background:#fafafa!important}
+.food-bottom{gap:8px!important;flex-wrap:wrap!important}
+.price-stack{font-size:15px!important}
+.add-btn,.checkout-btn{border-radius:4px!important;transition:background .2s,transform .2s!important}
+.add-btn:hover,.checkout-btn:hover{transform:translateY(-1px)}
+.order-note{border-radius:4px!important;background:#f5f5f5!important}
+.service-card{border-radius:4px!important;box-shadow:none!important}
+.service-card input,.service-card textarea,.checkout-fields input,.checkout-fields textarea{border-radius:4px!important}
+.visit{background:#101010!important}
+footer{background:#080808!important}
+button,a,input,textarea,select{ -webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #555!important;outline-offset:3px!important}
+@media(min-width:1200px){.menu-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.food-photo{aspect-ratio:1.5!important}}
+@media(max-width:900px){.store-hero{min-height:0!important}.hero-art{min-height:360px!important}.store-strip{margin-inline:24px!important}}
+@media(max-width:650px){
+ html{scroll-padding-top:68px}
+ .top{height:66px!important;padding-inline:15px!important}
+ .store-hero{margin-top:24px!important;padding-inline:17px!important;gap:24px!important}
+ .hero-copy h1{font-size:clamp(48px,12.5vw,66px)!important;letter-spacing:-3.7px!important;line-height:1.02!important}
+ .hero-description{font-size:12px!important;line-height:1.75!important}
+ .hero-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+ .hero-actions .btn{min-height:45px!important;padding-inline:9px!important;gap:7px!important;font-size:9px!important}
+ .hero-meta{margin-top:24px!important;gap:12px!important}
+ .hero-meta span{font-size:8px!important}
+ .hero-art{min-height:245px!important;padding:15px!important}
+ .hero-art-center{gap:16px!important}
+ .hero-monogram{width:94px!important;height:94px!important;font-size:43px!important}
+ .hero-art-center strong{font-size:clamp(22px,6vw,29px)!important}
+ .store-strip{margin:22px 17px 0!important;padding:15px!important;gap:14px!important;border-radius:4px!important}
+ .menu{padding:70px 17px 62px!important}
+ .section-head h2{font-size:clamp(34px,9vw,43px)!important;letter-spacing:-2.2px!important}
+ .menu-intro{font-size:11px!important;line-height:1.7!important}
+ .menu-discovery{display:block!important}
+ .menu-tools{margin:12px 0!important}
+ .menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important}
+ .food-photo{aspect-ratio:1.08!important}
+ .food-body{padding:11px!important;gap:7px!important}
+ .food-body h3{font-size:12px!important;line-height:1.35!important}
+ .food-description{font-size:9px!important;line-height:1.5!important}
+ .variant-select{min-height:35px!important;font-size:9px!important}
+ .food-bottom{align-items:center!important;gap:6px!important}
+ .price-stack{font-size:12px!important}
+ .add-btn{min-height:34px!important;padding-inline:9px!important;font-size:9px!important}
+ .menu-qty-control button{width:25px!important;height:25px!important}
+ .order-note{margin-inline:17px!important;padding:24px 19px!important}
+ .customer-tools{padding-inline:17px!important}
+ .service-card{padding:19px!important}
+ .visit{padding:54px 19px!important}
+}
+@media(max-width:370px){.menu-grid{grid-template-columns:1fr!important}.food-photo{aspect-ratio:1.55!important}.food-body h3{font-size:14px!important}.food-description{font-size:10px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
