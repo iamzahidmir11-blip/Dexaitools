@@ -1,34 +1,89 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><meta name="description" content="Hurmat Darbar, Uri — food, warm hospitality and memorable dining."><title>Hurmat Darbar | Uri</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff">
+<meta name="description" content="Order food online from Hurmat Darbar, Uri. Browse the menu, add favourites to your bag and place your order.">
+<title>Order Online | Hurmat Darbar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
 <body>
-<header class="top"><a class="logo" href="#home"><span class="seal">HD</span><span>HURMAT <b>DARBAR</b><small>URI · JAMMU & KASHMIR</small></span></a><nav><a href="#menu">Menu</a><a href="#story">Our story</a><a href="#services">Reservations</a><a href="#visit">Visit</a></nav><button class="cart-trigger" id="open-cart">Bag <b id="cart-count">0</b></button><a class="top-cta" href="tel:+919797151590">Call to order ↗</a><button class="hamb" aria-label="Toggle navigation">☰</button></header>
+<header class="top">
+  <a class="logo" href="#home" aria-label="Hurmat Darbar home"><span class="seal">HD</span><span>HURMAT <b>DARBAR</b><small>URI · JAMMU & KASHMIR</small></span></a>
+  <nav aria-label="Main navigation"><a href="#menu">Order food</a><a href="#services">Reservations</a><a href="#visit">Find us</a></nav>
+  <button class="cart-trigger" id="open-cart" type="button">Your bag <b id="cart-count">0</b></button>
+  <a class="top-cta" href="tel:+919797151590">Call restaurant ↗</a>
+  <button class="hamb" type="button" aria-label="Toggle navigation">☰</button>
+</header>
 <main id="home">
-<section class="zomato-hero">
-  <div class="restaurant-cover">
-    <div class="cover-brand"><span class="seal">HD</span><span>HURMAT DARBAR</span></div>
-    <div class="cover-copy"><p class="eyebrow">URI · JAMMU & KASHMIR</p><h1>Good food.<br><i>Good mood.</i></h1><p>Fresh favourites and warm hospitality, served from our kitchen in Uri.</p><a class="btn gold" href="#menu">Explore menu <span>↓</span></a></div>
-    <div class="cover-art"><div class="cover-art-inner"><span>HURMAT</span><b>DARBAR</b><small>FOOD · FAMILY · HOSPITALITY</small></div></div>
+  <section class="store-hero">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="live-dot"></span> HURMAT DARBAR · URI</p>
+      <h1>Your cravings.<br><span>Our kitchen.</span></h1>
+      <p class="hero-description">Explore the menu, choose your favourites and order directly from Hurmat Darbar.</p>
+      <div class="hero-actions"><a class="btn primary" href="#menu">Start your order <span>↓</span></a><a class="btn secondary" href="#visit">Restaurant details ↗</a></div>
+      <div class="hero-meta"><span><b>01</b> Browse the menu</span><span><b>02</b> Add to your bag</span><span><b>03</b> Place your order</span></div>
+    </div>
+    <div class="hero-art" aria-label="Hurmat Darbar online ordering">
+      <div class="hero-art-top"><span>THE HURMAT DARBAR MENU</span><span>URI · J&K</span></div>
+      <div class="hero-art-center"><span class="hero-monogram">HD</span><strong>GOOD FOOD<br>GOOD MOOD.</strong></div>
+      <div class="hero-art-bottom"><span>MADE TO BE SHARED</span><span>ORDER ONLINE ↗</span></div>
+    </div>
+  </section>
+  <section class="store-strip" aria-label="Restaurant information">
+    <div class="store-status"><span class="status-mark">●</span><div><b id="restaurant-open-state">Checking status…</b><small>Live restaurant status</small></div></div>
+    <div><span class="strip-icon">⌖</span><div><b>Find us</b><small>Opposite Tehsil, Uri</small></div></div>
+    <div><span class="strip-icon">☎</span><div><b>Call us</b><small>+91 97971 51590</small></div></div>
+    <div><span class="strip-icon">↗</span><div><b>Order direct</b><small>From our restaurant menu</small></div></div>
+  </section>
+  <section class="menu" id="menu">
+    <div class="section-head">
+      <div><p class="eyebrow">THE HURMAT DARBAR MENU</p><h2>What are you<br><span>in the mood for?</span></h2><p class="menu-intro">Choose a category or search for a dish. Prices and availability come from the live restaurant menu.</p></div>
+      <div class="menu-side-note"><span>01 / MENU</span><b>Pick your<br>favourites.</b></div>
+    </div>
+    <div class="menu-discovery"><div class="menu-search-label"><b>Explore every flavour</b><small>Search dishes, categories and more</small></div></div>
+    <div class="categories" id="menu-categories" aria-label="Menu categories"><button class="chip active" data-cat="all">All items</button></div>
+    <div id="menu-status" class="menu-status" role="status">Loading the live restaurant menu…</div>
+    <div id="menu-grid" class="menu-grid" aria-live="polite"></div>
+    <div class="menu-end"><span>HURMAT DARBAR · URI</span><span>More dishes. More reasons to gather.</span></div>
+  </section>
+  <section class="order-note">
+    <div><p class="eyebrow">ORDERING MADE SIMPLE</p><h2>Good food is<br><span>just a few taps away.</span></h2></div>
+    <div class="order-steps"><div><b>01</b><span><strong>Choose your food</strong><small>Browse categories, portions and prices.</small></span></div><div><b>02</b><span><strong>Review your bag</strong><small>Adjust quantities before checkout.</small></span></div><div><b>03</b><span><strong>Send your order</strong><small>We send it to the restaurant team.</small></span></div></div>
+  </section>
+  <section class="customer-tools" id="services">
+    <div class="section-head"><div><p class="eyebrow">A LITTLE MORE SERVICE</p><h2>Here when<br><span>you need us.</span></h2></div><span class="menu-side-note"><span>02 / SERVICES</span><b>Stay connected<br>with our team.</b></span></div>
+    <div class="service-grid">
+      <form class="service-card" id="reservation-form"><div class="service-kicker">01 · TABLE BOOKINGS</div><h3>Book a table</h3><p>Send a reservation request. Our restaurant team will confirm it with you.</p><label for="res-name">Your name</label><input id="res-name" required minlength="2" maxlength="80" placeholder="Full name"><label for="res-phone">Mobile number</label><input id="res-phone" required type="tel" inputmode="tel" placeholder="10-digit mobile number"><div class="service-two"><div><label for="res-party">Guests</label><input id="res-party" type="number" min="1" max="30" value="2" required></div><div><label for="res-time">Date and time</label><input id="res-time" type="datetime-local" required></div></div><label for="res-notes">Notes (optional)</label><textarea id="res-notes" maxlength="300" placeholder="Any special request"></textarea><button class="btn primary" type="submit">Request a table ↗</button><small id="res-message">Your request is sent to the restaurant for confirmation.</small></form>
+      <form class="service-card" id="tracking-form"><div class="service-kicker">02 · ORDER UPDATES</div><h3>Track your order</h3><p>Already placed an order? Use the tracking reference from your confirmation.</p><label for="tracking-token">Tracking reference</label><input id="tracking-token" required minlength="16" maxlength="80" placeholder="Paste your tracking reference"><button class="btn primary" type="submit">Find my order ↗</button><div id="tracking-result" class="tracking-result" aria-live="polite"></div><small>Keep your tracking reference private. Anyone with it can view the order status.</small></form>
+    </div>
+  </section>
+  <section class="visit" id="visit"><div><p class="eyebrow">COME BY AND SAY HELLO</p><h2>Meet us<br><span>in Uri.</span></h2><p>For questions about your order, delivery coverage or reservations, contact the restaurant team.</p><a class="btn light" href="https://www.google.com/maps/search/?api=1&query=Hurmat+Darbar+Uri+Jammu+Kashmir" target="_blank" rel="noopener">Get directions ↗</a></div><div class="details"><div><small>ADDRESS</small><p>Opposite Tehsil,<br>Uri, Baramulla, J&K – 193123</p></div><div><small>PHONE</small><p><a href="tel:+919797151590">+91 97971 51590</a></p></div><div><small>EMAIL</small><p><a href="mailto:darbarhurmat@gmail.com">darbarhurmat@gmail.com</a></p></div><div><small>HOURS</small><p>Every day<br>9:00 AM – 11:00 PM</p></div></div></section>
+</main>
+<aside class="cart-panel" id="cart-panel" aria-label="Your shopping bag" aria-modal="true">
+  <div class="cart-head"><div><p class="eyebrow">YOUR ORDER</p><h2>Your <span>bag.</span></h2></div><button id="close-cart" type="button" aria-label="Close bag">×</button></div>
+  <div id="cart-lines" class="cart-lines"></div>
+  <div class="cart-summary">
+    <div class="summary-title">Order summary</div>
+    <p>Subtotal <b id="cart-subtotal">₹0</b></p><p>Delivery fee <b id="delivery-fee-label">₹30</b></p><p class="cart-total">Total <b id="cart-total">₹0</b></p>
+    <small class="fee-note">Final delivery coverage and fee are checked by the restaurant system.</small>
+    <div class="checkout-fields"><div class="checkout-title">Delivery details</div>
+      <label for="customer-name">Your name</label><input id="customer-name" autocomplete="name" placeholder="Enter your full name">
+      <label for="customer-phone">Mobile number</label><input id="customer-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number">
+      <label for="customer-address">Delivery address / landmark</label><textarea id="customer-address" autocomplete="street-address" placeholder="House, street, landmark, Uri"></textarea>
+      <label for="customer-notes">Order notes (optional)</label><textarea id="customer-notes" placeholder="Any special request"></textarea>
+    </div>
+    <button id="checkout" class="checkout-btn" type="button">Place order</button>
+    <small id="order-footnote">Your order is sent securely to the restaurant. Available payment methods are shown here.</small>
   </div>
-  <div class="restaurant-summary">
-    <div class="restaurant-title"><div><span class="eyebrow">WELCOME TO</span><h2>Hurmat Darbar</h2><p>Restaurant · Uri, Jammu & Kashmir</p></div><span class="restaurant-live" id="restaurant-open-state">Checking status…</span></div>
-    <div class="restaurant-facts"><span><b>●</b> Freshly prepared</span><span><b>⌖</b> Near Opposite Tehsil, Uri</span><a href="tel:+919797151590"><b>☎</b> +91 97971 51590</a></div>
-    <div class="restaurant-actions"><a class="btn gold" href="#menu">Order from menu ↗</a><a class="btn outline" href="#services">Book a table</a><a class="btn outline" href="https://www.google.com/maps/search/?api=1&query=Hurmat+Darbar+Uri+Jammu+Kashmir" target="_blank" rel="noopener">Directions ↗</a></div>
-  </div>
-</section>
-<section class="menu" id="menu">
-  <div class="section-head"><div><p class="eyebrow">ORDER YOUR FAVOURITES</p><h2>Explore the <i>menu.</i></h2><p class="menu-intro">Browse dishes, choose your portion and add them to your bag.</p></div><span class="menu-tag">LIVE RESTAURANT MENU</span></div>
-  <div class="menu-discovery"><div class="menu-search-label"><b>What are you craving?</b><small>Search across our menu</small></div></div>
-  <div class="categories" id="menu-categories"><button class="chip active" data-cat="all">All categories</button></div>
-  <div id="menu-status" class="menu-status" role="status">Loading the restaurant menu…</div>
-  <div id="menu-grid" class="menu-grid" aria-live="polite"></div>
-  <p class="menu-foot">Prices and availability are provided by the restaurant and may change. For confirmation, call <a href="tel:+919797151590">+91 97971 51590</a>.</p>
-</section>
-<section class="customer-tools" id="services">
-  <div class="section-head"><div><p class="eyebrow">MORE FROM HURMAT DARBAR</p><h2>We're here to <i>help.</i></h2></div><span class="menu-tag">CUSTOMER SERVICES</span></div>
-  <div class="service-grid">
-    <form class="service-card" id="reservation-form"><h3>Book a table</h3><p>Send a reservation request. The restaurant team will confirm it.</p><label>Your name</label><input id="res-name" required minlength="2" maxlength="80" placeholder="Full name"><label>Mobile number</label><input id="res-phone" required type="tel" inputmode="tel" placeholder="10-digit mobile number"><div class="service-two"><div><label>Guests</label><input id="res-party" type="number" min="1" max="30" value="2" required></div><div><label>Date and time</label><input id="res-time" type="datetime-local" required></div></div><label>Notes (optional)</label><textarea id="res-notes" maxlength="300" placeholder="Any special request"></textarea><button class="btn gold" type="submit">Request reservation ↗</button><small id="res-message">Your request is sent to the restaurant for confirmation.</small></form>
-    <form class="service-card" id="tracking-form"><h3>Track your order</h3><p>Check the latest status using the tracking reference received after ordering.</p><label>Tracking reference</label><input id="tracking-token" required minlength="16" maxlength="80" placeholder="Paste your tracking reference"><button class="btn gold" type="submit">Track order ↗</button><div id="tracking-result" class="tracking-result" aria-live="polite"></div><small>Keep your tracking reference private. Anyone with it can view the order status.</small></form>
-  </div>
-</section>
-<section class="visit" id="visit"><div><p class="eyebrow">VISIT HURMAT DARBAR</p><h2>Your table is<br><i>waiting.</i></h2><p>Find us in Uri or call the restaurant for enquiries and reservations.</p><a class="btn dark" href="https://www.google.com/maps/search/?api=1&query=Hurmat+Darbar+Uri+Jammu+Kashmir" target="_blank" rel="noopener">Get directions ↗</a></div><div class="details"><div><small>FIND US</small><p>Near Opposite Tehsil,<br>Uri, Jammu & Kashmir – 193123</p></div><div><small>CALL</small><p><a href="tel:+919797151590">+91 97971 51590</a></p></div><div><small>EMAIL</small><p><a href="mailto:darbarhurmat@gmail.com">darbarhurmat@gmail.com</a></p></div><div><small>OPENING HOURS</small><p>Every day<br>9:00 AM – 11:00 PM</p></div></div></section>
-</main><aside class="cart-panel" id="cart-panel"><div class="cart-head"><h2>Your <i>bag.</i></h2><button id="close-cart">×</button></div><div id="cart-lines" class="cart-lines"></div><div class="cart-summary"><p>Subtotal <b id="cart-subtotal">₹0</b></p><p>Delivery estimate <b id="delivery-fee-label">₹30</b></p><p class="cart-total">Total <b id="cart-total">₹0</b></p><small>*Restaurant confirms delivery coverage and final fee.</small><label>Your name</label><input id="customer-name" autocomplete="name" placeholder="Your name"><label>Mobile number</label><input id="customer-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number"><label>Delivery address / landmark</label><textarea id="customer-address" autocomplete="street-address" placeholder="House, street, landmark, Uri"></textarea><label>Order notes (optional)</label><textarea id="customer-notes" placeholder="Any special request"></textarea><button id="checkout" class="checkout-btn">Place order</button><small>Your order is submitted securely to the restaurant system. Payment availability depends on the restaurant settings.</small></div></aside><div id="cart-scrim" class="cart-scrim"></div><footer><a class="logo" href="#home"><span class="seal">HD</span><span>HURMAT <b>DARBAR</b><small>URI · JAMMU & KASHMIR</small></span></a><p>Good food. Warm hospitality. Memorable moments.</p><span>© <span id="year"></span> Hurmat Darbar · <a href="admin.html" aria-label="Staff admin login">Staff login</a></span></footer><script type="module" src="script.js"></script></body></html>
+</aside>
+<div id="cart-scrim" class="cart-scrim"></div>
+<button id="mobile-cart-bar" class="mobile-cart-bar" type="button" aria-label="Open your bag"><span><b id="mobile-cart-count">0 items</b><small>View your bag</small></span><strong id="mobile-cart-total">₹0</strong><span class="mobile-cart-arrow">→</span></button>
+<div id="order-success" class="order-success" role="dialog" aria-modal="true" aria-labelledby="success-title" hidden>
+  <div class="success-card"><div class="success-mark">✓</div><p class="eyebrow">ORDER RECEIVED</p><h2 id="success-title">You're all set.</h2><p id="success-copy">Your order has been sent to Hurmat Darbar.</p><div class="success-reference"><small>YOUR TRACKING REFERENCE</small><code id="success-token"></code><button id="copy-tracking" type="button">Copy reference</button></div><button id="success-close" class="checkout-btn" type="button">Continue browsing</button></div>
+</div>
+<footer><a class="logo" href="#home"><span class="seal">HD</span><span>HURMAT <b>DARBAR</b><small>URI · JAMMU & KASHMIR</small></span></a><p>Good food. Warm hospitality. Memorable moments.</p><span>© <span id="year"></span> Hurmat Darbar · <a href="admin.html" aria-label="Staff admin login">Staff login</a></span></footer>
+<script type="module" src="script.js"></script>
+</body></html>
