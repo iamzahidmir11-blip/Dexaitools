@@ -311,7 +311,7 @@ footer>p,footer>span{color:#b8c1b7}
 
 
 /* Final compact product-card ordering controls */
-.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.menu-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 .menu-card{min-width:0}
 .food-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap}
 .food-bottom .price-stack{flex:1 1 auto}
@@ -425,3 +425,5 @@ footer a{color:var(--gold)}
 .service-card{transition:transform .22s ease,border-color .22s ease}
 .service-card:focus-within{border-color:#8e7846}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+@media(max-width:600px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
