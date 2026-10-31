@@ -141,7 +141,7 @@ async function load(){
   status.textContent="Loading live menu and restaurant settings…";
   const [a,b,c]=await Promise.all([
     db.from("menu_categories").select("id,name,sort_order").eq("active",true).order("sort_order"),
-    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,sort_order,menu_categories(name),undefined").eq("active",true).order("sort_order"),
+    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,sort_order,menu_categories(name),menu_variants(id,label,price,sort_order,active)").eq("active",true).order("sort_order"),
     db.from("restaurant_settings").select("name,is_open,location_verified,lat,lng,delivery_fee,min_order,cod_enabled,upi_enabled,upi_id").eq("id",1).single()
   ]);
   if(a.error||b.error){status.textContent="Menu unavailable. Please call +91 97971 51590.";return;}
