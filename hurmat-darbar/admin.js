@@ -98,13 +98,16 @@ function homeView(){
 }
 function ordersView(){return orders.map(orderCard).join("")||empty("No customer orders in the database yet.");}
 function menuView(){
-  const names=[...new Set(menuCategories.map(c=>c.name).concat(menuItems.map(i=>i.menu_categories?.name||"Uncategorised")))];
-  return '<div class="notice">Menu changes are live: product name, description, food photo, veg label, price and availability update the customer website from the same database.</div><div class="actions"><button class="btn sm" id="add-category">Add category</button><button class="btn sm" id="add-item">Add product</button></div>'+
-    names.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
-      const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"/>':'<div style="width:58px;height:58px;border-radius:10px;background:#203a2b;display:grid;place-items:center;color:var(--gold)">HD</div>';
-      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+' '+(v.active?'':'· Hidden')+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'" data-label="'+esc(v.label)+'">Edit variant</button><button class="btn ghost sm" data-variant-toggle="'+esc(v.id)+'" data-active="'+String(v.active)+'">'+(v.active?"Hide":"Enable")+'</button></div>').join("");
-      return '<div class="item-row" style="align-items:flex-start">'+photo+'<div class="item-meta" style="flex:1"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"No description")+'</span><span class="mute">'+(i.is_veg?'VEG':'NON-VEG')+' · '+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+(i.needs_verification?' · Needs review':'')+'</span>'+variants+'</div><div class="actions"><button class="btn ghost sm" data-upload-image="'+esc(i.id)+'">Photo</button><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button><button class="btn ghost sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?"Hide":"Publish")+'</button></div></div>';
-    }).join("")||empty("No products in this category."))).join("");
+  const search='<div class="store-toolbar"><input id="menu-search" type="search" placeholder="Search products, e.g. Chicken Biryani"><select id="menu-filter"><option value="all">All products</option><option value="published">Published</option><option value="hidden">Hidden</option><option value="stock">Stock tracking on</option><option value="low">Low stock</option><option value="out">Out of stock</option></select><button class="btn" id="add-category">+ Category</button><button class="btn" id="add-item">+ Add product</button></div>';
+  const cards=menuItems.map(i=>{
+    const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="'+esc(i.name)+'" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div class="store-photo-fallback" style="display:none">HD</div>':'<div class="store-photo-fallback">HD</div>';
+    const variants=(i.menu_variants||[]).map(v=>'<div class="store-variant"><span>'+esc(v.label)+' <b>'+money(v.price)+'</b> '+(v.active?'':'<small>Hidden</small>')+'</span><div class="actions"><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'">Price</button><button class="btn ghost sm" data-variant-toggle="'+esc(v.id)+'" data-active="'+String(v.active)+'">'+(v.active?'Hide':'Enable')+'</button></div></div>').join("");
+    const stock=Number(i.stock_qty||0);
+    const stockBlock=i.track_stock?'<div class="inventory-panel"><div><small>INVENTORY ON HAND</small><b class="inventory-number">'+stock+'</b><small>units available</small></div><div class="inventory-stepper"><button class="qty-step" data-stock-minus="'+esc(i.id)+'" data-stock="'+stock+'" '+(stock<=0?'disabled':'')+'>−</button><button class="qty-step" data-stock-plus="'+esc(i.id)+'" data-stock="'+stock+'">+</button></div><span class="stock-state '+(stock===0?'out':stock<=5?'low':'in')+'">'+(stock===0?'Out of stock':stock<=5?'Low stock':'In stock')+'</span></div>':'<div class="inventory-panel inventory-off"><span>Inventory not tracked</span><button class="btn ghost sm" data-stock-enable="'+esc(i.id)+'">Set stock quantity</button></div>';
+    return '<article class="store-product" data-product-card data-name="'+esc((i.name+" "+(i.description||"")+" "+(i.menu_categories?.name||"")).toLowerCase())+'" data-published="'+String(i.active)+'" data-tracked="'+String(i.track_stock)+'" data-stock-value="'+stock+'"><div class="store-product-photo">'+photo+'<span class="store-photo-type">'+(i.is_veg?'VEG':'NON-VEG')+'</span><span class="store-publish-tag '+(i.active?'published':'hidden')+'">'+(i.active?'PUBLISHED':'HIDDEN')+'</span></div><div class="store-product-info"><div class="store-product-heading"><div><small>'+esc(i.menu_categories?.name||"Uncategorised")+'</small><h3>'+esc(i.name)+'</h3></div><b class="store-product-price">'+money(Math.min(...(i.menu_variants||[]).filter(v=>v.active&&v.price!==null).map(v=>Number(v.price)).concat([0]).filter(n=>n>0))||0)+'</b></div><p>'+esc(i.description||"No product description added.")+'</p>'+stockBlock+'<div class="store-variants"><div class="store-section-label">PRICE & VARIANTS</div>'+(variants||'<small>No active variants configured.</small>')+'</div><div class="store-product-actions"><button class="btn ghost sm" data-upload-image="'+esc(i.id)+'">Upload photo</button><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit details</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?'Pause':'Enable')+'</button><button class="btn sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?'Hide product':'Publish product')+'</button></div></div></article>';
+  }).join("");
+  const catCards=menuCategories.map(c=>'<span class="store-category-chip">'+esc(c.name)+'</span>').join("");
+  return '<div class="store-intro"><div><span class="store-kicker">HURMAT DARBAR · COMMERCE</span><h2>Product Store</h2><p>Manage the complete customer catalogue from one place. Photos, pricing, variants, publishing and stock all sync to the live website.</p></div><div class="store-metrics"><div><small>PRODUCTS</small><b>'+menuItems.length+'</b></div><div><small>PUBLISHED</small><b>'+menuItems.filter(i=>i.active).length+'</b></div><div><small>TRACKED STOCK</small><b>'+menuItems.filter(i=>i.track_stock).length+'</b></div><div><small>OUT OF STOCK</small><b>'+menuItems.filter(i=>i.track_stock&&Number(i.stock_qty||0)===0).length+'</b></div></div></div>'+search+'<div class="store-category-list">'+catCards+'</div><div class="store-product-grid" id="store-product-grid">'+(cards||empty("No products yet. Add your first product."))+'</div>';
 }
 function reservationsView(){
   return reservations.map(r=>'<article class="card" style="margin:10px 0"><div class="row"><b>'+esc(r.name)+'</b><span class="tag s-new">'+esc(r.status)+'</span></div><p class="mute">'+esc(r.phone)+' · '+esc(r.party_size)+' guests</p><p class="mute">'+new Date(r.reserve_at).toLocaleString()+'</p><p class="mute">'+esc(r.notes||"")+'</p><div class="actions">'+["confirmed","rejected","cancelled"].filter(s=>r.status==="pending"||s==="cancelled").map(s=>'<button class="btn sm '+(s==="cancelled"?"ghost":"")+'" data-reservation="'+esc(r.id)+'" data-res-status="'+s+'">'+s+'</button>').join("")+'</div></article>').join("")||empty("No reservations have been received.");
@@ -165,6 +168,31 @@ function bindActions(){
     const rider=document.getElementById("rider-"+b.dataset.assign).value;if(!rider){toast("Choose a rider first.",true);return;}
     try{await api("",{action:"assign_rider",order_id:b.dataset.assign,rider_id:rider});await refresh();toast("Rider assigned.");}catch(e){toast(e.message,true);}
   });
+  document.querySelectorAll("[data-stock-enable]").forEach(b=>b.onclick=async()=>{
+    const item=menuItems.find(x=>x.id===b.dataset.stockEnable);if(!item)return;
+    const raw=prompt("Enter the current physical stock quantity for "+item.name+":","0");if(raw===null)return;
+    const qty=Number(raw);if(!Number.isInteger(qty)||qty<0||qty>1000000){toast("Enter a whole number from 0 to 1,000,000.",true);return;}
+    b.disabled=true;
+    try{await api("",{action:"update_menu_item",item_id:item.id,track_stock:true,stock_qty:qty});await refresh();toast("Inventory tracking enabled.");}catch(e){toast(e.message,true);b.disabled=false;}
+  });
+  document.querySelectorAll("[data-stock-plus],[data-stock-minus]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.stockPlus||b.dataset.stockMinus,item=menuItems.find(x=>x.id===id);if(!item)return;
+    const current=Number(item.stock_qty||0),delta=b.hasAttribute("data-stock-plus")?1:-1,next=current+delta;
+    if(next<0||next>1000000)return;
+    b.disabled=true;
+    try{await api("",{action:"update_menu_item",item_id:id,track_stock:true,stock_qty:next});await refresh();toast("Stock updated: "+next+" units remaining.");}catch(e){toast(e.message,true);b.disabled=false;}
+  });
+  const menuSearch=document.getElementById("menu-search"),menuFilter=document.getElementById("menu-filter");
+  const applyStoreFilter=()=>{
+    const q=(menuSearch?.value||"").trim().toLowerCase(),filter=menuFilter?.value||"all";
+    document.querySelectorAll("[data-product-card]").forEach(card=>{
+      const tracked=card.dataset.tracked==="true",qty=Number(card.dataset.stockValue||0),published=card.dataset.published==="true";
+      const matchName=card.dataset.name.includes(q);
+      const matchFilter=filter==="all"||(filter==="published"&&published)||(filter==="hidden"&&!published)||(filter==="stock"&&tracked)||(filter==="low"&&tracked&&qty>0&&qty<=5)||(filter==="out"&&tracked&&qty===0);
+      card.hidden=!(matchName&&matchFilter);
+    });
+  };
+  if(menuSearch)menuSearch.oninput=applyStoreFilter;if(menuFilter)menuFilter.onchange=applyStoreFilter;
   document.querySelectorAll("[data-upload-image]").forEach(b=>b.onclick=()=>{
     const item=menuItems.find(x=>x.id===b.dataset.uploadImage);if(!item)return;
     const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";
