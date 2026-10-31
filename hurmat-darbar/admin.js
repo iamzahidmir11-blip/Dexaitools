@@ -15,7 +15,7 @@ const statusNames = {
   delivered:"Delivered", cancelled:"Cancelled", rejected:"Rejected", delivery_failed:"Delivery failed"
 };
 const tabs = [["home","⌂","Home"],["orders","▤","Orders"],["menu","▦","Menu"],["reservations","▣","Bookings"],["riders","♧","Riders"],["alerts","♢","Alerts"],["settings","⚙","Settings"]];
-let user=null, role=null, page="home", orders=[], menuItems=[], reservations=[], riders=[], notifications=[], settings=null, channel=null, busy=false;
+let user=null, role=null, page="home", orders=[], menuItems=[], menuCategories=[], reservations=[], riders=[], notifications=[], settings=null, channel=null, busy=false;
 
 function toast(message, bad=false){
   let el=document.getElementById("admin-toast");
@@ -98,12 +98,13 @@ function homeView(){
 }
 function ordersView(){return orders.map(orderCard).join("")||empty("No customer orders in the database yet.");}
 function menuView(){
-  const cats=[...new Map(menuItems.map(i=>[i.menu_categories?.name||"Uncategorised",i.menu_categories?.name||"Uncategorised"])).values()];
-  return '<div class="actions"><button class="btn sm" id="add-category">Add category</button><button class="btn sm" id="add-item">Add menu item</button></div>'+
-    cats.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
-      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'">Edit price</button></div>').join("");
-      return '<div class="item-row"><div class="item-meta"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"")+'</span><span class="mute">'+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+'</span>'+variants+'</div><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button></div>';
-    }).join("")||empty("No items in this category."))).join("");
+  const names=[...new Set(menuCategories.map(c=>c.name).concat(menuItems.map(i=>i.menu_categories?.name||"Uncategorised")))];
+  return '<div class="notice">Menu changes are live: product name, description, food photo, veg label, price and availability update the customer website from the same database.</div><div class="actions"><button class="btn sm" id="add-category">Add category</button><button class="btn sm" id="add-item">Add product</button></div>'+
+    names.map(c=>card(esc(c),menuItems.filter(i=>(i.menu_categories?.name||"Uncategorised")===c).map(i=>{
+      const photo=i.image_url?'<img src="'+esc(i.image_url)+'" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"/>':'<div style="width:58px;height:58px;border-radius:10px;background:#203a2b;display:grid;place-items:center;color:var(--gold)">HD</div>';
+      const variants=(i.menu_variants||[]).map(v=>'<div class="item-row"><span>'+esc(v.label)+' · '+money(v.price)+' '+(v.active?'':'· Hidden')+'</span><button class="btn ghost sm" data-price="'+esc(v.id)+'" data-current="'+esc(v.price)+'" data-label="'+esc(v.label)+'">Edit variant</button></div>').join("");
+      return '<div class="item-row" style="align-items:flex-start">'+photo+'<div class="item-meta" style="flex:1"><b>'+esc(i.name)+'</b><span class="mute">'+esc(i.description||"No description")+'</span><span class="mute">'+(i.is_veg?'VEG':'NON-VEG')+' · '+(i.available?"Available":"Unavailable")+' · '+(i.active?"Published":"Hidden")+(i.needs_verification?' · Needs review':'')+'</span>'+variants+'</div><div class="actions"><button class="btn ghost sm" data-edit-item="'+esc(i.id)+'">Edit</button><button class="btn ghost sm" data-toggle="'+esc(i.id)+'" data-available="'+String(i.available)+'">'+(i.available?"Pause":"Enable")+'</button><button class="btn ghost sm" data-publish="'+esc(i.id)+'" data-active="'+String(i.active)+'">'+(i.active?"Hide":"Publish")+'</button></div></div>';
+    }).join("")||empty("No products in this category."))).join("");
 }
 function reservationsView(){
   return reservations.map(r=>'<article class="card" style="margin:10px 0"><div class="row"><b>'+esc(r.name)+'</b><span class="tag s-new">'+esc(r.status)+'</span></div><p class="mute">'+esc(r.phone)+' · '+esc(r.party_size)+' guests</p><p class="mute">'+new Date(r.reserve_at).toLocaleString()+'</p><p class="mute">'+esc(r.notes||"")+'</p><div class="actions">'+["confirmed","rejected","cancelled"].filter(s=>r.status==="pending"||s==="cancelled").map(s=>'<button class="btn sm '+(s==="cancelled"?"ghost":"")+'" data-reservation="'+esc(r.id)+'" data-res-status="'+s+'">'+s+'</button>').join("")+'</div></article>').join("")||empty("No reservations have been received.");
@@ -148,7 +149,7 @@ async function refresh(){
   if(results[2].status==="fulfilled")reservations=results[2].value.reservations||[];
   if(results[3].status==="fulfilled")riders=results[3].value.riders||[];
   if(results[4].status==="fulfilled"&&!results[4].value.error)notifications=results[4].value.data||[];
-  if(results[5].status==="fulfilled"&&!results[5].value.error)settings=results[5].value.data;
+  if(results[5].status==="fulfilled"&&!results[5].value.error)settings=results[5].value.data;\n  const categoryResult=await supabase.from("menu_categories").select("id,name,active,sort_order").order("sort_order");if(!categoryResult.error)menuCategories=categoryResult.data||[];
   render();
 }
 function bindActions(){
@@ -162,6 +163,19 @@ function bindActions(){
   document.querySelectorAll("[data-assign]").forEach(b=>b.onclick=async()=>{
     const rider=document.getElementById("rider-"+b.dataset.assign).value;if(!rider){toast("Choose a rider first.",true);return;}
     try{await api("",{action:"assign_rider",order_id:b.dataset.assign,rider_id:rider});await refresh();toast("Rider assigned.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-edit-item]").forEach(b=>b.onclick=async()=>{
+    const item=menuItems.find(x=>x.id===b.dataset.editItem);if(!item)return;
+    const name=prompt("Product name:",item.name);if(name===null)return;
+    const description=prompt("Product description:",item.description||"");if(description===null)return;
+    const imageUrl=prompt("Food photo URL (https://) — leave blank for no photo:",item.image_url||"");if(imageUrl===null)return;
+    if(imageUrl.trim()&&!/^https:\\/\\//i.test(imageUrl.trim())){toast("Photo URL must start with https://",true);return;}
+    const veg=prompt("Food type: enter VEG or NON-VEG",item.is_veg?"VEG":"NON-VEG");if(veg===null)return;
+    if(!name.trim()||name.trim().length<2||name.length>120||description.length>500||!["veg","non-veg"].includes(veg.trim().toLowerCase())){toast("Check product name, description and food type.",true);return;}
+    try{await api("",{action:"update_menu_item",item_id:item.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg"});await refresh();toast("Product details and photo updated on the website.");}catch(e){toast(e.message,true);}
+  });
+  document.querySelectorAll("[data-publish]").forEach(b=>b.onclick=async()=>{
+    try{await api("",{action:"update_menu_item",item_id:b.dataset.publish,active:b.dataset.active!=="true"});await refresh();toast("Product publishing status updated.");}catch(e){toast(e.message,true);}
   });
   document.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
     try{await api("",{action:"update_menu_item",item_id:b.dataset.toggle,available:b.dataset.available!=="true"});await refresh();toast("Website menu availability updated.");}catch(e){toast(e.message,true);}
@@ -210,13 +224,16 @@ function bindActions(){
   };
   const addItem=document.getElementById("add-item");
   if(addItem)addItem.onclick=async()=>{
-    const name=prompt("Menu item name:");if(!name||!name.trim())return;
-    const category=(menuItems.find(x=>x.menu_categories)?.category_id)||null;
-    const categoryName=prompt("Enter an existing category name exactly:",menuItems[0]?.menu_categories?.name||"");
-    const match=menuItems.find(x=>x.menu_categories?.name?.toLowerCase()===String(categoryName||"").trim().toLowerCase());
-    if(!match){toast("Select a category that already has a menu item.",true);return;}
-    const price=Number(prompt("Price in rupees:","100"));if(!Number.isInteger(price)||price<1){toast("Enter a valid price.",true);return;}
-    const {data,error}=await supabase.from("menu_items").insert({category_id:match.category_id,name:name.trim(),active:true,available:true}).select("id").single();
+    const name=prompt("Product name:");if(!name||name.trim().length<2)return;
+    const categoryName=prompt("Category name (choose an existing category):",menuCategories[0]?.name||"");
+    const match=menuCategories.find(x=>x.name.toLowerCase()===String(categoryName||"").trim().toLowerCase());
+    if(!match){toast("Category not found. Add the category first.",true);return;}
+    const description=prompt("Short product description:","Freshly prepared at Hurmat Darbar");if(description===null)return;
+    const imageUrl=prompt("Food photo URL (https://), optional:","");if(imageUrl===null)return;
+    if(imageUrl.trim()&&!/^https:\\/\\//i.test(imageUrl.trim())){toast("Photo URL must start with https://",true);return;}
+    const veg=prompt("Food type: VEG or NON-VEG","NON-VEG");if(!["veg","non-veg"].includes(String(veg||"").trim().toLowerCase())){toast("Enter VEG or NON-VEG.",true);return;}
+    const price=Number(prompt("Regular price in rupees:","100"));if(!Number.isInteger(price)||price<1){toast("Enter a valid price.",true);return;}
+    const {data,error}=await supabase.from("menu_items").insert({category_id:match.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg",active:true,available:true}).select("id").single();
     if(error){toast(error.message,true);return;}
     const variant=await supabase.from("menu_variants").insert({item_id:data.id,label:"Regular",price,active:true});
     if(variant.error){toast("Item saved, but price variant failed: "+variant.error.message,true);return;}
