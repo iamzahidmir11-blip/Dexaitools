@@ -1093,3 +1093,28 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .checkout-fields input,.checkout-fields textarea{padding:9px!important}
 }
 @media(prefers-reduced-motion:reduce){.cart-panel{transition:none!important}}
+
+
+/* Official Hurmat Darbar brand mark */
+.logo .brand-logo{
+  width:46px!important;
+  height:46px!important;
+  flex:0 0 46px;
+  display:block;
+  object-fit:contain;
+  border-radius:12px;
+  border:1px solid #b58a4b;
+  box-shadow:0 5px 18px #211f1820;
+}
+footer .logo .brand-logo{
+  width:46px!important;
+  height:46px!important;
+}
+@media(max-width:760px){
+  .logo .brand-logo,
+  footer .logo .brand-logo{
+    width:38px!important;
+    height:38px!important;
+    flex-basis:38px;
+  }
+}
