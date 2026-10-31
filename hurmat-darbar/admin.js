@@ -47,6 +47,19 @@ async function verifyAccess(){
   role=match.role;
   return true;
 }
+function passwordSetupView(){
+  navRoot.innerHTML="";
+  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./../icon.svg" alt="Hurmat Darbar"></div><h1>Set owner password</h1><p>Your secure owner invitation is accepted. Create a private password to finish account setup.</p><form id="owner-password-form"><label>New password</label><input id="owner-new-password" type="password" autocomplete="new-password" minlength="10" required placeholder="At least 10 characters"><label>Confirm password</label><input id="owner-confirm-password" type="password" autocomplete="new-password" minlength="10" required placeholder="Enter it again"><button class="btn wide" id="owner-password-submit" type="submit">Save password & open Hurmat Owner</button></form></div>';
+  document.getElementById("owner-password-form").onsubmit=async e=>{
+    e.preventDefault();
+    const password=document.getElementById("owner-new-password").value,confirmPassword=document.getElementById("owner-confirm-password").value,button=document.getElementById("owner-password-submit");
+    if(password.length<10){toast("Use at least 10 characters.",true);return;}
+    if(password!==confirmPassword){toast("Passwords do not match.",true);return;}
+    button.disabled=true;button.textContent="Saving securely…";
+    try{const {error}=await supabase.auth.updateUser({password,data:{owner_password_setup_required:false}});if(error)throw error;await verifyAccess();await startApp();}
+    catch(err){toast(err.message||"Password setup failed.",true);button.disabled=false;button.textContent="Save password & open Hurmat Owner";}
+  };
+}
 function loginView(message){
   navRoot.innerHTML="";
   root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./icon.svg" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
@@ -380,7 +393,7 @@ async function startApp(){
     .subscribe();
 }
 async function init(){
-  try{if(await verifyAccess())await startApp();else loginView("");}
+  try{const {data:{session}}=await supabase.auth.getSession();if(session?.user?.user_metadata?.owner_password_setup_required){passwordSetupView();return;}if(await verifyAccess())await startApp();else loginView("");}
   catch(e){loginView(e.message||"Unable to verify account.");}
 }
 supabase.auth.onAuthStateChange((event,session)=>{
