@@ -94,7 +94,7 @@ function loginView(message){
 }
 function nav(){
   const mainTabs=tabs.slice(0,4);
-  navRoot.innerHTML=mainTabs.map(t=>'<button class="dock-item '+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span class="dock-icon"'+iconSvg(t[1])+'</span><small>'+t[2]+'</small></button>').join("");
+  navRoot.innerHTML=mainTabs.map(t=>'<button class="dock-item '+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span class="dock-icon">'+iconSvg(t[1])+'</span><small>'+t[2]+'</small></button>').join("");
   navRoot.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.tab;render();});
 }
 function header(){
@@ -105,7 +105,7 @@ function header(){
   return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>'+(DEVELOPMENT_PREVIEW?'DEVELOPMENT WORKSPACE':'LIVE RESTAURANT OPERATIONS')+'</small></div></div><div class="owner-header-actions">'+status+
   '<button class="header-icon notification-trigger" id="owner-notifications" aria-label="Open notifications" title="Notifications"><span aria-hidden="true">'+iconSvg("bell")+'</span>'+(unread?'<i>'+Math.min(unread,99)+'</i>':'')+'</button>'+
   '<button class="header-icon menu-trigger" id="owner-menu" aria-label="Open menu" title="More options" aria-expanded="false"><span aria-hidden="true">'+iconSvg("menu")+'</span></button>'+
-  '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span class="menu-item-icon">'+iconSvg(t[1])+'</span><span class="menu-item-label">'+t[2]+'</span><span class="menu-item-arrow">›</span>+'</button>').join("")+'</div></div></header>';
+  '<div class="owner-more-menu" id="owner-more-menu" hidden>'+moreTabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(page===t[0]?"on":"")+'"><span class="menu-item-icon">'+iconSvg(t[1])+'</span><span class="menu-item-label">'+t[2]+'</span><span class="menu-item-arrow">›</span></button>').join("")+'</div></div></header>';
 }
 function shell(title,desc,content){
   const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
