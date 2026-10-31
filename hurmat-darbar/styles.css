@@ -572,3 +572,116 @@ footer{padding:28px clamp(16px,5vw,76px)}
 }
 @media(max-width:360px){.cover-copy{max-width:80%}.cover-art{right:-10%;width:36%}.menu-grid{gap:7px}.food-body{padding:8px}.food-photo{height:98px}}
 
+
+
+/* MONOCHROME REDESIGN — bold white & charcoal restaurant storefront */
+:root{
+ --hd-green:#111111;--hd-panel:#ffffff;--hd-gold:#111111;--hd-cream:#171717;
+ --hd-muted:#666666;--hd-line:#e5e5e5;
+ --bg:#ffffff;--bg2:#f5f5f5;--card:#ffffff;--line:#e5e5e5;
+ --gold:#111111;--ink:#111111;--paper:#ffffff;--cream:#f5f5f5;--muted:#666666;
+}
+html{background:#fff;color-scheme:light}
+body{background:#fff!important;color:#151515!important;font-family:Manrope,Arial,sans-serif!important}
+.top{background:rgba(255,255,255,.96)!important;color:#111!important;border-bottom:1px solid #e8e8e8!important;box-shadow:0 4px 24px #00000008!important}
+.top nav a,.logo,.top a{color:#111!important}
+.logo{font-weight:900!important;letter-spacing:1.2px}
+.logo small{color:#777!important}
+.seal{background:#111!important;color:#fff!important;border:1px solid #111!important;border-radius:50%!important;font-family:Manrope,sans-serif!important;font-weight:900!important}
+.cart-trigger,.top-cta,.btn.gold,.restaurant-actions .btn:first-child{background:#111!important;color:#fff!important;border:1px solid #111!important;font-weight:900!important}
+.cart-trigger b{background:#fff!important;color:#111!important}
+.hamb{color:#111!important}
+.zomato-hero{margin-top:20px}
+.restaurant-cover{background:#111!important;border:1px solid #111!important;border-radius:18px!important;box-shadow:0 22px 55px #00000018}
+.restaurant-cover:before,.restaurant-cover:after{border-color:#ffffff20!important}
+.cover-brand,.cover-brand .seal{color:#fff!important}
+.cover-brand .seal{background:#fff!important;color:#111!important;border-color:#fff!important}
+.cover-copy .eyebrow,.eyebrow,.restaurant-title .eyebrow{color:#777!important;font-weight:900!important}
+.cover-copy .eyebrow{color:#c9c9c9!important}
+.cover-copy h1{font-family:Manrope,Arial,sans-serif!important;font-weight:900!important;letter-spacing:-2.5px!important;color:#fff!important}
+.cover-copy h1 i,.section-head h2 i,.visit h2 i{color:#bdbdbd!important}
+.cover-copy>p:not(.eyebrow){color:#d0d0d0!important}
+.cover-art{background:#202020!important;border:1px solid #777!important;box-shadow:0 25px 70px #0008!important}
+.cover-art-inner{background:#151515!important;border-color:#777!important;color:#fff!important}
+.cover-art-inner span,.cover-art-inner small{color:#cfcfcf!important}
+.cover-art-inner b{font-family:Manrope,Arial,sans-serif!important;font-weight:900!important}
+.restaurant-title h2,.section-head h2,.customer-tools .section-head h2,.visit h2{font-family:Manrope,Arial,sans-serif!important;font-weight:900!important;letter-spacing:-1.4px!important;color:#111!important}
+.restaurant-title p,.menu-intro,.menu-status,.menu-foot,.restaurant-facts{color:#666!important}
+.restaurant-live{background:#f3f3f3!important;border:1px solid #ddd!important;color:#111!important;font-weight:900!important}
+.restaurant-live.closed{background:#222!important;color:#fff!important;border-color:#222!important}
+.restaurant-facts{border-color:#e5e5e5!important}
+.restaurant-facts b{color:#111!important}
+.restaurant-actions .outline,.btn.outline{background:#fff!important;color:#111!important;border:1px solid #cfcfcf!important;font-weight:800!important}
+.menu,.customer-tools,.visit,.intro{background:#fff!important;color:#111!important}
+.menu{padding-top:58px!important}
+.menu .section-head h2,.customer-tools .section-head h2{font-size:clamp(34px,4vw,48px)!important}
+.menu-tag{color:#777!important;font-weight:900!important;letter-spacing:1.7px!important}
+.menu-search-label b{color:#111!important;font-weight:900!important}
+.menu-search-label small{color:#777!important}
+.menu-search{background:#f7f7f7!important;color:#111!important;border:1px solid #dedede!important;border-radius:10px!important;font-weight:700!important}
+.menu-search:focus{border-color:#111!important;box-shadow:0 0 0 3px #00000012!important}
+.menu-tools:before{color:#111!important}
+.categories .chip{background:#fff!important;color:#333!important;border:1px solid #dedede!important;border-radius:8px!important;font-weight:800!important}
+.categories .chip.active,.categories .chip:hover{background:#111!important;color:#fff!important;border-color:#111!important}
+.menu-grid{gap:18px!important}
+.menu-card{background:#fff!important;color:#111!important;border:1px solid #e6e6e6!important;border-radius:13px!important;box-shadow:0 7px 25px #0000000b!important}
+.menu-card:hover{border-color:#aaa!important;box-shadow:0 16px 34px #00000012!important}
+.food-photo{background:#eee!important}
+.food-body{background:#fff!important;color:#111!important}
+.food-body h3{font-family:Manrope,Arial,sans-serif!important;font-size:16px!important;font-weight:900!important;color:#111!important;letter-spacing:-.35px!important}
+.food-description,.food-body p{color:#666!important}
+.food-type,.food-type.veg,.food-type.nonveg{color:#333!important;font-weight:900!important}
+.food-type.veg:before,.food-type.nonveg:before{background:#fff!important;box-shadow:inset 0 0 0 2px #111!important;border-color:#111!important}
+.stock-note{color:#555!important;font-weight:800!important}
+.variant-select{background:#f7f7f7!important;color:#111!important;border:1px solid #dedede!important;border-radius:8px!important;font-weight:700!important}
+.price-stack{color:#111!important;font-weight:900!important}
+.price-stack small{color:#777!important}
+.add-btn,.checkout-btn,.food-bottom .card-add{background:#111!important;color:#fff!important;border:1px solid #111!important;border-radius:8px!important;font-weight:900!important}
+.add-btn:hover,.checkout-btn:hover{background:#333!important}
+.add-btn:disabled,.checkout-btn:disabled{opacity:.4!important}
+.menu-qty-control button,.qty-control button{background:#fff!important;color:#111!important;border:1px solid #ccc!important;border-radius:7px!important}
+.menu-qty-control .qty-value,.qty-control .qty-value{color:#111!important;font-weight:900!important}
+.menu-empty{background:#f7f7f7!important;color:#555!important;border:1px solid #e5e5e5!important}
+.customer-tools{border-top:1px solid #eee!important;border-bottom:1px solid #eee!important}
+.service-card{background:#fff!important;color:#111!important;border:1px solid #e5e5e5!important;border-radius:13px!important;box-shadow:0 8px 25px #00000009!important}
+.service-card h3{font-family:Manrope,Arial,sans-serif!important;color:#111!important;font-size:21px!important;font-weight:900!important}
+.service-card>p,.service-card small{color:#666!important}
+.service-card label,.cart-summary label{color:#333!important;font-weight:800!important}
+.service-card input,.service-card textarea,.cart-summary input,.cart-summary textarea{background:#f8f8f8!important;color:#111!important;border:1px solid #ddd!important;border-radius:8px!important;font-family:Manrope,Arial,sans-serif!important}
+.service-card input::placeholder,.service-card textarea::placeholder,.cart-summary input::placeholder,.cart-summary textarea::placeholder{color:#999!important}
+.service-card .btn{background:#111!important;color:#fff!important;border:1px solid #111!important;font-weight:900!important}
+.tracking-result,.tracking-result b,.tracking-total{color:#111!important}
+.tracking-step{color:#666!important}
+.visit{background:#f5f5f5!important;border:1px solid #e7e7e7!important;border-radius:14px!important}
+.visit h2{color:#111!important}
+.visit>div:first-child>p:not(.eyebrow),.details p{color:#555!important}
+.visit .eyebrow,.details small{color:#666!important;font-weight:900!important}
+.visit .btn.dark{background:#111!important;color:#fff!important}
+.details>div{border-color:#ddd!important}
+.details a,.menu-foot a{color:#111!important;text-decoration:underline!important;font-weight:800!important}
+.cart-panel{background:#fff!important;color:#111!important;border-left:1px solid #ddd!important;box-shadow:-20px 0 70px #0003!important}
+.cart-head{border-color:#e5e5e5!important}
+.cart-head h2,.cart-head button{color:#111!important}
+.cart-head h2{font-family:Manrope,Arial,sans-serif!important;font-weight:900!important}
+.cart-head h2 i{color:#555!important}
+.cart-line{border-color:#e5e5e5!important;color:#111!important}
+.cart-line small,.cart-item-info small,.cart-summary small{color:#666!important}
+.cart-summary{background:#f7f7f7!important;border-top:1px solid #e5e5e5!important}
+.cart-summary p{color:#555!important}
+.cart-summary b,.cart-total b{color:#111!important}
+.cart-total{color:#111!important}
+.cart-scrim{background:#0009!important}
+footer{background:#111!important;color:#fff!important;border-top:1px solid #111!important}
+footer .logo,footer .logo small,footer>p,footer>span{color:#fff!important}
+footer a{color:#fff!important;text-decoration:underline!important}
+:focus-visible{outline:2px solid #111!important;outline-offset:3px}
+@media(max-width:650px){
+ .top.nav-open nav{background:#fff!important;border-color:#e5e5e5!important}
+ .top.nav-open nav a{color:#111!important;font-weight:800!important}
+ .restaurant-title h2{font-size:23px!important}
+ .cover-copy h1{letter-spacing:-1.7px!important}
+ .food-body h3{font-size:12px!important}
+ .food-bottom .card-add,.add-btn{background:#111!important;color:#fff!important}
+ .visit{background:#f5f5f5!important}
+}
+@media(prefers-reduced-motion:reduce){.menu-card,.service-card,.food-image{transition:none!important}}
