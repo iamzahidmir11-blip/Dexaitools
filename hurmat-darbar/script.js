@@ -10,7 +10,7 @@ function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=
 function toggleCart(on){panel.classList.toggle("open",on);scrim.classList.toggle("open",on)}
 document.getElementById("open-cart").onclick=()=>toggleCart(true);document.getElementById("close-cart").onclick=()=>toggleCart(false);scrim.onclick=()=>toggleCart(false);
 function renderCats(data){cats.replaceChildren();[ {id:"all",name:"All categories"},...data].forEach((x,i)=>{const b=el("button","chip"+(i===0?" active":""),x.name);b.dataset.cat=x.id;cats.append(b)});cats.onclick=e=>{const b=e.target.closest("[data-cat]");if(!b)return;cat=b.dataset.cat;cats.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===b));render()}}
-function foodImage(item){if(item.image_url&&/^https?:\/\//i.test(item.image_url))return item.image_url;const q=encodeURIComponent((item.name||"Indian food")+" food dish");const lock=[...(item.id||item.name||"hd")].reduce((a,c)=>a+c.charCodeAt(0),0)%997;return "https://loremflickr.com/900/650/"+q+"?lock="+lock}
+function foodImage(item){return item.image_url&&item.image_url.startsWith("https://")?item.image_url:""}
 function foodDescription(item){if(item.description&&item.description.trim())return item.description.trim();const category=(item.category_name||"").toLowerCase();if(category.includes("wazwan"))return "A traditional Kashmiri-style preparation, served fresh from the Hurmat Darbar kitchen.";if(category.includes("momo"))return "A flavourful momo favourite, prepared fresh and served hot.";if(category.includes("drink")||category.includes("breakfast"))return "A refreshing pick, prepared fresh for your table.";if(category.includes("fries"))return "Crisp, savoury comfort food made for sharing.";if(category.includes("soup"))return "A warm, comforting bowl prepared fresh to order.";if(category.includes("pasta"))return "A satisfying pasta favourite, freshly prepared.";return "A restaurant favourite, freshly prepared and served with care."}
 function cartKey(itemId,variantId){return itemId+":"+variantId}
 function cartQty(itemId,variantId){return cart.find(x=>x.key===cartKey(itemId,variantId))?.qty||0}
@@ -20,9 +20,9 @@ function render(){
   if(!list.length){grid.append(el("p","menu-empty","No matching items found."));return}
   list.forEach(x=>{
     const card=el("article","menu-card"),photo=el("div","food-photo"),image=el("img","food-image");
-    image.src=foodImage(x);image.alt=x.name+" food";image.loading="lazy";image.decoding="async";image.referrerPolicy="no-referrer";
-    image.onerror=()=>{image.onerror=null;image.style.display="none";photo.classList.add("photo-unavailable");photo.append(el("span","photo-label","HURMAT DARBAR"))};
-    photo.append(image);
+    const imageUrl=foodImage(x);image.alt=x.name+" food";image.loading="lazy";image.decoding="async";image.referrerPolicy="no-referrer";
+    if(imageUrl){image.src=imageUrl;image.onerror=()=>{image.onerror=null;image.remove();photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));};photo.append(image);}
+    else{photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));}
     const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);
     body.append(type,title,el("p","food-description",foodDescription(x)));
     const select=el("select","variant-select");
@@ -160,7 +160,7 @@ const reservationForm=document.getElementById("reservation-form");
 if(reservationForm)reservationForm.addEventListener("submit",async e=>{
  e.preventDefault();const button=reservationForm.querySelector("button[type=submit]"),message=document.getElementById("res-message");
  const name=document.getElementById("res-name").value.trim(),phone=document.getElementById("res-phone").value.trim(),party=Number(document.getElementById("res-party").value),when=document.getElementById("res-time").value,notes=document.getElementById("res-notes").value.trim();
- if(name.length<2||phone.replace(/\\D/g,"").length<10||!Number.isInteger(party)||party<1||party>30||!when||new Date(when)<=new Date()){message.textContent="Please check your name, mobile number, guest count and future date/time.";return;}
+ if(name.length<2||phone.replace(/[^0-9]/g,"").length<10||!Number.isInteger(party)||party<1||party>30||!when||new Date(when)<=new Date()){message.textContent="Please check your name, mobile number, guest count and future date/time.";return;}
  button.disabled=true;button.textContent="Sending request…";
  try{const {error}=await db.from("reservations").insert({name,phone,party_size:party,reserve_at:new Date(when).toISOString(),notes:notes||null,status:"pending"});if(error)throw error;message.textContent="Reservation request received. The restaurant will confirm it.";reservationForm.reset();document.getElementById("res-party").value="2";}
  catch(err){message.textContent="Could not send request: "+(err.message||"Please call the restaurant.");}
