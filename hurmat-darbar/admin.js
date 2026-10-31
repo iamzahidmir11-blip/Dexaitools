@@ -149,7 +149,8 @@ async function refresh(){
   if(results[2].status==="fulfilled")reservations=results[2].value.reservations||[];
   if(results[3].status==="fulfilled")riders=results[3].value.riders||[];
   if(results[4].status==="fulfilled"&&!results[4].value.error)notifications=results[4].value.data||[];
-  if(results[5].status==="fulfilled"&&!results[5].value.error)settings=results[5].value.data;\n  const categoryResult=await supabase.from("menu_categories").select("id,name,active,sort_order").order("sort_order");if(!categoryResult.error)menuCategories=categoryResult.data||[];
+  if(results[5].status==="fulfilled"&&!results[5].value.error)settings=results[5].value.data;
+  const categoryResult=await supabase.from("menu_categories").select("id,name,active,sort_order").order("sort_order");if(!categoryResult.error)menuCategories=categoryResult.data||[];
   render();
 }
 function bindActions(){
@@ -230,7 +231,7 @@ function bindActions(){
     if(!match){toast("Category not found. Add the category first.",true);return;}
     const description=prompt("Short product description:","Freshly prepared at Hurmat Darbar");if(description===null)return;
     const imageUrl=prompt("Food photo URL (https://), optional:","");if(imageUrl===null)return;
-    if(imageUrl.trim()&&!/^https:\\/\\//i.test(imageUrl.trim())){toast("Photo URL must start with https://",true);return;}
+    if(imageUrl.trim()&&!imageUrl.trim().startsWith("https://")){toast("Photo URL must start with https://",true);return;}
     const veg=prompt("Food type: VEG or NON-VEG","NON-VEG");if(!["veg","non-veg"].includes(String(veg||"").trim().toLowerCase())){toast("Enter VEG or NON-VEG.",true);return;}
     const price=Number(prompt("Regular price in rupees:","100"));if(!Number.isInteger(price)||price<1){toast("Enter a valid price.",true);return;}
     const {data,error}=await supabase.from("menu_items").insert({category_id:match.id,name:name.trim(),description,image_url:imageUrl.trim()||null,is_veg:veg.trim().toLowerCase()==="veg",active:true,available:true}).select("id").single();
