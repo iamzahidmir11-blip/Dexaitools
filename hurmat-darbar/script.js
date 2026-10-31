@@ -54,6 +54,7 @@ function renderCart(){
   document.getElementById("cart-count").textContent=count;
   document.getElementById("cart-subtotal").textContent=money(subtotal);
   document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
+  const checkout=document.getElementById("checkout");if(checkout&&!placingOrder)checkout.disabled=!cart.length||!restaurantSettings?.is_open||!restaurantSettings?.location_verified||!(restaurantSettings?.cod_enabled||(restaurantSettings?.upi_enabled&&restaurantSettings?.upi_id));
 }
 function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Number(x.qty)+d);if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
 const paymentSelect=el("select","payment-method");
@@ -138,6 +139,8 @@ async function load(){
   if(c.error){status.textContent="Menu is live, but checkout settings are unavailable. Please call the restaurant.";return;}
   restaurantSettings=c.data;
   items=(b.data||[]).map(x=>({...x,category_name:x.menu_categories?.name||"",menu_variants:(x.menu_variants||[]).filter(v=>v.price!==null).sort((p,q)=>p.sort_order-q.sort_order)})).filter(x=>x.menu_variants.length);
+  cart=cart.flatMap(line=>{const item=items.find(x=>x.id===line.item_id&&x.available!==false),variant=item?.menu_variants.find(v=>v.id===line.variant_id);return item&&variant?[{...line,name:item.name,label:variant.label,price:Number(variant.price),qty:Math.max(1,Number(line.qty)||1)}]:[]});
+  localStorage.setItem("hd-cart",JSON.stringify(cart));
   renderCats(a.data||[]);
   status.textContent=items.length+" menu items loaded · live restaurant prices";
   const search=el("input","menu-search");search.placeholder="Search dishes, drinks and more…";search.oninput=()=>{query=search.value.toLowerCase().trim();render();};
