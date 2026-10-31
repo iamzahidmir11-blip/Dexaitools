@@ -47,7 +47,7 @@ function render(){
   });
 }
 function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key);if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
-function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart()}
+function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart();checkoutState()}
 function renderCart(){
   const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
   cart.forEach(x=>{
