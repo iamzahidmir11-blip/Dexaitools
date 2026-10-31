@@ -162,9 +162,6 @@ function reportsView(){
 function alertsView(){
   return notifications.map(n=>'<div class="item-row"><div class="item-meta"><b>'+esc(n.title)+'</b><span class="mute">'+esc(n.body||"")+'</span><span class="mute">'+new Date(n.created_at).toLocaleString()+'</span></div>'+(n.is_read?"":'<button class="btn ghost sm" data-read="'+esc(n.id)+'">Mark read</button>')+'</div>').join("")||empty("No notifications yet.");
 }
-function alertsView(){
-  return notifications.map(n=>'<div class="item-row"><div class="item-meta"><b>'+esc(n.title)+'</b><span class="mute">'+esc(n.body||"")+'</span><span class="mute">'+new Date(n.created_at).toLocaleString()+'</span></div>'+(n.is_read?"":'<button class="btn ghost sm" data-read="'+esc(n.id)+'">Mark read</button>')+'</div>').join("")||empty("No notifications yet.");
-}
 function settingsView(){
   const s=settings||{};
   return '<div class="notice">Enter the restaurant’s exact map-pin coordinates and confirm them only after checking the pin. Orders remain blocked until the location is verified and a real payment method is enabled.</div>'+
