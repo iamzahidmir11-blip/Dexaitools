@@ -24,21 +24,21 @@ function render(){
     if(imageUrl){image.src=imageUrl;image.onerror=()=>{image.onerror=null;image.remove();photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));};photo.append(image);}
     else{photo.classList.add("photo-unavailable");photo.append(el("span","photo-label",x.name));}
     const body=el("div","food-body"),type=el("span","food-type "+(x.is_veg?"veg":"nonveg"),x.is_veg?"VEG":"NON-VEG"),title=el("h3","",x.name);
-    body.append(type,title,el("p","food-description",foodDescription(x)));
+    body.append(type,title,el("h3","food-title",x.name),el("p","food-description",foodDescription(x)));if(x.track_stock===true){const stockNote=el("small","stock-note",Number(x.stock_qty||0)>0?Number(x.stock_qty)+" available":"Out of stock");body.append(stockNote)}
     const select=el("select","variant-select");
     x.menu_variants.forEach((v,n)=>{const opt=document.createElement("option");opt.value=String(n);opt.textContent=v.label+" · "+money(v.price);select.append(opt)});
     const savedVariantIndex=x.menu_variants.findIndex(v=>v.id===selectedVariants[x.id]);if(savedVariantIndex>=0)select.value=String(savedVariantIndex);
     const foot=el("div","food-bottom"),price=el("div","price-stack",money(x.menu_variants[0].price));
     price.append(el("small","","Selected price"));
     const add=el("button","add-btn card-add","Add to bag");
-    add.type="button";add.disabled=x.available===false;
+    add.type="button";const stockLeft=Number(x.stock_qty||0),stockTracked=x.track_stock===true,canBuy=x.available!==false&&(!stockTracked||stockLeft>0);add.disabled=!canBuy;
     const controls=el("div","menu-qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value","0"),plus=el("button","qty-plus","+");
-    minus.type=plus.type="button";plus.disabled=x.available===false;
+    minus.type=plus.type="button";plus.disabled=!canBuy;
     const sync=()=>{
       const v=x.menu_variants[Number(select.value)],amount=cartQty(x.id,v.id);
-      qty.textContent=String(amount);minus.disabled=amount===0;plus.disabled=x.available===false||amount>=50;price.firstChild.textContent=money(v.price);
+      qty.textContent=String(amount);minus.disabled=amount===0;plus.disabled=!canBuy||amount>=50||(stockTracked&&amount>=stockLeft);price.firstChild.textContent=money(v.price);
       add.hidden=amount>0;controls.hidden=amount===0;
-      add.textContent=x.available===false?"Unavailable":"Add to bag";
+      add.textContent=x.available===false?"Paused":(stockTracked&&stockLeft===0?"Out of stock":"Add to bag");
     };
     select.onchange=()=>{selectedVariants[x.id]=x.menu_variants[Number(select.value)].id;sync()};
     add.onclick=()=>{const v=x.menu_variants[Number(select.value)];addItem(x,v,false)};
@@ -47,7 +47,7 @@ function render(){
     controls.append(minus,qty,plus);foot.append(price,add,controls);body.append(select,foot);card.append(photo,body);grid.append(card);sync();
   });
 }
-function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key);if(old&&old.qty>=50){alert("Maximum 50 units per item.");return}selectedVariants[item.id]=v.id;if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
+function addItem(item,v,open=true){const key=cartKey(item.id,v.id),old=cart.find(x=>x.key===key),limit=item.track_stock===true?Number(item.stock_qty||0):50;if(item.available===false||limit<1){alert("This product is currently unavailable.");return}if(old&&old.qty>=Math.min(50,limit)){alert("Only "+limit+" units are currently available.");return}selectedVariants[item.id]=v.id;if(old)old.qty++;else cart.push({key,item_id:item.id,variant_id:v.id,name:item.name,label:v.label,price:+v.price,qty:1});save();render();if(open)toggleCart(true)}
 function save(){localStorage.setItem("hd-cart",JSON.stringify(cart));renderCart();checkoutState()}
 function renderCart(){
   const root=document.getElementById("cart-lines");root.replaceChildren();let subtotal=0,count=0;
@@ -57,7 +57,7 @@ function renderCart(){
     info.append(small);
     const controls=el("div","qty-control"),minus=el("button","qty-minus","−"),qty=el("span","qty-value",x.qty),plus=el("button","qty-plus","+");
     minus.type=plus.type="button";minus.setAttribute("aria-label","Decrease "+x.name);plus.setAttribute("aria-label","Increase "+x.name);
-    minus.onclick=()=>qtyChange(x.key,-1);plus.disabled=Number(x.qty)>=50;plus.onclick=()=>qtyChange(x.key,1);
+    minus.onclick=()=>qtyChange(x.key,-1);const stockItem=items.find(i=>i.id===x.item_id),stockLimit=stockItem?.track_stock===true?Number(stockItem.stock_qty||0):50;plus.disabled=Number(x.qty)>=Math.min(50,stockLimit);plus.onclick=()=>qtyChange(x.key,1);
     controls.append(minus,qty,plus);row.append(info,controls);root.append(row);
   });
   if(!cart.length)root.append(el("p","menu-empty","Your bag is empty. Add dishes from the menu."));
@@ -66,7 +66,7 @@ function renderCart(){
   document.getElementById("cart-total").textContent=money(subtotal+(cart.length?Number(restaurantSettings?.delivery_fee??30):0));
   const checkout=document.getElementById("checkout");if(checkout&&!placingOrder)checkout.disabled=!cart.length||!restaurantSettings?.is_open||!restaurantSettings?.location_verified||!(restaurantSettings?.cod_enabled||(restaurantSettings?.upi_enabled&&restaurantSettings?.upi_id));
 }
-function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;x.qty=Math.max(0,Math.min(50,Number(x.qty)+d));if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
+function qtyChange(key,d){const x=cart.find(x=>x.key===key);if(!x)return;const item=items.find(i=>i.id===x.item_id),limit=item?.track_stock===true?Number(item.stock_qty||0):50;if(d>0&&Number(x.qty)>=Math.min(50,limit)){alert("Stock limit reached for this product.");return}x.qty=Math.max(0,Math.min(50,Number(x.qty)+d));if(x.qty===0)cart=cart.filter(x=>x.key!==key);save();render()}
 const paymentSelect=el("select","payment-method");
 paymentSelect.id="payment-method";
 const orderHelp=el("small","","Checking restaurant ordering setup…");
@@ -85,9 +85,10 @@ function checkoutState(){
   paymentSelect.replaceChildren();
   methods.forEach(m=>{const o=document.createElement("option");o.value=m.value;o.textContent=m.label;paymentSelect.append(o);});
   if(!methods.length){const o=document.createElement("option");o.value="";o.textContent="No payment method enabled";paymentSelect.append(o);}
-  const ready=cart.length>0&&!!restaurantSettings?.is_open&&!!restaurantSettings?.location_verified&&methods.length>0;
+  const stockOk=cart.every(line=>{const item=items.find(i=>i.id===line.item_id);return item&&item.available!==false&&(item.track_stock!==true||Number(item.stock_qty||0)>=Number(line.qty))});
+  const ready=cart.length>0&&stockOk&&!!restaurantSettings?.is_open&&!!restaurantSettings?.location_verified&&methods.length>0;
   checkoutButton.disabled=!ready||placingOrder||Number(document.getElementById("cart-subtotal").textContent.replace(/[^0-9]/g,""))<Number(restaurantSettings?.min_order||0);
-  orderHelp.textContent=!restaurantSettings?"Restaurant setup could not be loaded.":
+  orderHelp.textContent=!stockOk?"One or more products no longer have enough stock. Update your bag quantity.":!restaurantSettings?"Restaurant setup could not be loaded.":
     !restaurantSettings.is_open?"The restaurant is currently not accepting orders.":
     !restaurantSettings.location_verified?"Online delivery is not enabled: restaurant map location still needs verification.":
     !methods.length?"Online ordering is paused until the restaurant enables a payment method.":Number(document.getElementById("cart-subtotal").textContent.replace(/[^0-9]/g,""))<Number(restaurantSettings?.min_order||0)?"Minimum order is "+money(restaurantSettings.min_order)+". Add more items to continue.":"Your order will be saved directly to the restaurant order system.";
@@ -142,7 +143,7 @@ async function load(){
   status.textContent="Loading live menu and restaurant settings…";
   const [a,b,c]=await Promise.all([
     db.from("menu_categories").select("id,name,sort_order").eq("active",true).order("sort_order"),
-    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,sort_order,menu_categories(name),menu_variants(id,label,price,sort_order,active)").eq("active",true).order("sort_order"),
+    db.from("menu_items").select("id,category_id,name,description,image_url,is_veg,available,track_stock,stock_qty,sort_order,menu_categories(name),menu_variants(id,label,price,sort_order,active)").eq("active",true).order("sort_order"),
     db.from("restaurant_settings").select("name,is_open,location_verified,lat,lng,delivery_fee,min_order,cod_enabled,upi_enabled,upi_id").eq("id",1).single()
   ]);
   if(a.error||b.error){status.textContent="Menu unavailable. Please call +91 97971 51590.";return;}
