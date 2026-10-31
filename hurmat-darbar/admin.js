@@ -49,9 +49,9 @@ async function verifyAccess(){
 }
 function loginView(message){
   navRoot.innerHTML="";
-  root.innerHTML='<div class="auth-card card"><div class="logo">HD</div><h1>Admin sign in</h1><p>Sign in with the verified Supabase account assigned an active Owner or Manager role. New accounts do not receive admin access automatically.</p>'+
+  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./icon.svg" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
     (message?'<div class="notice">'+esc(message)+'</div>':'')+
-    '<form id="login-form"><label>Email address</label><input id="login-email" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="btn wide" id="login-submit" type="submit">Sign in securely</button></form><p style="margin:14px 0 0">Access is checked against Supabase Auth, email verification and the database role table.</p></div>';
+    '<form id="login-form"><label>Email address</label><input id="login-email" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="btn wide" id="login-submit" type="submit">Sign in to Hurmat Owner</button></form><button type="button" class="text-action" id="forgot-password" style="margin-top:14px">Forgot password?</button><p style="margin:14px 0 0">Owner accounts require a secure invitation and verified email. No public registration or demo access.</p></div>';
   document.getElementById("login-form").addEventListener("submit",async e=>{
     e.preventDefault();const button=document.getElementById("login-submit");button.disabled=true;button.textContent="Checking account…";
     try{
@@ -60,6 +60,7 @@ function loginView(message){
       await verifyAccess();await startApp();
     }catch(err){await supabase.auth.signOut().catch(()=>{});loginView(err.message||"Sign-in failed.");}
   });
+  document.getElementById("forgot-password").onclick=async()=>{const email=document.getElementById("login-email").value.trim();if(!email){toast("Enter your owner email first.",true);return;}const {error}=await supabase.auth.resetPasswordForEmail(email);if(error){toast(error.message,true);return;}toast("Password reset email sent. Check your inbox.");};
 }
 function nav(){
   navRoot.innerHTML=tabs.map(t=>'<button class="'+(page===t[0]?"on":"")+'" data-tab="'+t[0]+'"><span>'+t[1]+'</span>'+t[2]+'</button>').join("");
@@ -67,10 +68,10 @@ function nav(){
 }
 function header(){
   const open=!!settings?.is_open;
-  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo">HD</div><div><b>HURMAT DARBAR</b><small>RESTAURANT PARTNER CONSOLE</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
+  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="./icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
 }
 function shell(title,desc,content){
-  root.innerHTML=header()+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">RESTAURANT OPERATIONS</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
+  root.innerHTML=header()+'<main class="partner-main"><div class="page-heading"><div><span class="eyebrow">HURMAT OWNER</span><h1>'+esc(title)+'</h1><p class="sub">'+esc(desc||"Live data from the restaurant database.")+'</p></div><div class="page-updated">Live database · '+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+'</div></div>'+content+'</main>';
   document.getElementById("signout").onclick=async()=>{if(channel)await supabase.removeChannel(channel);await supabase.auth.signOut();user=null;role=null;loginView("You have signed out.");};
 }
 function card(title,body){return '<section class="card" style="margin:10px 0"><h2 style="margin:0 0 12px">'+title+'</h2>'+body+'</section>';}
@@ -166,7 +167,8 @@ function settingsView(){
     '<label style="display:flex;align-items:center;gap:8px;margin:10px 0"><input id="set-upi" type="checkbox" style="width:auto;margin:0" '+(s.upi_enabled?"checked":"")+'> Enable manual UPI (not automatic payment verification)</label>'+
     '<label>UPI ID (required only if manual UPI is enabled)</label><input id="set-upi-id" value="'+esc(s.upi_id||"")+'">'+
     '<label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input id="set-verified" type="checkbox" style="width:auto;margin:0" '+(s.location_verified?"checked":"")+'> I have checked and verified the restaurant map pin</label>'+
-    '<button class="btn wide" type="submit">Save real restaurant settings</button></form>';
+    '<button class="btn wide" type="submit">Save restaurant settings</button></form>'+
+    '<section class="card" style="margin-top:14px"><h2 style="margin:0 0 8px">Owner account access</h2><p class="mute" style="margin:0 0 14px">Invite the restaurant owner using their email. They receive a secure account setup link and are assigned the Owner role after invitation.</p><form id="owner-invite-form"><label>Owner email address</label><input id="owner-invite-email" type="email" autocomplete="email" required placeholder="owner@example.com"><button class="btn wide" id="owner-invite-submit" type="submit">Send secure owner invitation</button></form></section>';
 }
 function render(){
   nav();
@@ -309,6 +311,8 @@ function bindActions(){
   document.querySelectorAll("[data-read]").forEach(b=>b.onclick=async()=>{
     const {error}=await supabase.from("notifications").update({is_read:true}).eq("id",b.dataset.read);if(error){toast(error.message,true);return;}await refresh();
   });
+  const ownerInviteForm=document.getElementById("owner-invite-form");
+  if(ownerInviteForm)ownerInviteForm.onsubmit=async e=>{e.preventDefault();const button=document.getElementById("owner-invite-submit"),email=document.getElementById("owner-invite-email").value.trim().toLowerCase();if(!email)return;button.disabled=true;button.textContent="Sending invitation…";try{await api("",{action:"invite_owner",email});ownerInviteForm.reset();toast("Owner invitation sent. Ask them to check their email.");}catch(err){toast(err.message||"Owner invitation failed.",true);}finally{button.disabled=false;button.textContent="Send secure owner invitation";}};
   const settingsForm=document.getElementById("settings-form");
   if(settingsForm)settingsForm.onsubmit=async e=>{
     e.preventDefault();
