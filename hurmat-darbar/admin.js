@@ -52,7 +52,7 @@ async function verifyAccess(){
 }
 function passwordSetupView(){
   navRoot.innerHTML="";
-  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./../icon.svg" alt="Hurmat Darbar"></div><h1>Set owner password</h1><p>Your secure owner invitation is accepted. Create a private password to finish account setup.</p><form id="owner-password-form"><label>New password</label><input id="owner-new-password" type="password" autocomplete="new-password" minlength="10" required placeholder="At least 10 characters"><label>Confirm password</label><input id="owner-confirm-password" type="password" autocomplete="new-password" minlength="10" required placeholder="Enter it again"><button class="btn wide" id="owner-password-submit" type="submit">Save password & open Hurmat Owner</button></form></div>';
+  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="./../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><h1>Set owner password</h1><p>Your secure owner invitation is accepted. Create a private password to finish account setup.</p><form id="owner-password-form"><label>New password</label><input id="owner-new-password" type="password" autocomplete="new-password" minlength="10" required placeholder="At least 10 characters"><label>Confirm password</label><input id="owner-confirm-password" type="password" autocomplete="new-password" minlength="10" required placeholder="Enter it again"><button class="btn wide" id="owner-password-submit" type="submit">Save password & open Hurmat Owner</button></form></div>';
   document.getElementById("owner-password-form").onsubmit=async e=>{
     e.preventDefault();
     const password=document.getElementById("owner-new-password").value,confirmPassword=document.getElementById("owner-confirm-password").value,button=document.getElementById("owner-password-submit");
@@ -65,7 +65,7 @@ function passwordSetupView(){
 }
 function loginView(message){
   navRoot.innerHTML="";
-  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
+  root.innerHTML='<div class="auth-card card"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><h1>Hurmat Owner</h1><p>Secure owner access to live orders, menu, inventory, bookings, delivery and restaurant settings. New owner accounts are created by invitation only.</p>'+
     (message?'<div class="notice">'+esc(message)+'</div>':'')+
     '<form id="login-form"><label>Email address</label><input id="login-email" type="email" autocomplete="username" required placeholder="owner@example.com"><label>Password</label><input id="login-password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="btn wide" id="login-submit" type="submit">Sign in to Hurmat Owner</button></form><button type="button" class="text-action" id="forgot-password" style="margin-top:14px">Forgot password?</button><p style="margin:14px 0 0">Owner accounts require a secure invitation and verified email. Owner accounts are issued through secure invitation only.</p></div>';
   document.getElementById("login-form").addEventListener("submit",async e=>{
@@ -84,8 +84,8 @@ function nav(){
 }
 function header(){
   const open=!!settings?.is_open;
-  if(DEVELOPMENT_PREVIEW) return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>DEVELOPMENT WORKSPACE</small></div></div><div class="topbar-actions"><span class="pill">PREVIEW MODE</span></div></header>';
-  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../icon.svg" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
+  if(DEVELOPMENT_PREVIEW) return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>DEVELOPMENT WORKSPACE</small></div></div><div class="topbar-actions"><span class="pill">PREVIEW MODE</span></div></header>';
+  return '<header class="partner-topbar"><div class="topbar-brand"><div class="logo"><img src="../assets/hurmat-logo-repo.png" alt="Hurmat Darbar"></div><div><b>HURMAT OWNER</b><small>LIVE RESTAURANT OPERATIONS</small></div></div><div class="topbar-actions"><button class="outlet-state '+(open?'is-open':'is-paused')+'" id="outlet-toggle" data-open="'+String(open)+'"><i></i>'+(open?'Accepting orders':'Orders paused')+'</button><span class="pill">'+esc(role||"STAFF").toUpperCase()+'</span><button class="btn ghost sm" id="signout">Sign out</button></div></header>';
 }
 function shell(title,desc,content){
   const previewNotice=DEVELOPMENT_PREVIEW?'<div class="notice" style="margin:16px 0 20px"><b>Development preview</b> · Login temporarily hidden. Live restaurant data and saving changes are disabled. Phone OTP + Admin approval will be added before launch.</div>':"";
